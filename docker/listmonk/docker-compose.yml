@@ -1,0 +1,81 @@
+# ─── Listmonk — Mailing list & waitlist manager ───────────────────────────────
+#
+# Deployment target : subscribe.vaultscope.de  (via Coolify reverse proxy)
+# Admin UI          : https://subscribe.vaultscope.de  (login with ADMIN_* vars)
+# Public API        : https://subscribe.vaultscope.de/api/public/subscription
+#
+# First-run setup
+# ---------------
+# 1. Copy .env.example → .env and fill in all values.
+# 2. docker compose up -d
+# 3. Open the admin UI and:
+#    a. Go to Lists → New List → create "VaultScope Launch Waitlist"
+#    b. Copy the list UUID into VITE_LISTMONK_LIST_UUID in the website .env
+#    c. Go to Settings → General → enable Double Opt-in
+#    d. Configure SMTP under Settings → SMTP (use the values from this .env)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9000:9000"
+    environment:
+      LISTMONK_app__address: "0.0.0.0:9000"
+      LISTMONK_app__admin_username: "${LISTMONK_ADMIN_USER}"
+      LISTMONK_app__admin_password: "${LISTMONK_ADMIN_PASSWORD}"
+
+      # Database
+      LISTMONK_db__host: listmonk_db
+      LISTMONK_db__port: "5432"
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: "${DB_PASSWORD}"
+      LISTMONK_db__database: listmonk
+
+      # SMTP — fill in .env with your relay credentials
+      LISTMONK_smtp__host: "${SMTP_HOST}"
+      LISTMONK_smtp__port: "${SMTP_PORT}"
+      LISTMONK_smtp__auth_protocol: "${SMTP_AUTH_PROTOCOL}"
+      LISTMONK_smtp__username: "${SMTP_USERNAME}"
+      LISTMONK_smtp__password: "${SMTP_PASSWORD}"
+      LISTMONK_smtp__tls_type: "${SMTP_TLS_TYPE}"
+
+      # From address shown in confirmation emails
+      LISTMONK_app__from_email: "${FROM_EMAIL}"
+
+      # Allow the VaultScope frontend to call the public API
+      LISTMONK_app__cors_origins: "https://vaultscope.de"
+
+    depends_on:
+      listmonk_db:
+        condition: service_healthy
+    # Initialise DB schema on first boot, then start normally
+    command: >
+      sh -c "yes | ./listmonk --install --idempotent && ./listmonk"
+    networks:
+      - listmonk
+
+  listmonk_db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: listmonk
+    volumes:
+      - listmonk_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - listmonk
+
+networks:
+  listmonk:
+
+volumes:
+  listmonk_data:
