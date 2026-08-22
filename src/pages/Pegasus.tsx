@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PageHero, FeatureSection, Button } from '../components/Shared';
+import { PageHero, FeatureSection, Button, Breadcrumbs } from '../components/Shared';
 import {
   Shield, Zap, TrendingUp, Gift, Volume2, Tag, Star,
   Code, Database, Server, ArrowRight,
@@ -162,7 +162,7 @@ export const Pegasus = () => {
   const [activeDeployment, setActiveDeployment] = useState<DeployMethod>('docker');
 
   useEffect(() => {
-    document.title = "Pegasus — Discord Platform by VaultScope";
+    document.title = "Pegasus — VaultScope Software";
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
@@ -174,10 +174,13 @@ export const Pegasus = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <div className="container mx-auto px-6 lg:px-12 pt-32">
+        <Breadcrumbs items={[{ label: 'Software' }, { label: 'Pegasus' }]} />
+      </div>
 
       {/* ─── HERO ─────────────────────────────────────────────────── */}
       <PageHero
-        eyebrow="A VAULTSCOPE PRODUCT"
+        eyebrow="VAULTSCOPE SOFTWARE"
         title="Powerful Discord automation. Without giving up control."
         description="Pegasus is a full-featured Discord community management platform built for flexibility, transparency, and self-hosting. Eight production-ready modules. A complete web dashboard. A full REST API."
         primaryCta="Open Dashboard"
@@ -783,7 +786,7 @@ export const Pegasus = () => {
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Monitoring and alerting</li>
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> VaultScope support</li>
               </ul>
-              <Link to="/pricing" className="mt-auto">
+              <Link to="/pricing/" className="mt-auto">
                 <Button className="w-full">View Pricing</Button>
               </Link>
             </div>
@@ -800,7 +803,7 @@ export const Pegasus = () => {
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Integration and development work</li>
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Priority support</li>
               </ul>
-              <Link to="/about" className="mt-auto">
+              <Link to="/company/contact/" className="mt-auto">
                 <Button variant="outline" className="w-full">Contact Us</Button>
               </Link>
             </div>

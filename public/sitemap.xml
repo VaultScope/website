@@ -7,67 +7,100 @@
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
+
+  <!-- Infrastructure -->
   <url>
-    <loc>https://vaultscope.de/hosting</loc>
+    <loc>https://vaultscope.de/infrastructure/</loc>
     <priority>0.9</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/contact</loc>
+    <loc>https://vaultscope.de/infrastructure/cloud/</loc>
     <priority>0.8</priority>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/infrastructure/dedicated/</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/infrastructure/managed/</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
   </url>
 
-  <!-- Infrastructure / company -->
+  <!-- Deploy -->
   <url>
-    <loc>https://vaultscope.de/open-source</loc>
+    <loc>https://vaultscope.de/deploy/</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Software -->
+  <url>
+    <loc>https://vaultscope.de/software/pegasus/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
+
+  <!-- Pricing -->
   <url>
-    <loc>https://vaultscope.de/about</loc>
+    <loc>https://vaultscope.de/pricing/</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Company -->
+  <url>
+    <loc>https://vaultscope.de/company/about/</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/projects</loc>
-    <priority>0.5</priority>
+    <loc>https://vaultscope.de/company/open-source/</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/company/contact/</loc>
+    <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
 
   <!-- Legal -->
   <url>
-    <loc>https://vaultscope.de/privacy</loc>
+    <loc>https://vaultscope.de/legal/privacy/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/terms</loc>
+    <loc>https://vaultscope.de/legal/terms/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/hosting-terms</loc>
+    <loc>https://vaultscope.de/legal/imprint/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/cancellation</loc>
+    <loc>https://vaultscope.de/legal/hosting-terms/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/aup</loc>
+    <loc>https://vaultscope.de/legal/cancellation/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/dpa</loc>
+    <loc>https://vaultscope.de/legal/aup/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/imprint</loc>
+    <loc>https://vaultscope.de/legal/dpa/</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>

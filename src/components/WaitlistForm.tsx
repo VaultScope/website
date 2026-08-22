@@ -114,7 +114,7 @@ export const WaitlistForm = () => {
 
       <p className="mt-3 text-xs text-foreground/30 font-light">
         Double opt-in. No spam. Unsubscribe any time.{' '}
-        <a href="/privacy" className="hover:text-foreground/50 transition-colors underline underline-offset-2">
+        <a href="/legal/privacy/" className="hover:text-foreground/50 transition-colors underline underline-offset-2">
           Privacy Policy
         </a>
       </p>

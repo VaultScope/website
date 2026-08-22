@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, GitBranch, Sun, Moon } from 'lucide-react';
+import { Menu, X, GitBranch, Sun, Moon, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { getInitialDark, applyDark } from '../hooks/useTheme';
 
@@ -16,7 +16,6 @@ function useTheme() {
 
   const toggle = useCallback(() => setDark(!dark), [dark, setDark]);
 
-  // Follow system preference changes when the user hasn't explicitly chosen
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = (e: MediaQueryListEvent) => {
@@ -82,12 +81,177 @@ const Logo = ({ className = "h-12 w-auto" }: { className?: string }) => (
   </>
 );
 
+// ─── Breadcrumbs ──────────────────────────────────────────────────────────────
+
+export const Breadcrumbs = ({ items }: { items: { label: string; href?: string }[] }) => (
+  <nav aria-label="Breadcrumb" className="mb-6">
+    <ol className="flex items-center gap-2 text-xs tracking-widest uppercase text-foreground/40">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-center gap-2">
+          {i > 0 && <span aria-hidden="true">/</span>}
+          {item.href && i < items.length - 1 ? (
+            <Link to={item.href} className="hover:text-foreground transition-colors">
+              {item.label}
+            </Link>
+          ) : (
+            <span className={i === items.length - 1 ? 'text-foreground/70' : ''} aria-current={i === items.length - 1 ? 'page' : undefined}>
+              {item.label}
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+);
+
+// ─── Dropdown Menu Types ──────────────────────────────────────────────────────
+
+interface DropdownItem {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+interface NavDropdown {
+  label: string;
+  id: string;
+  items: DropdownItem[];
+}
+
+const NAV_DROPDOWNS: NavDropdown[] = [
+  {
+    label: 'Infrastructure',
+    id: 'nav-infra',
+    items: [
+      { label: 'Cloud VPS', href: '/infrastructure/cloud/' },
+      { label: 'Dedicated Servers', href: '/infrastructure/dedicated/' },
+      { label: 'Managed Infrastructure', href: '/infrastructure/managed/' },
+      { label: 'Pricing', href: '/pricing/' },
+    ],
+  },
+  {
+    label: 'Software',
+    id: 'nav-software',
+    items: [
+      { label: 'Pegasus', href: '/software/pegasus/' },
+      { label: 'Open Source', href: '/company/open-source/' },
+    ],
+  },
+  {
+    label: 'Company',
+    id: 'nav-company',
+    items: [
+      { label: 'About', href: '/company/about/' },
+      { label: 'Contact', href: '/company/contact/' },
+      { label: 'Status', href: 'https://status.vaultscope.de/status/vs', external: true },
+    ],
+  },
+];
+
+// ─── NavDropdownMenu ──────────────────────────────────────────────────────────
+
+const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
+  dropdown: NavDropdown;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+      buttonRef.current?.focus();
+      return;
+    }
+
+    if (!isOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onToggle();
+        setTimeout(() => itemRefs.current[0]?.focus(), 0);
+      }
+      return;
+    }
+
+    const currentIndex = itemRefs.current.findIndex(ref => ref === document.activeElement);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = currentIndex < dropdown.items.length - 1 ? currentIndex + 1 : 0;
+      itemRefs.current[next]?.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = currentIndex > 0 ? currentIndex - 1 : dropdown.items.length - 1;
+      itemRefs.current[prev]?.focus();
+    }
+  };
+
+  return (
+    <div ref={menuRef} className="relative" onKeyDown={handleKeyDown}>
+      <button
+        ref={buttonRef}
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={dropdown.id}
+        aria-haspopup="true"
+        className="flex items-center gap-1 hover:text-foreground transition-colors py-2 relative group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/50 cursor-pointer"
+      >
+        {dropdown.label}
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div
+          id={dropdown.id}
+          role="menu"
+          className="absolute top-full left-0 mt-2 min-w-[200px] border border-border bg-background z-50"
+        >
+          {dropdown.items.map((item, i) => (
+            item.external ? (
+              <a
+                key={item.href}
+                ref={el => { itemRefs.current[i] = el; }}
+                href={item.href}
+                target="_blank"
+                rel="noreferrer"
+                role="menuitem"
+                tabIndex={-1}
+                onClick={onClose}
+                className="block px-5 py-3 text-xs tracking-wider uppercase text-foreground/60 hover:text-foreground hover:bg-foreground/[0.03] transition-colors focus-visible:outline-none focus-visible:bg-foreground/[0.05]"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                ref={el => { itemRefs.current[i] = el; }}
+                to={item.href}
+                role="menuitem"
+                tabIndex={-1}
+                onClick={onClose}
+                className="block px-5 py-3 text-xs tracking-wider uppercase text-foreground/60 hover:text-foreground hover:bg-foreground/[0.03] transition-colors focus-visible:outline-none focus-visible:bg-foreground/[0.05]"
+              >
+                {item.label}
+              </Link>
+            )
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -97,20 +261,39 @@ export const Navbar = () => {
 
   useEffect(() => {
     setIsOpen(false);
+    setOpenDropdown(null);
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Primary desktop nav — hosting first, no /projects
-  const navLinks = [
-    { label: 'Hosting',     path: '/hosting'     },
-    { label: 'Open Source', path: '/open-source' },
-    { label: 'Company',     path: '/about'       },
-  ];
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile drawer on Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isOpen) setIsOpen(false);
+        if (openDropdown) setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, openDropdown]);
 
   return (
     <motion.nav
+      ref={navRef}
       initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 transition-all duration-500 w-full ${scrolled ? 'py-4 bg-background border-b border-border' : 'py-6 bg-transparent'}`}
+      aria-label="Main navigation"
     >
       {/* Logo */}
       <div className="flex items-center">
@@ -121,22 +304,28 @@ export const Navbar = () => {
 
       {/* Desktop nav links */}
       <div className="hidden lg:flex items-center gap-10 text-xs tracking-wider uppercase font-medium text-foreground/50">
-        {navLinks.map(item => (
-          <Link
-            key={item.label}
-            to={item.path}
-            className="hover:text-foreground transition-colors py-2 relative group"
-          >
-            {item.label}
-            <span className="absolute bottom-0 left-1/2 w-0 h-px bg-foreground transition-all duration-300 group-hover:w-full group-hover:left-0" />
-          </Link>
+        {NAV_DROPDOWNS.map(dropdown => (
+          <NavDropdownMenu
+            key={dropdown.id}
+            dropdown={dropdown}
+            isOpen={openDropdown === dropdown.id}
+            onToggle={() => setOpenDropdown(openDropdown === dropdown.id ? null : dropdown.id)}
+            onClose={() => setOpenDropdown(null)}
+          />
         ))}
+        <Link
+          to="/deploy/"
+          className="hover:text-foreground transition-colors py-2 relative group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/50"
+        >
+          Deploy
+          <span className="absolute bottom-0 left-1/2 w-0 h-px bg-foreground transition-all duration-300 group-hover:w-full group-hover:left-0" />
+        </Link>
       </div>
 
       {/* Right controls */}
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <Link to="/contact" className="hidden sm:flex">
+        <Link to="/company/contact/" className="hidden sm:flex">
           <Button className="h-10 px-8">Contact</Button>
         </Link>
         <button
@@ -150,7 +339,12 @@ export const Navbar = () => {
 
       {/* Mobile drawer */}
       {isOpen && (
-        <div className="fixed inset-0 bg-background z-50 flex flex-col p-8 border-l border-border md:w-[400px] ml-auto right-0 left-auto">
+        <div
+          className="fixed inset-0 bg-background z-50 flex flex-col p-8 border-l border-border md:w-[400px] ml-auto right-0 left-auto overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
+        >
           <div className="flex justify-between items-center border-b border-border pb-8 mb-8">
             <Logo className="h-9 w-auto" />
             <div className="flex items-center gap-3">
@@ -166,47 +360,50 @@ export const Navbar = () => {
           </div>
 
           <div className="flex flex-col gap-8">
-            {/* Hosting */}
-            <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Hosting</span>
-              <Link to="/hosting" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Cloud VPS</Link>
-              <Link to="/hosting" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Dedicated Servers</Link>
-              <Link to="/odp"     className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">One-Click Deploy</Link>
-            </div>
             {/* Infrastructure */}
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Infrastructure</span>
-              <Link to="/open-source" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Open Source</Link>
+              <Link to="/infrastructure/cloud/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Cloud VPS</Link>
+              <Link to="/infrastructure/dedicated/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Dedicated Servers</Link>
+              <Link to="/infrastructure/managed/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Managed Infrastructure</Link>
+              <Link to="/pricing/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Pricing</Link>
+            </div>
+            {/* Deploy */}
+            <div className="flex flex-col gap-4">
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Deploy</span>
+              <Link to="/deploy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">One-Click Deploy</Link>
+            </div>
+            {/* Software */}
+            <div className="flex flex-col gap-4">
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Software</span>
+              <Link to="/software/pegasus/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Pegasus</Link>
+              <Link to="/company/open-source/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Open Source</Link>
             </div>
             {/* Company */}
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Company</span>
-              <Link to="/about"       className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">About</Link>
-              <Link to="/contact"     className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Contact</Link>
-              <Link to="/principles"  className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Principles</Link>
+              <Link to="/company/about/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">About</Link>
+              <Link to="/company/contact/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Contact</Link>
+              <a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Status</a>
             </div>
             {/* Resources */}
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Resources</span>
               <a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Documentation</a>
               <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">GitHub</a>
-              <a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Status</a>
             </div>
             {/* Legal */}
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Legal</span>
-              <Link to="/privacy"       className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Privacy Policy</Link>
-              <Link to="/terms"         className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Terms of Service</Link>
-              <Link to="/hosting-terms" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Hosting Terms</Link>
-              <Link to="/cancellation"  className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Cancellation Policy</Link>
-              <Link to="/aup"           className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Acceptable Use</Link>
-              <Link to="/dpa"           className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Data Processing</Link>
-              <Link to="/imprint"       className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Imprint</Link>
+              <Link to="/legal/privacy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/legal/terms/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link to="/legal/hosting-terms/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Hosting Terms</Link>
+              <Link to="/legal/imprint/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Imprint</Link>
             </div>
           </div>
 
           <div className="mt-auto pt-8 border-t border-border">
-            <Link to="/contact">
+            <Link to="/company/contact/">
               <Button className="w-full">Get in Touch</Button>
             </Link>
           </div>
@@ -229,28 +426,28 @@ export const Footer = () => (
             <Logo />
           </Link>
           <p className="text-foreground/40 text-sm max-w-sm leading-relaxed">
-            Modern hosting and infrastructure. Cloud VPS and Dedicated Servers — built for what comes next.
+            Infrastructure and software, engineered together.
           </p>
         </div>
 
-        {/* Hosting */}
+        {/* Infrastructure */}
         <div>
-          <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Hosting</h3>
+          <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Infrastructure</h3>
           <ul className="space-y-4 text-sm text-foreground/50">
-            <li><Link to="/hosting" className="hover:text-foreground transition-colors">Cloud VPS</Link></li>
-            <li><Link to="/hosting" className="hover:text-foreground transition-colors">Dedicated Servers</Link></li>
-            <li><Link to="/odp"     className="hover:text-foreground transition-colors">One-Click Deploy</Link></li>
+            <li><Link to="/infrastructure/cloud/" className="hover:text-foreground transition-colors">Cloud VPS</Link></li>
+            <li><Link to="/infrastructure/dedicated/" className="hover:text-foreground transition-colors">Dedicated Servers</Link></li>
+            <li><Link to="/deploy/" className="hover:text-foreground transition-colors">One-Click Deploy</Link></li>
+            <li><Link to="/infrastructure/managed/" className="hover:text-foreground transition-colors">Managed</Link></li>
           </ul>
         </div>
 
-        {/* Company — /projects ONLY appears here */}
+        {/* Company */}
         <div>
           <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Company</h3>
           <ul className="space-y-4 text-sm text-foreground/50">
-            <li><Link to="/open-source" className="hover:text-foreground transition-colors">Open Source</Link></li>
-            <li><Link to="/projects"    className="hover:text-foreground transition-colors">Projects</Link></li>
-            <li><Link to="/about"       className="hover:text-foreground transition-colors">About</Link></li>
-            <li><Link to="/contact"     className="hover:text-foreground transition-colors">Contact</Link></li>
+            <li><Link to="/company/open-source/" className="hover:text-foreground transition-colors">Open Source</Link></li>
+            <li><Link to="/company/about/" className="hover:text-foreground transition-colors">About</Link></li>
+            <li><Link to="/company/contact/" className="hover:text-foreground transition-colors">Contact</Link></li>
           </ul>
         </div>
 
@@ -258,9 +455,9 @@ export const Footer = () => (
         <div>
           <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Resources</h3>
             <ul className="space-y-4 text-sm text-foreground/50">
-              <li><a href="https://pegasusbot.app/docs"                          target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Documentation</a></li>
-              <li><a href="https://github.com/semi-constructor"                  target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">GitHub</a></li>
-              <li><a href="https://status.vaultscope.de/status/vs"               target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Status</a></li>
+              <li><a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Documentation</a></li>
+              <li><a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">GitHub</a></li>
+              <li><a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Status</a></li>
             </ul>
         </div>
 
@@ -268,13 +465,13 @@ export const Footer = () => (
         <div>
           <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Legal</h3>
           <ul className="space-y-4 text-sm text-foreground/50">
-            <li><Link to="/privacy"        className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-            <li><Link to="/terms"          className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-            <li><Link to="/hosting-terms"  className="hover:text-foreground transition-colors">Hosting Terms</Link></li>
-            <li><Link to="/cancellation"   className="hover:text-foreground transition-colors">Cancellation Policy</Link></li>
-            <li><Link to="/aup"            className="hover:text-foreground transition-colors">Acceptable Use</Link></li>
-            <li><Link to="/dpa"            className="hover:text-foreground transition-colors">Data Processing</Link></li>
-            <li><Link to="/imprint"        className="hover:text-foreground transition-colors">Imprint</Link></li>
+            <li><Link to="/legal/privacy/" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/legal/terms/" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+            <li><Link to="/legal/hosting-terms/" className="hover:text-foreground transition-colors">Hosting Terms</Link></li>
+            <li><Link to="/legal/cancellation/" className="hover:text-foreground transition-colors">Cancellation Policy</Link></li>
+            <li><Link to="/legal/aup/" className="hover:text-foreground transition-colors">Acceptable Use</Link></li>
+            <li><Link to="/legal/dpa/" className="hover:text-foreground transition-colors">Data Processing</Link></li>
+            <li><Link to="/legal/imprint/" className="hover:text-foreground transition-colors">Imprint</Link></li>
           </ul>
         </div>
 
@@ -282,7 +479,7 @@ export const Footer = () => (
 
       <div className="border-t border-border pt-8 flex items-center justify-between text-xs tracking-wider uppercase text-foreground/30">
         <div>
-          <p>© 2026 VaultScope. All rights reserved.</p>
+          <p>&copy; 2026 VaultScope. All rights reserved.</p>
         </div>
         <div className="flex gap-6">
           <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
@@ -295,9 +492,6 @@ export const Footer = () => (
 );
 
 // ─── FeatureSection ───────────────────────────────────────────────────────────
-//
-// visual provided  → two-column layout (text + visual, reversed when reverse=true)
-// no visual        → single wide editorial column, no placeholder box
 
 export const FeatureSection = ({
   title,

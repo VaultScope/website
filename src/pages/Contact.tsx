@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PageHero } from '../components/Shared';
+import { PageHero, Breadcrumbs } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { Mail, LifeBuoy, GitBranch, Activity, BookOpen, FileText } from 'lucide-react';
 
@@ -14,6 +14,9 @@ export const Contact = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <div className="container mx-auto px-6 lg:px-12 pt-32">
+        <Breadcrumbs items={[{ label: 'Company' }, { label: 'Contact' }]} />
+      </div>
       <PageHero
         eyebrow="CONTACT"
         title="Get in touch."
@@ -96,7 +99,7 @@ export const Contact = () => {
                 icon: FileText,
                 label: 'Imprint',
                 desc: 'Legal contact details',
-                href: '/imprint',
+                href: '/legal/imprint/',
                 external: false,
               },
             ].map((item, i) => {

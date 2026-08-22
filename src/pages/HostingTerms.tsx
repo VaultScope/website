@@ -27,17 +27,17 @@ export const HostingTerms = () => {
                 relationship between VaultScope (Anton Schmidt, Einzelunternehmen) and customers
                 purchasing Cloud VPS or Dedicated Server services. These Hosting Terms supplement
                 the general{' '}
-                <Link to="/terms" className="text-foreground hover:underline">Terms of Service</Link>.
+                <Link to="/legal/terms/" className="text-foreground hover:underline">Terms of Service</Link>.
                 In the event of conflict between these Hosting Terms and the general Terms of Service,
                 these Hosting Terms take precedence for hosting services.
               </p>
               <p className="text-sm mt-3">
                 Consumers additionally benefit from the rights set out in the{' '}
-                <Link to="/cancellation" className="text-foreground hover:underline">
+                <Link to="/legal/cancellation/" className="text-foreground hover:underline">
                   Cancellation Policy
                 </Link>
                 . All customers are subject to the{' '}
-                <Link to="/aup" className="text-foreground hover:underline">
+                <Link to="/legal/aup/" className="text-foreground hover:underline">
                   Acceptable Use Policy
                 </Link>
                 .
@@ -216,7 +216,7 @@ export const HostingTerms = () => {
                   <p>
                     Consumers have a 14-day statutory right of withdrawal from the date of contract
                     conclusion. See the{' '}
-                    <Link to="/cancellation" className="text-foreground hover:underline">
+                    <Link to="/legal/cancellation/" className="text-foreground hover:underline">
                       Cancellation Policy
                     </Link>{' '}
                     for full details.
@@ -333,7 +333,7 @@ export const HostingTerms = () => {
               <p className="text-sm mb-4">
                 VaultScope processes personal data in connection with the provision of Services
                 as described in the{' '}
-                <Link to="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>.
+                <Link to="/legal/privacy/" className="text-foreground hover:underline">Privacy Policy</Link>.
               </p>
               <p className="text-sm">
                 Where the Customer processes personal data of third parties (e.g. end users of
@@ -341,7 +341,7 @@ export const HostingTerms = () => {
                 controller and VaultScope acts as data processor. In this case, a Data Processing
                 Agreement (DPA) must be concluded pursuant to Art. 28 GDPR. The VaultScope DPA
                 is available at{' '}
-                <Link to="/dpa" className="text-foreground hover:underline">/dpa</Link>.
+                <Link to="/legal/dpa/" className="text-foreground hover:underline">/legal/dpa/</Link>.
                 By using VaultScope hosting services, the Customer agrees to the terms of the DPA.
               </p>
             </div>

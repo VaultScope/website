@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PageHero, Button } from '../components/Shared';
+import { PageHero, Button, Breadcrumbs } from '../components/Shared';
 import { ExternalLink, GitBranch } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -43,6 +43,18 @@ const INFRA_STACK = [
     category: 'Server Monitoring',
     desc: "Lightweight infrastructure monitoring used within VaultScope's server environment for resource and system health tracking.",
     url: 'https://beszel.dev',
+  },
+  {
+    name: 'Mailcow',
+    category: 'Email Server',
+    desc: "Self-hosted email server suite providing IMAP, SMTP, and webmail. Powers VaultScope's email infrastructure with full control over mail delivery and domain management.",
+    url: 'https://mailcow.email',
+  },
+  {
+    name: 'Listmonk',
+    category: 'Mailing & Newsletters',
+    desc: "Self-hosted newsletter and mailing list manager. Handles waitlist subscriptions, product announcements, and transactional email campaigns.",
+    url: 'https://listmonk.app',
   },
 ];
 
@@ -96,6 +108,9 @@ export const OpenSource = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <div className="container mx-auto px-6 lg:px-12 pt-32">
+        <Breadcrumbs items={[{ label: 'Company' }, { label: 'Open Source' }]} />
+      </div>
 
       {/* ─── HERO ──────────────────────────────────────────────────── */}
       <PageHero

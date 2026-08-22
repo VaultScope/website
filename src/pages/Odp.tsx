@@ -5,6 +5,14 @@ import { PackageOpen, Zap, Shield, Settings2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
+const SERVICE_CATEGORIES = [
+  "Game Servers",
+  "Databases",
+  "Applications",
+  "Development Tools",
+  "Infrastructure Tools",
+];
+
 // --- How it works steps ---
 
 const HOW_IT_WORKS = [
@@ -61,12 +69,12 @@ const PILLARS = [
 
 export const Odp = () => {
   useEffect(() => {
-    document.title = "ODP — VaultScope";
+    document.title = "Deploy — VaultScope";
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
         "content",
-        "VaultScope One-Click Deploy — launch pre-configured services on managed infrastructure instantly, without any setup."
+        "VaultScope Deploy — launch pre-configured services on managed infrastructure instantly. A deployment platform for applications, databases, and services."
       );
     }
   }, []);
@@ -75,7 +83,7 @@ export const Odp = () => {
     <div className="flex flex-col w-full">
       {/* Hero */}
       <PageHero
-        eyebrow="ONE-CLICK DEPLOY"
+        eyebrow="DEPLOY PLATFORM"
         title={
           <>
             Services, live
@@ -83,7 +91,7 @@ export const Odp = () => {
             in seconds.
           </>
         }
-        description="Pre-built images. Pre-configured settings. Deploy a fully managed service on our infrastructure with a single click — zero manual setup required."
+        description="A deployment platform for pre-configured services. Deploy applications, databases, and tools on managed infrastructure — zero manual setup required."
         primaryCta="Join the waitlist"
         primaryLink="#waitlist"
         align="left"
@@ -214,12 +222,19 @@ export const Odp = () => {
                 configuration. More services will be added regularly.
               </p>
             </div>
-            <div className="shrink-0">
+            <div className="shrink-0 flex flex-col gap-4">
               <div className="flex items-center gap-2 border border-border px-4 py-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-foreground/20 block" />
                 <span className="text-xs font-medium text-foreground/40 uppercase tracking-widest">
                   Coming Soon
                 </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {SERVICE_CATEGORIES.map((cat) => (
+                  <span key={cat} className="text-xs font-medium text-foreground/40 uppercase tracking-widest border border-border px-3 py-1.5">
+                    {cat}
+                  </span>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -245,7 +260,7 @@ export const Odp = () => {
               <p className="text-sm text-foreground/30 font-light">
                 Questions before launch?{" "}
                 <Link
-                  to="/contact"
+                  to="/company/contact/"
                   className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2"
                 >
                   Get in touch

@@ -1,15 +1,11 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
-import {
-  motion,
-  useScroll,
-  useSpring,
-  useInView,
-  useTransform,
-} from 'framer-motion';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { ArrowRight, Server, Shield, Cpu } from 'lucide-react';
+import { Button } from '../components/Shared';
+import {
+  ArrowRight, Server, Shield, Cpu, Rocket,
+  Code2, Wrench, Monitor, HardDrive, Settings,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // ─── Helper Components ─────────────────────────────────────────────────────────
@@ -40,152 +36,154 @@ const FadeIn = ({
 
 const VaultScopeCanvas = () => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
   const scrollProgressRef = useRef(0);
-  const rackGroupRef = useRef<THREE.Group | null>(null);
 
-  // Scroll-driven opacity: stays visible through hero + infra section, then fades to 0
   const { scrollY } = useScroll();
   const vh = typeof window !== 'undefined' ? window.innerHeight : 900;
   const canvasOpacity = useTransform(scrollY, [0, vh * 0.8, vh * 2.0], [1, 1, 0]);
 
   useEffect(() => {
-    setLoaded(true);
+    const isMobile = window.innerWidth < 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canvas = document.createElement('canvas');
+    const hasWebGL = !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    const saveData = (navigator as unknown as { connection?: { saveData?: boolean } }).connection?.saveData;
+
+    if (!isMobile && !prefersReducedMotion && hasWebGL && !saveData) {
+      setShouldRender(true);
+    }
   }, []);
 
   useEffect(() => {
     const el = mountRef.current;
-    if (!el || !loaded) return;
+    if (!el || !shouldRender) return;
 
-    const width = el.clientWidth;
-    const height = el.clientHeight;
-
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance',
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(width, height);
-    renderer.setClearColor(0x000000, 0);
-    el.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    // Camera starts close — rack already fills ~half the frame at page load
-    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
-    camera.position.set(0, 0, 560);
-
-    // ── Lighting ──────────────────────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffffff, 50));
-
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
-    keyLight.position.set(200, 400, 300);
-    scene.add(keyLight);
-
-    const rimLight = new THREE.DirectionalLight(0x3355ee, 0.7);
-    rimLight.position.set(-250, -100, -200);
-    scene.add(rimLight);
-
-    // Green accent from below — server-room atmosphere
-    const accentLight = new THREE.PointLight(0x00cc77, 0.8, 1200);
-    accentLight.position.set(0, -300, 200);
-    scene.add(accentLight);
-
-    // ── Rack group — shifted down so the rack sits lower in the viewport ────
-    const rackGroup = new THREE.Group();
-    rackGroup.position.y = -400;
-    rackGroup.rotation.y = -0.25; // fixed slight angle — shows depth without animating
-    scene.add(rackGroup);
-    rackGroupRef.current = rackGroup;
-
-    // ── Events ────────────────────────────────────────────────────────────────
-    const onResize = () => {
-      if (!el) return;
-      const w = el.clientWidth;
-      const h = el.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener('resize', onResize);
-
-    // Fly-in progress: 0 → 1 over the first 60 % of viewport height
-    const updateScroll = () => {
-      scrollProgressRef.current = Math.min(
-        1,
-        window.scrollY / (window.innerHeight * 0.6),
-      );
-    };
-    window.addEventListener('scroll', updateScroll, { passive: true });
-    updateScroll();
-
-    // ── Render loop — only scroll changes state; lerp settles quickly ─────────
+    let disposed = false;
     let raf = 0;
-    const tick = () => {
-      raf = requestAnimationFrame(tick);
 
-      const progress = scrollProgressRef.current;
+    const init = async () => {
+      const THREE = await import('three');
+      const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
 
-      // Camera zooms from z=560 → z=370 as the user scrolls  (25% smaller start, 30% smaller end)
-      const targetCamZ = 560 - progress * 190;
-      camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+      if (disposed) return;
 
-      renderer.render(scene, camera);
+      const width = el.clientWidth;
+      const height = el.clientHeight;
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+      renderer.setClearColor(0x000000, 0);
+      el.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
+      camera.position.set(0, 0, 560);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 50));
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
+      keyLight.position.set(200, 400, 300);
+      scene.add(keyLight);
+
+      const rimLight = new THREE.DirectionalLight(0x3355ee, 0.7);
+      rimLight.position.set(-250, -100, -200);
+      scene.add(rimLight);
+
+      const accentLight = new THREE.PointLight(0x00cc77, 0.8, 1200);
+      accentLight.position.set(0, -300, 200);
+      scene.add(accentLight);
+
+      const rackGroup = new THREE.Group();
+      rackGroup.position.y = -400;
+      rackGroup.rotation.y = -0.25;
+      scene.add(rackGroup);
+
+      const onResize = () => {
+        if (!el) return;
+        const w = el.clientWidth;
+        const h = el.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      };
+      window.addEventListener('resize', onResize);
+
+      const updateScroll = () => {
+        scrollProgressRef.current = Math.min(1, window.scrollY / (window.innerHeight * 0.6));
+      };
+      window.addEventListener('scroll', updateScroll, { passive: true });
+      updateScroll();
+
+      const tick = () => {
+        raf = requestAnimationFrame(tick);
+        const progress = scrollProgressRef.current;
+        const targetCamZ = 560 - progress * 190;
+        camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+        renderer.render(scene, camera);
+      };
+      tick();
+
+      const loader = new GLTFLoader();
+      loader.load(
+        '/3d/server_rack.glb',
+        (gltf) => {
+          const model = gltf.scene;
+          const box = new THREE.Box3().setFromObject(model);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+          const scaleFactor = 700 / Math.max(size.x, size.y, size.z);
+          model.scale.setScalar(scaleFactor);
+          box.setFromObject(model);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          model.position.sub(center);
+          rackGroup.add(model);
+        },
+        undefined,
+        (error) => console.error('Failed to load server rack model:', error),
+      );
+
+      return () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('resize', onResize);
+        window.removeEventListener('scroll', updateScroll);
+        renderer.dispose();
+        scene.traverse((child: any) => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach((m: any) => m.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        });
+        if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+      };
     };
-    tick();
+
+    let cleanup: (() => void) | undefined;
+    init().then((c) => { cleanup = c; });
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('scroll', updateScroll);
-      renderer.dispose();
-      scene.traverse((child) => {
-        const mesh = child as THREE.Mesh;
-        if (mesh.geometry) mesh.geometry.dispose();
-        if (mesh.material) {
-          if (Array.isArray(mesh.material)) {
-            mesh.material.forEach((m) => m.dispose());
-          } else {
-            mesh.material.dispose();
-          }
-        }
-      });
-      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+      cleanup?.();
     };
-  }, [loaded]);
+  }, [shouldRender]);
 
-  // ── Load GLB model ────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!loaded) return;
-    const loader = new GLTFLoader();
-    loader.load(
-      '/3d/server_rack.glb',
-      (gltf) => {
-        const model = gltf.scene;
-
-        // Normalise: fit the longest axis to 700 world-units (way larger)
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const scaleFactor = 700 / Math.max(size.x, size.y, size.z);
-        model.scale.setScalar(scaleFactor);
-
-        // Centre on origin
-        box.setFromObject(model);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        model.position.sub(center);
-
-        rackGroupRef.current?.add(model);
-      },
-      undefined,
-      (error) => console.error('Failed to load server rack model:', error),
-    );
-  }, [loaded]);
+  if (!shouldRender) return null;
 
   return (
     <motion.div
       ref={mountRef}
+      aria-hidden="true"
       style={{
         position: 'fixed',
         inset: 0,
@@ -197,11 +195,88 @@ const VaultScopeCanvas = () => {
   );
 };
 
-// ─── Hosting Compare Section ───────────────────────────────────────────────────
+// ─── Product Overview Section ──────────────────────────────────────────────────
 
-const HostingCompareSection = () => {
+const ProductOverview = () => {
+  const products = [
+    {
+      icon: Server,
+      label: 'Infrastructure',
+      title: 'Infrastructure',
+      desc: 'Cloud VPS and Dedicated Servers on EU infrastructure.',
+      link: '/infrastructure/',
+    },
+    {
+      icon: Rocket,
+      label: 'Deploy',
+      title: 'Deploy',
+      desc: 'One-click deployment for pre-configured services.',
+      link: '/deploy/',
+    },
+    {
+      icon: Code2,
+      label: 'Software',
+      title: 'Software',
+      desc: 'Products built and operated by VaultScope.',
+      link: '/software/pegasus/',
+    },
+    {
+      icon: Wrench,
+      label: 'Managed',
+      title: 'Managed',
+      desc: 'Infrastructure designed for your business.',
+      link: '/infrastructure/managed/',
+    },
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background border-t border-border">
+      <div className="container mx-auto px-6 lg:px-12">
+        <FadeIn>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0 border border-border">
+            {products.map((product, i) => {
+              const Icon = product.icon;
+              return (
+                <Link
+                  key={product.title}
+                  to={product.link}
+                  className={`group p-8 flex flex-col gap-6 hover:bg-foreground/[0.02] transition-colors ${
+                    i < products.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-border' : ''
+                  }`}
+                >
+                  <div className="w-12 h-12 border border-border flex items-center justify-center group-hover:border-foreground/30 transition-colors">
+                    <Icon className="w-5 h-5 text-foreground/50" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-2">
+                      {product.label}
+                    </p>
+                    <h3 className="text-xl font-medium text-foreground tracking-tight mb-2">
+                      {product.title}
+                    </h3>
+                    <p className="text-sm text-foreground/50 font-light leading-relaxed">
+                      {product.desc}
+                    </p>
+                  </div>
+                  <div className="mt-auto flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-foreground/30 group-hover:text-foreground/60 transition-colors">
+                    Learn more
+                    <ArrowRight className="w-3 h-3" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+};
+
+// ─── Infrastructure Section ────────────────────────────────────────────────────
+
+const InfrastructureSection = () => {
   const [activeTab, setActiveTab] = useState<'vps' | 'dedicated'>('vps');
-  
+
   const scrollY = useScroll();
   const progress = useTransform(scrollY.scrollYProgress, [0, 0.3], [0, 1]);
 
@@ -262,7 +337,7 @@ const HostingCompareSection = () => {
         <div className="border-t border-border px-6 py-4 grid grid-cols-3 gap-4 text-xs font-mono text-foreground/40 uppercase tracking-widest">
           <div>
             <div className="mb-1">Location</div>
-            <div className="text-foreground">EU · West</div>
+            <div className="text-foreground">EU</div>
           </div>
           <div>
             <div className="mb-1">CPU</div>
@@ -302,7 +377,7 @@ const HostingCompareSection = () => {
         </div>
 
         <div className="px-6 pt-4 pb-2">
-          <div className="border border-foreground/20 px-4 py-2 bg-foreground/[0.02] rounded-none">
+          <div className="border border-foreground/20 px-4 py-2 bg-foreground/[0.02]">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
               <span className="text-[9px] font-medium uppercase tracking-widest text-foreground/60">
@@ -348,7 +423,7 @@ const HostingCompareSection = () => {
         <div className="border-t border-border px-6 py-4 grid grid-cols-3 gap-4 text-xs font-mono text-foreground/40 uppercase tracking-widest">
           <div>
             <div className="mb-1">Location</div>
-            <div className="text-foreground">EU · West</div>
+            <div className="text-foreground">EU</div>
           </div>
           <div>
             <div className="mb-1">CPU</div>
@@ -370,11 +445,11 @@ const HostingCompareSection = () => {
           <FadeIn>
             <div className="text-center mb-16">
               <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                Hosting Platform
+                Infrastructure
               </p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Cloud VPS & <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground/50">Dedicated Servers.</span>
+                Cloud VPS &<br />
+                <span className="text-foreground/50">Dedicated Servers.</span>
               </h2>
               <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
                 Modern infrastructure built on Proxmox and Debian. Full control, transparent
@@ -388,7 +463,7 @@ const HostingCompareSection = () => {
               <div className="w-full md:w-64 flex flex-col gap-3">
                 <button
                   onClick={() => setActiveTab('vps')}
-                  className={`text-left px-6 py-5 border transition-all duration-300 ${
+                  className={`text-left px-6 py-5 border transition-all duration-300 cursor-pointer ${
                     activeTab === 'vps'
                       ? 'bg-foreground text-background border-foreground'
                       : 'bg-background text-foreground border-border hover:border-foreground/50'
@@ -396,11 +471,11 @@ const HostingCompareSection = () => {
                 >
                   <span className="block text-xs font-mono mb-2 uppercase tracking-widest">Tier 01</span>
                   <span className="text-2xl font-medium uppercase tracking-wider">Cloud VPS</span>
-                  <p className="text-xs mt-3 text-foreground/60">Virtualized. Shared Hardware.</p>
+                  <p className={`text-xs mt-3 ${activeTab === 'vps' ? 'text-background/60' : 'text-foreground/60'}`}>Virtualized. Shared Hardware.</p>
                 </button>
                 <button
                   onClick={() => setActiveTab('dedicated')}
-                  className={`text-left px-6 py-5 border transition-all duration-300 ${
+                  className={`text-left px-6 py-5 border transition-all duration-300 cursor-pointer ${
                     activeTab === 'dedicated'
                       ? 'bg-foreground text-background border-foreground'
                       : 'bg-background text-foreground border-border hover:border-foreground/50'
@@ -408,7 +483,7 @@ const HostingCompareSection = () => {
                 >
                   <span className="block text-xs font-mono mb-2 uppercase tracking-widest">Tier 02</span>
                   <span className="text-2xl font-medium uppercase tracking-wider">Dedicated</span>
-                  <p className="text-xs mt-3 text-foreground/60">Physical. Full Control.</p>
+                  <p className={`text-xs mt-3 ${activeTab === 'dedicated' ? 'text-background/60' : 'text-foreground/60'}`}>Physical. Full Control.</p>
                 </button>
               </div>
 
@@ -447,19 +522,104 @@ const HostingCompareSection = () => {
               ))}
             </div>
           </FadeIn>
+
+          <FadeIn delay={0.5}>
+            <div className="mt-12 text-center">
+              <Link to="/infrastructure/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
+                Explore Infrastructure<ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </div>
     </section>
   );
 };
 
-// ─── Infrastructure Layers Section ─────────────────────────────────────────────
+// ─── ODP Section ───────────────────────────────────────────────────────────────
 
-const InfrastructureLayers = () => {
+const DeploySection = () => {
+  const steps = [
+    { step: '01', title: 'Choose', desc: 'Select from pre-configured services.' },
+    { step: '02', title: 'Configure', desc: 'Set parameters — name, region, resources.' },
+    { step: '03', title: 'Running', desc: 'Live on infrastructure in seconds.' },
+  ];
+
+  const categories = ['Game Servers', 'Databases', 'Applications', 'Development Tools', 'Infrastructure Tools'];
+
+  return (
+    <section className="py-24 lg:py-32 bg-background border-t border-border">
+      <div className="container mx-auto px-6 lg:px-12">
+        <div className="max-w-6xl mx-auto">
+          <FadeIn>
+            <div className="mb-16">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
+                One-Click Deploy
+              </p>
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
+                Deploy in seconds.
+              </h2>
+              <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl">
+                Pre-built images and pre-configured settings. Launch a fully managed service on our
+                infrastructure without manual setup.
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.2}>
+            <div className="grid md:grid-cols-3 gap-0 border border-border mb-12">
+              {steps.map((item, i) => (
+                <div
+                  key={item.step}
+                  className={`p-10 flex flex-col gap-4 ${
+                    i < steps.length - 1 ? 'border-b md:border-b-0 md:border-r border-border' : ''
+                  }`}
+                >
+                  <span className="text-xs font-medium text-foreground/20 tracking-widest uppercase">{item.step}</span>
+                  <h3 className="text-2xl font-medium text-foreground tracking-tight">{item.title}</h3>
+                  <p className="text-sm text-foreground/40 font-light leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.3}>
+            <div className="flex flex-wrap gap-3 mb-12">
+              {categories.map((cat) => (
+                <span key={cat} className="border border-border px-4 py-2 text-xs font-medium text-foreground/40 uppercase tracking-widest">
+                  {cat}
+                </span>
+              ))}
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.4}>
+            <Link to="/deploy/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
+              Explore Deploy<ArrowRight className="w-4 h-4" />
+            </Link>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Managed Infrastructure Section ────────────────────────────────────────────
+
+const ManagedSection = () => {
+  const capabilities = [
+    { icon: Settings, title: 'Architecture', desc: 'Infrastructure designed for your requirements.' },
+    { icon: Rocket, title: 'Deployment', desc: 'Provisioned and configured by engineers.' },
+    { icon: Monitor, title: 'Monitoring', desc: 'Proactive health tracking and alerting.' },
+    { icon: Wrench, title: 'Maintenance', desc: 'Updates, patches, and ongoing management.' },
+    { icon: HardDrive, title: 'Migration', desc: 'Move existing workloads with zero downtime.' },
+  ];
+
   return (
     <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
         <div
+          className="w-full h-full"
           style={{
             backgroundImage:
               'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,1) 1px, transparent 1px)',
@@ -471,47 +631,47 @@ const InfrastructureLayers = () => {
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="max-w-6xl mx-auto">
           <FadeIn>
-            <div className="mb-20">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">The Stack</p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88]">
-                Built on open<br />
-                infrastructure.
+            <div className="mb-16">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">
+                Managed Infrastructure
+              </p>
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88] mb-6">
+                Infrastructure designed for<br />
+                your business.
               </h2>
+              <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl">
+                Operated by engineers. Architecture, deployment, monitoring, and maintenance —
+                all handled for you.
+              </p>
             </div>
           </FadeIn>
 
           <FadeIn delay={0.2}>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
-              {[
-                { name: 'PROXMOX', category: 'Virtualization', desc: 'Open-source hypervisor platform' },
-                { name: 'DEBIAN', category: 'Operating System', desc: 'Stable, production-grade Linux' },
-                { name: 'COOLIFY', category: 'Deployment', desc: 'Self-hosted application management' },
-                { name: 'FORGEJO', category: 'Development', desc: 'Self-hosted Git platform' },
-                { name: 'UPTIME KUMA', category: 'Monitoring', desc: 'Service uptime tracking' },
-                { name: 'BESZEL', category: 'Monitoring', desc: 'Infrastructure health' },
-              ].map((tech, i) => (
-                <div key={i} className="group border border-background/20 p-8 hover:bg-background/10 transition-colors">
-                  <div className="text-6xl font-medium text-background/10 mb-4 group-hover:text-background/20 transition-colors">
-                    {tech.name[0]}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-0 border border-background/20">
+              {capabilities.map((cap, i) => {
+                const Icon = cap.icon;
+                return (
+                  <div
+                    key={cap.title}
+                    className={`p-8 ${
+                      i < capabilities.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-background/20' : ''
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 text-background/40 mb-4" />
+                    <h3 className="text-base font-medium text-background mb-2">{cap.title}</h3>
+                    <p className="text-sm text-background/40 font-light leading-relaxed">{cap.desc}</p>
                   </div>
-                  <h3 className="text-xl font-medium text-background mb-2">{tech.name}</h3>
-                  <p className="text-sm text-background/50 font-light">{tech.category}</p>
-                  <p className="text-xs text-background/40 font-light mt-2">{tech.desc}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </FadeIn>
 
-          <FadeIn delay={0.4}>
-            <div className="border border-background/20 p-10 bg-background/10">
-              <h3 className="text-2xl font-medium text-background mb-4">Infrastructure Philosophy</h3>
-              <p className="text-background/50 font-light leading-relaxed max-w-2xl mb-8">
-                We believe infrastructure should be visible, auditable, and controllable.
-                That's why VaultScope's platform runs on curated open-source tools—each
-                chosen for stability, performance, and community support.
-              </p>
-              <Link to="/open-source" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-background hover:text-background/70 transition-colors">
-                Explore the full stack<ArrowRight className="w-4 h-4" />
+          <FadeIn delay={0.3}>
+            <div className="mt-12">
+              <Link to="/company/contact/">
+                <Button variant="outline" className="border-background/30 text-background hover:bg-background/10 hover:border-background/50">
+                  Talk to an Engineer
+                </Button>
               </Link>
             </div>
           </FadeIn>
@@ -521,9 +681,67 @@ const InfrastructureLayers = () => {
   );
 };
 
-// ─── Principles Section ────────────────────────────────────────────────────────
+// ─── Software / Pegasus Section ────────────────────────────────────────────────
 
-const PrinciplesSection = () => {
+const SoftwareSection = () => {
+  return (
+    <section className="py-24 lg:py-32 bg-background border-t border-border">
+      <div className="container mx-auto px-6 lg:px-12">
+        <div className="max-w-6xl mx-auto">
+          <FadeIn>
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
+                  Software
+                </p>
+                <h2 className="text-5xl md:text-6xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
+                  Software built by<br />VaultScope.
+                </h2>
+                <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-xl mb-8">
+                  VaultScope develops software alongside its infrastructure services. Pegasus is
+                  a full-featured Discord community management platform — self-hostable and
+                  source-available.
+                </p>
+                <Link to="/software/pegasus/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
+                  Learn about Pegasus<ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              <div className="border border-border p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 border border-border flex items-center justify-center">
+                    <Code2 className="w-5 h-5 text-foreground/50" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-foreground">Pegasus</h3>
+                    <p className="text-xs text-foreground/40 uppercase tracking-widest">Discord Platform</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-0 border border-border">
+                  {[
+                    { label: 'Modules', value: '8' },
+                    { label: 'License', value: 'PolyForm NC' },
+                    { label: 'Stack', value: 'TypeScript' },
+                    { label: 'Dashboard', value: 'Next.js' },
+                  ].map((stat) => (
+                    <div key={stat.label} className="border-b border-r border-border last:border-r-0 px-5 py-4">
+                      <div className="text-xs text-foreground/30 uppercase tracking-widest mb-1">{stat.label}</div>
+                      <div className="text-sm font-medium text-foreground">{stat.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Why VaultScope Section ────────────────────────────────────────────────────
+
+const WhyVaultScope = () => {
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border">
       <div className="container mx-auto px-6 lg:px-12">
@@ -532,53 +750,52 @@ const PrinciplesSection = () => {
             <div className="text-center mb-20">
               <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">Principles</p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88]">
-                Designed with<br />
-                intention.
+                Why VaultScope.
               </h2>
             </div>
           </FadeIn>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <FadeIn delay={0.2}>
+            <FadeIn delay={0.1}>
               <div className="border-l-2 border-foreground/20 pl-8">
                 <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">01</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Control</h3>
+                <h3 className="text-3xl font-medium text-foreground mb-4">Engineering</h3>
                 <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Your infrastructure should behave like your infrastructure. Full root access,
-                  complete control, no vendor lock-in.
+                  Infrastructure designed deliberately. Every component has purpose, every
+                  decision is intentional. No layers of unnecessary abstraction.
+                </p>
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.2}>
+              <div className="border-l-2 border-foreground/20 pl-8">
+                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">02</p>
+                <h3 className="text-3xl font-medium text-foreground mb-4">Transparency</h3>
+                <p className="text-lg text-foreground/50 font-light leading-relaxed">
+                  Open-source stack you can inspect and audit. Infrastructure should be
+                  understandable, observable, and controllable.
                 </p>
               </div>
             </FadeIn>
 
             <FadeIn delay={0.3}>
               <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">02</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Transparency</h3>
+                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">03</p>
+                <h3 className="text-3xl font-medium text-foreground mb-4">Integration</h3>
                 <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Infrastructure should be understandable, observable, and controllable.
-                  We use only open technologies we can inspect.
+                  Infrastructure and software, engineered together. Services that work as a
+                  system, not isolated products bolted to third-party platforms.
                 </p>
               </div>
             </FadeIn>
 
             <FadeIn delay={0.4}>
               <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">03</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Engineering</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Infrastructure designed deliberately instead of assembled from layers
-                  of abstraction. Every component has purpose.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.5}>
-              <div className="border-l-2 border-foreground/20 pl-8">
                 <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">04</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Observability</h3>
+                <h3 className="text-3xl font-medium text-foreground mb-4">Personal Service</h3>
                 <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Systems should be measurable, visible, and understandable. Uptime Kuma,
-                  Beszel, and Coolify keep everything observable.
+                  Talk to engineers, not support tiers. Problems get solved by the people who
+                  built the infrastructure — directly.
                 </p>
               </div>
             </FadeIn>
@@ -589,20 +806,23 @@ const PrinciplesSection = () => {
   );
 };
 
-// ─── Pre-Launch Section ────────────────────────────────────────────────────────
+// ─── Technology Transparency Section ───────────────────────────────────────────
 
-const PreLaunchSection = () => {
-  const timeline = [
-    { step: '01', label: 'Infrastructure', desc: 'Server setup and network configuration' },
-    { step: '02', label: 'Platform', desc: 'Virtualization and deployment systems' },
-    { step: '03', label: 'Automation', desc: 'Provisioning and management workflows' },
-    { step: '04', label: 'Observability', desc: 'Monitoring and health tracking' },
+const TechnologySection = () => {
+  const technologies = [
+    { name: 'PROXMOX', category: 'Virtualization', desc: 'Open-source hypervisor platform' },
+    { name: 'DEBIAN', category: 'Operating System', desc: 'Stable, production-grade Linux' },
+    { name: 'COOLIFY', category: 'Deployment', desc: 'Self-hosted application management' },
+    { name: 'FORGEJO', category: 'Development', desc: 'Self-hosted Git platform' },
+    { name: 'UPTIME KUMA', category: 'Monitoring', desc: 'Service uptime tracking' },
+    { name: 'BESZEL', category: 'Monitoring', desc: 'Infrastructure health' },
   ];
 
   return (
     <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
         <div
+          className="w-full h-full"
           style={{
             backgroundImage:
               'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,1) 1px, transparent 1px)',
@@ -612,50 +832,73 @@ const PreLaunchSection = () => {
       </div>
 
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <FadeIn>
-            <div className="text-center mb-20">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">Roadmap</p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88]">
-                Built before the<br />
-                first customer.
+            <div className="mb-16">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">The Stack</p>
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88] mb-6">
+                Built on open<br />
+                infrastructure.
               </h2>
-              <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl mx-auto mt-8">
-                Cloud VPS and Dedicated Servers are in preparation. We're refining the platform,
-                optimizing performance, and ensuring everything meets our standards for reliability
-                and transparency.
+              <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl">
+                VaultScope runs on curated open-source tools — each chosen for stability,
+                performance, and community support.
               </p>
             </div>
           </FadeIn>
 
-          <div className="relative mt-20">
-            <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-background/20 -translate-y-1/2 hidden md:block" />
-            
-            <div className="space-y-16">
-              {timeline.map((item, i) => (
-                <FadeIn key={i} delay={i * 0.1}>
-                  <div className="flex flex-col md:flex-row items-center gap-8 relative">
-                    <div className="w-16 h-16 rounded-full border border-background/30 flex items-center justify-center shrink-0 relative z-10">
-                      <span className="font-mono font-medium text-background/40">{item.step}</span>
-                    </div>
-                    <div className="hidden md:block w-full h-[1px] bg-background/20" />
-                    <div className="flex-1">
-                      <p className="font-medium text-background mb-2">{item.label}</p>
-                      <p className="text-sm text-background/50 font-light">{item.desc}</p>
-                    </div>
+          <FadeIn delay={0.2}>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-background/20 mb-12">
+              {technologies.map((tech) => (
+                <div key={tech.name} className="group border-b border-r border-background/20 p-8 hover:bg-background/10 transition-colors">
+                  <div className="text-5xl font-medium text-background/10 mb-3 group-hover:text-background/20 transition-colors">
+                    {tech.name[0]}
                   </div>
-                </FadeIn>
+                  <h3 className="text-lg font-medium text-background mb-1">{tech.name}</h3>
+                  <p className="text-sm text-background/50 font-light">{tech.category}</p>
+                  <p className="text-xs text-background/40 font-light mt-2">{tech.desc}</p>
+                </div>
               ))}
             </div>
-          </div>
+          </FadeIn>
 
-          <FadeIn delay={0.5}>
-            <div className="mt-24 p-10 border border-background/30 bg-background/10 text-center">
-              <h3 className="text-2xl font-medium text-background mb-6">Ready to get started?</h3>
-              <p className="text-background/50 font-light mb-8 max-w-md mx-auto">
-                Join the waitlist to be notified when Cloud VPS and Dedicated Servers launch.
+          <FadeIn delay={0.3}>
+            <Link to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-background/50 hover:text-background transition-colors">
+              See the full stack<ArrowRight className="w-4 h-4" />
+            </Link>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Pre-Launch / Waitlist Section ─────────────────────────────────────────────
+
+const WaitlistSection = () => {
+  return (
+    <section id="waitlist" className="py-24 lg:py-32 bg-background border-t border-border">
+      <div className="container mx-auto px-6 lg:px-12">
+        <div className="max-w-4xl mx-auto">
+          <FadeIn>
+            <div className="text-center mb-16">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">Pre-Launch</p>
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
+                Built before the<br />first customer.
+              </h2>
+              <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
+                Cloud VPS, Dedicated Servers, and One-Click Deploy are in preparation.
+                Join the waitlist to be notified when services launch.
               </p>
-              <WaitlistForm />
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.2}>
+            <div className="border border-border p-10 text-center">
+              <h3 className="text-2xl font-medium text-foreground mb-6">Get notified at launch</h3>
+              <div className="max-w-md mx-auto">
+                <WaitlistForm />
+              </div>
             </div>
           </FadeIn>
         </div>
@@ -668,40 +911,35 @@ const PreLaunchSection = () => {
 
 const FinalCTASection = () => {
   return (
-    <section className="py-24 lg:py-32 bg-background relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="w-[600px] h-[600px] bg-foreground/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2" />
-      </div>
-
+    <section className="py-24 lg:py-32 bg-background border-t border-border relative overflow-hidden">
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <FadeIn>
             <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter text-foreground leading-[0.88] mb-8">
-              Your next server<br />
-              starts here.
+              Ready to talk<br />
+              infrastructure?
             </h2>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <p className="text-xl md:text-2xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto mb-16">
-              Cloud VPS and Dedicated Servers built for applications that need infrastructure
-              they can rely on. Premium quality. Transparent technology. Engineering without
-              unnecessary complexity.
+              Cloud VPS, Dedicated Servers, and managed infrastructure — built for applications
+              that need engineering they can rely on.
             </p>
           </FadeIn>
 
           <FadeIn delay={0.3}>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/hosting">
-                <div className="h-14 px-10 text-sm tracking-widest uppercase font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer inline-flex items-center justify-center gap-2">
-                  Explore Hosting<ArrowRight className="w-4 h-4" />
-                </div>
+              <Link to="/company/contact/">
+                <Button>
+                  Contact VaultScope<ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </Link>
-              <Link to="/contact">
-                <div className="h-14 px-10 text-sm tracking-widest uppercase font-medium border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors cursor-pointer inline-flex items-center justify-center gap-2">
-                  Contact VaultScope
-                </div>
-              </Link>
+              <a href="#waitlist">
+                <Button variant="outline">
+                  Join the Waitlist
+                </Button>
+              </a>
             </div>
           </FadeIn>
         </div>
@@ -714,178 +952,83 @@ const FinalCTASection = () => {
 
 export const Home = () => {
   const heroRef = useRef<HTMLDivElement>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(query.matches);
-    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    query.addEventListener('change', handler);
-    return () => query.removeEventListener('change', handler);
-  }, []);
-
-  useEffect(() => {
-    document.title = 'VaultScope — Infrastructure & Hosting';
+    document.title = 'VaultScope — Infrastructure and Software, Engineered Together';
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute(
         'content',
-        'VaultScope — Cloud VPS and Dedicated Servers built on modern infrastructure, transparent technology, and engineering without unnecessary complexity.'
+        'VaultScope builds Cloud VPS, Dedicated Servers, and software on transparent, open-source infrastructure. German engineering. EU infrastructure.'
       );
     }
   }, []);
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden bg-background text-foreground">
-      <ScrollProgressBar />
+      <VaultScopeCanvas />
 
-      <CursorGlow />
-
-      <div ref={heroRef} className="relative h-screen overflow-hidden border-b border-border">
-        <VaultScopeCanvas />
-
-        <div className="relative h-full flex flex-col items-center justify-center px-6">
+      <div ref={heroRef} className="relative min-h-screen overflow-hidden border-b border-border flex items-center justify-center">
+        <div className="relative flex flex-col items-center justify-center px-6 py-40">
           <motion.div
             initial={{ opacity: 0, y: 30, filter: 'blur(12px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{
-              duration: 1.2,
-              delay: 0,
-              ease: [0.16, 1, 0.3, 1],
-            }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-center max-w-5xl"
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tighter text-foreground leading-[0.92] mb-5">
-              Cloud infrastructure.
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tighter text-foreground leading-[0.92] mb-8">
+              Infrastructure and software,<br />
+              <span className="text-foreground/50">engineered together.</span>
             </h1>
-            <p className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tighter text-foreground/50 leading-[0.92]">
-              Built for what's next.
-            </p>
           </motion.div>
 
           <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.9,
-              delay: 0.6,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="text-center text-foreground/50 max-w-xl text-base md:text-lg font-light leading-relaxed mt-10 mb-14"
+            transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center text-foreground/50 max-w-xl text-base md:text-lg font-light leading-relaxed mb-14"
           >
-            Cloud VPS and Dedicated Servers built on modern infrastructure, transparent
-            technology, and engineering without unnecessary complexity.
+            Cloud VPS, Dedicated Servers, One-Click Deploy, and software — built on
+            transparent infrastructure with German engineering.
           </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-14">
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.9,
-                delay: 0.8,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-            >
-              <Link to="/hosting">
-                <div className="h-14 px-10 text-sm tracking-widest uppercase font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer inline-flex items-center justify-center gap-2">
-                  Explore Hosting<ArrowRight className="w-4 h-4" />
-                </div>
-              </Link>
-            </motion.div>
-
-            <div
-              style={{ opacity: 0, animation: 'hero-infra-fade 0.9s cubic-bezier(0.16,1,0.3,1) 0.8s forwards' }}
-              onAnimationEnd={(e: React.AnimationEvent<HTMLDivElement>) => {
-                e.currentTarget.style.animation = 'none';
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              <Link to="/open-source">
-                <div
-                  style={{ mixBlendMode: 'difference', borderColor: 'white', color: 'white' }}
-                  className="h-14 px-10 text-sm tracking-widest uppercase font-medium border cursor-pointer inline-flex items-center justify-center gap-2"
-                >
-                  Our Infrastructure
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          {!reducedMotion && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.4, 0], y: [0, 12, 0] }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: 2.5,
-              }}
-              className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20"
-            >
-              <span className="text-[9px] tracking-[0.3em] uppercase text-foreground/25 font-medium">
-                Scroll to explore
-              </span>
-              <div
-                className="w-[1px] h-12 bg-gradient-to-b from-foreground/30 to-transparent"
-                style={{ transformOrigin: 'top' }}
-              />
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row gap-4"
+          >
+            <Link to="/infrastructure/">
+              <Button>
+                Explore Infrastructure<ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+            <Link to="/company/contact/">
+              <Button variant="outline">
+                Talk to VaultScope
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </div>
 
-      <HostingCompareSection />
+      <ProductOverview />
 
-      <InfrastructureLayers />
+      <InfrastructureSection />
 
-      <PrinciplesSection />
+      <DeploySection />
 
-      <PreLaunchSection />
+      <ManagedSection />
+
+      <SoftwareSection />
+
+      <WhyVaultScope />
+
+      <TechnologySection />
+
+      <WaitlistSection />
 
       <FinalCTASection />
     </div>
-  );
-};
-
-// ─── Additional Components (must be after Home export) ──────────────────────────
-
-const ScrollProgressBar = () => {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
-
-  return (
-    <motion.div
-      style={{ scaleX }}
-      className="fixed top-0 left-0 right-0 h-[2px] bg-foreground/30 z-[200] origin-left pointer-events-none"
-    />
-  );
-};
-
-const CursorGlow = () => {
-  const [mousePos, setMousePos] = useState({ x: -500, y: -500 });
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
-
-  const cursorGlow = useMemo(
-    () => `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.02), transparent 70%)`,
-    [mousePos.x, mousePos.y]
-  );
-
-  return (
-    <motion.div
-      className="fixed inset-0 pointer-events-none z-[2]"
-      style={{ background: cursorGlow }}
-    />
   );
 };

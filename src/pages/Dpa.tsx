@@ -31,7 +31,7 @@ export const Dpa = () => {
               <p className="text-sm mt-3">
                 By using VaultScope hosting services, the Customer accepts this DPA as part
                 of the contract as described in the{' '}
-                <Link to="/hosting-terms" className="text-foreground hover:underline">
+                <Link to="/legal/hosting-terms/" className="text-foreground hover:underline">
                   Hosting Terms
                 </Link>
                 . This DPA takes effect on the date the hosting service commences.
@@ -114,7 +114,7 @@ export const Dpa = () => {
                 by the Controller. VaultScope does not specify or restrict the types of personal
                 data the Controller may process on the infrastructure, subject to compliance with
                 the{' '}
-                <Link to="/aup" className="text-foreground hover:underline">
+                <Link to="/legal/aup/" className="text-foreground hover:underline">
                   Acceptable Use Policy
                 </Link>{' '}
                 and applicable law.
@@ -123,7 +123,7 @@ export const Dpa = () => {
                 VaultScope processes the following personal data for account management purposes
                 as a data controller (not processor): Customer name, email address, billing
                 address, and payment records. This processing is described in the{' '}
-                <Link to="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>.
+                <Link to="/legal/privacy/" className="text-foreground hover:underline">Privacy Policy</Link>.
               </p>
             </div>
 

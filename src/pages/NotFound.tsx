@@ -20,7 +20,7 @@ export const NotFound = () => {
         <Link to="/">
           <Button>Go Home</Button>
         </Link>
-        <Link to="/contact">
+        <Link to="/company/contact/">
           <Button variant="outline">Contact Us</Button>
         </Link>
       </div>
