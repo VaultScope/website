@@ -5,7 +5,7 @@ import {
   Code, Database, Server, ArrowRight,
   GitBranch, Globe, BarChart3, Lock, Settings, Users
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LocaleLink } from '../i18n/LocaleLink';
 import { motion } from 'framer-motion';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -786,9 +786,9 @@ export const Pegasus = () => {
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Monitoring and alerting</li>
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> VaultScope support</li>
               </ul>
-              <Link to="/pricing/" className="mt-auto">
+              <LocaleLink to="/pricing/" className="mt-auto">
                 <Button className="w-full">View Pricing</Button>
-              </Link>
+              </LocaleLink>
             </div>
 
             <div className="border border-border p-8 flex flex-col bg-background md:col-span-2 lg:col-span-1">
@@ -803,9 +803,9 @@ export const Pegasus = () => {
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Integration and development work</li>
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Priority support</li>
               </ul>
-              <Link to="/company/contact/" className="mt-auto">
+              <LocaleLink to="/company/contact/" className="mt-auto">
                 <Button variant="outline" className="w-full">Contact Us</Button>
-              </Link>
+              </LocaleLink>
             </div>
           </div>
         </div>

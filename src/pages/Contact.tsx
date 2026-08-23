@@ -2,15 +2,17 @@ import { useEffect } from 'react';
 import { PageHero, Breadcrumbs } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { Mail, LifeBuoy, GitBranch, Activity, BookOpen, FileText } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 export const Contact = () => {
+  const { t } = useLanguage();
   useEffect(() => {
-    document.title = "Contact — VaultScope";
+    document.title = t.contact.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute('content', 'Get in touch with VaultScope. General enquiries, support, and launch notifications.');
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full">

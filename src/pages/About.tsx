@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { PageHero, Button, Breadcrumbs } from '../components/Shared';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 
 export const About = () => {
+  const { t } = useLanguage();
   useEffect(() => {
-    document.title = 'About — VaultScope';
+    document.title = t.about.title;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute(
@@ -13,7 +15,7 @@ export const About = () => {
         'VaultScope is an infrastructure and software company. Building Cloud VPS, Dedicated Servers, and software on transparent, open-source infrastructure.'
       );
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
@@ -121,9 +123,9 @@ export const About = () => {
       {/* CTA */}
       <section className="py-24 relative bg-background border-t border-border/[0.05]">
         <div className="container mx-auto px-6 lg:px-12 max-w-4xl text-center">
-          <Link to="/company/contact/">
-            <Button>Contact VaultScope</Button>
-          </Link>
+          <LocaleLink to="/company/contact/">
+            <Button>{t.about.cta}</Button>
+          </LocaleLink>
         </div>
       </section>
     </div>

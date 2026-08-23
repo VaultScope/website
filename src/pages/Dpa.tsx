@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { PageHero } from '../components/Shared';
-import { Link } from 'react-router-dom';
+import { LocaleLink as Link } from '../i18n/LocaleLink';
 
 export const Dpa = () => {
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { PageHero, Button, Breadcrumbs } from '../components/Shared';
 import { ExternalLink, GitBranch } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../i18n';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -95,8 +96,9 @@ const VS_PROJECTS = [
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export const OpenSource = () => {
+  const { t } = useLanguage();
   useEffect(() => {
-    document.title = "Open Source — VaultScope";
+    document.title = t.openSource.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
@@ -104,12 +106,12 @@ export const OpenSource = () => {
         "The open-source and self-hosted technology stack used across the VaultScope ecosystem. Debian, Coolify, Forgejo, Uptime Kuma, Beszel, Voltius, OpenCode, and more."
       );
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
       <div className="container mx-auto px-6 lg:px-12 pt-32">
-        <Breadcrumbs items={[{ label: 'Company' }, { label: 'Open Source' }]} />
+        <Breadcrumbs items={[{ label: t.nav.company }, { label: t.openSource.breadcrumb }]} />
       </div>
 
       {/* ─── HERO ──────────────────────────────────────────────────── */}

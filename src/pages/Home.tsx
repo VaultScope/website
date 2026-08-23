@@ -7,6 +7,8 @@ import {
   Code2, Wrench, Monitor, HardDrive, Settings,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 
 // ─── Helper Components ─────────────────────────────────────────────────────────
 
@@ -198,33 +200,34 @@ const VaultScopeCanvas = () => {
 // ─── Product Overview Section ──────────────────────────────────────────────────
 
 const ProductOverview = () => {
+  const { t, localePath } = useLanguage();
   const products = [
     {
       icon: Server,
-      label: 'Infrastructure',
-      title: 'Infrastructure',
-      desc: 'Cloud VPS and Dedicated Servers on EU infrastructure.',
+      label: t.home.products.infrastructure.title,
+      title: t.home.products.infrastructure.title,
+      desc: t.home.products.infrastructure.desc,
       link: '/infrastructure/',
     },
     {
       icon: Rocket,
-      label: 'Deploy',
-      title: 'Deploy',
-      desc: 'One-click deployment for pre-configured services.',
+      label: t.home.products.deploy.title,
+      title: t.home.products.deploy.title,
+      desc: t.home.products.deploy.desc,
       link: '/deploy/',
     },
     {
       icon: Code2,
-      label: 'Software',
-      title: 'Software',
-      desc: 'Products built and operated by VaultScope.',
+      label: t.home.products.software.title,
+      title: t.home.products.software.title,
+      desc: t.home.products.software.desc,
       link: '/software/pegasus/',
     },
     {
       icon: Wrench,
-      label: 'Managed',
-      title: 'Managed',
-      desc: 'Infrastructure designed for your business.',
+      label: t.nav.managedInfrastructure,
+      title: t.nav.managedInfrastructure,
+      desc: t.home.infrastructure.managed.desc,
       link: '/infrastructure/managed/',
     },
   ];
@@ -239,7 +242,7 @@ const ProductOverview = () => {
               return (
                 <Link
                   key={product.title}
-                  to={product.link}
+                  to={localePath(product.link)}
                   className={`group p-8 flex flex-col gap-6 hover:bg-foreground/[0.02] transition-colors ${
                     i < products.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-border' : ''
                   }`}
@@ -259,7 +262,7 @@ const ProductOverview = () => {
                     </p>
                   </div>
                   <div className="mt-auto flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-foreground/30 group-hover:text-foreground/60 transition-colors">
-                    Learn more
+                    {t.common.learnMore}
                     <ArrowRight className="w-3 h-3" />
                   </div>
                 </Link>
@@ -275,6 +278,7 @@ const ProductOverview = () => {
 // ─── Infrastructure Section ────────────────────────────────────────────────────
 
 const InfrastructureSection = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'vps' | 'dedicated'>('vps');
 
   const scrollY = useScroll();
@@ -525,9 +529,9 @@ const InfrastructureSection = () => {
 
           <FadeIn delay={0.5}>
             <div className="mt-12 text-center">
-              <Link to="/infrastructure/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
-                Explore Infrastructure<ArrowRight className="w-4 h-4" />
-              </Link>
+              <LocaleLink to="/infrastructure/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
+                {t.home.infrastructure.cta}<ArrowRight className="w-4 h-4" />
+              </LocaleLink>
             </div>
           </FadeIn>
         </div>
@@ -539,13 +543,14 @@ const InfrastructureSection = () => {
 // ─── ODP Section ───────────────────────────────────────────────────────────────
 
 const DeploySection = () => {
+  const { t } = useLanguage();
   const steps = [
     { step: '01', title: 'Choose', desc: 'Select from pre-configured services.' },
     { step: '02', title: 'Configure', desc: 'Set parameters — name, region, resources.' },
     { step: '03', title: 'Running', desc: 'Live on infrastructure in seconds.' },
   ];
 
-  const categories = ['Game Servers', 'Databases', 'Applications', 'Development Tools', 'Infrastructure Tools'];
+  const categories = ['Minecraft Servers', 'Code Servers', 'Databases', 'Pegasus'];
 
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border">
@@ -594,9 +599,9 @@ const DeploySection = () => {
           </FadeIn>
 
           <FadeIn delay={0.4}>
-            <Link to="/deploy/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
-              Explore Deploy<ArrowRight className="w-4 h-4" />
-            </Link>
+            <LocaleLink to="/deploy/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
+              {t.home.deploy.cta}<ArrowRight className="w-4 h-4" />
+            </LocaleLink>
           </FadeIn>
         </div>
       </div>
@@ -607,6 +612,7 @@ const DeploySection = () => {
 // ─── Managed Infrastructure Section ────────────────────────────────────────────
 
 const ManagedSection = () => {
+  const { t } = useLanguage();
   const capabilities = [
     { icon: Settings, title: 'Architecture', desc: 'Infrastructure designed for your requirements.' },
     { icon: Rocket, title: 'Deployment', desc: 'Provisioned and configured by engineers.' },
@@ -668,11 +674,11 @@ const ManagedSection = () => {
 
           <FadeIn delay={0.3}>
             <div className="mt-12">
-              <Link to="/company/contact/">
+              <LocaleLink to="/company/contact/">
                 <Button variant="outline" className="border-background/30 text-background hover:bg-background/10 hover:border-background/50">
-                  Talk to an Engineer
+                  {t.common.getInTouch}
                 </Button>
-              </Link>
+              </LocaleLink>
             </div>
           </FadeIn>
         </div>
@@ -684,6 +690,7 @@ const ManagedSection = () => {
 // ─── Software / Pegasus Section ────────────────────────────────────────────────
 
 const SoftwareSection = () => {
+  const { t } = useLanguage();
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border">
       <div className="container mx-auto px-6 lg:px-12">
@@ -702,9 +709,9 @@ const SoftwareSection = () => {
                   a full-featured Discord community management platform — self-hostable and
                   source-available.
                 </p>
-                <Link to="/software/pegasus/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
-                  Learn about Pegasus<ArrowRight className="w-4 h-4" />
-                </Link>
+                <LocaleLink to="/software/pegasus/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
+                  {t.home.software.cta}<ArrowRight className="w-4 h-4" />
+                </LocaleLink>
               </div>
 
               <div className="border border-border p-8">
@@ -809,6 +816,7 @@ const WhyVaultScope = () => {
 // ─── Technology Transparency Section ───────────────────────────────────────────
 
 const TechnologySection = () => {
+  const { t } = useLanguage();
   const technologies = [
     { name: 'PROXMOX', category: 'Virtualization', desc: 'Open-source hypervisor platform' },
     { name: 'DEBIAN', category: 'Operating System', desc: 'Stable, production-grade Linux' },
@@ -863,9 +871,9 @@ const TechnologySection = () => {
           </FadeIn>
 
           <FadeIn delay={0.3}>
-            <Link to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-background/50 hover:text-background transition-colors">
-              See the full stack<ArrowRight className="w-4 h-4" />
-            </Link>
+            <LocaleLink to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-background/50 hover:text-background transition-colors">
+              {t.home.techTransparency.cta}<ArrowRight className="w-4 h-4" />
+            </LocaleLink>
           </FadeIn>
         </div>
       </div>
@@ -910,6 +918,7 @@ const WaitlistSection = () => {
 // ─── Final CTA Section ─────────────────────────────────────────────────────────
 
 const FinalCTASection = () => {
+  const { t } = useLanguage();
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border relative overflow-hidden">
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
@@ -930,14 +939,14 @@ const FinalCTASection = () => {
 
           <FadeIn delay={0.3}>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/company/contact/">
+              <LocaleLink to="/company/contact/">
                 <Button>
-                  Contact VaultScope<ArrowRight className="w-4 h-4 ml-2" />
+                  {t.common.contact}<ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              </Link>
+              </LocaleLink>
               <a href="#waitlist">
                 <Button variant="outline">
-                  Join the Waitlist
+                  {t.common.joinWaitlist}
                 </Button>
               </a>
             </div>
@@ -952,6 +961,7 @@ const FinalCTASection = () => {
 
 export const Home = () => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const { t, localePath } = useLanguage();
 
   useEffect(() => {
     document.title = 'VaultScope — Infrastructure and Software, Engineered Together';
@@ -977,8 +987,7 @@ export const Home = () => {
             className="text-center max-w-5xl"
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tighter text-foreground leading-[0.92] mb-8">
-              Infrastructure and software,<br />
-              <span className="text-foreground/50">engineered together.</span>
+              {t.home.hero.title.split(',').map((part, i) => i === 0 ? <span key={i}>{part},<br /></span> : <span key={i} className="text-foreground/50">{part}</span>)}
             </h1>
           </motion.div>
 
@@ -988,8 +997,7 @@ export const Home = () => {
             transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="text-center text-foreground/50 max-w-xl text-base md:text-lg font-light leading-relaxed mb-14"
           >
-            Cloud VPS, Dedicated Servers, One-Click Deploy, and software — built on
-            transparent infrastructure with German engineering.
+            {t.home.hero.description}
           </motion.p>
 
           <motion.div
@@ -998,14 +1006,14 @@ export const Home = () => {
             transition={{ duration: 0.9, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Link to="/infrastructure/">
+            <Link to={localePath('/infrastructure/')}>
               <Button>
-                Explore Infrastructure<ArrowRight className="w-4 h-4 ml-2" />
+                {t.home.hero.primaryCta}<ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link to="/company/contact/">
+            <Link to={localePath('/company/contact/')}>
               <Button variant="outline">
-                Talk to VaultScope
+                {t.home.hero.secondaryCta}
               </Button>
             </Link>
           </motion.div>

@@ -2,15 +2,15 @@ import { useEffect } from "react";
 import { PageHero } from "../components/Shared";
 import { WaitlistForm } from "../components/WaitlistForm";
 import { PackageOpen, Zap, Shield, Settings2 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useLanguage } from "../i18n";
+import { LocaleLink } from "../i18n/LocaleLink";
 
 const SERVICE_CATEGORIES = [
-  "Game Servers",
+  "Minecraft Servers",
+  "Code Servers",
   "Databases",
-  "Applications",
-  "Development Tools",
-  "Infrastructure Tools",
+  "Pegasus",
 ];
 
 // --- How it works steps ---
@@ -68,8 +68,9 @@ const PILLARS = [
 // --- Component ---
 
 export const Odp = () => {
+  const { t } = useLanguage();
   useEffect(() => {
-    document.title = "Deploy — VaultScope";
+    document.title = t.deploy.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
@@ -77,7 +78,7 @@ export const Odp = () => {
         "VaultScope Deploy — launch pre-configured services on managed infrastructure instantly. A deployment platform for applications, databases, and services."
       );
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
@@ -259,12 +260,12 @@ export const Odp = () => {
             <div className="mt-8 pt-8 border-t border-border/[0.05]">
               <p className="text-sm text-foreground/30 font-light">
                 Questions before launch?{" "}
-                <Link
+                <LocaleLink
                   to="/company/contact/"
                   className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2"
                 >
-                  Get in touch
-                </Link>
+                  {t.common.getInTouch}
+                </LocaleLink>
                 .
               </p>
             </div>

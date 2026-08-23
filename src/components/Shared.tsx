@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, GitBranch, Sun, Moon, ChevronDown } from 'lucide-react';
+import { Menu, X, GitBranch, Sun, Moon, ChevronDown, Globe } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { getInitialDark, applyDark } from '../hooks/useTheme';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 
 // ─── useTheme ─────────────────────────────────────────────────────────────────
 
@@ -49,17 +51,36 @@ export const Button = ({ children, variant = 'primary', className = '', ...props
 
 const ThemeToggle = () => {
   const { dark, toggle } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <button
       onClick={toggle}
-      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={dark ? t.common.switchToLight : t.common.switchToDark}
       className="w-9 h-9 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-pointer"
     >
       {dark
         ? <Sun className="w-4 h-4" />
         : <Moon className="w-4 h-4" />
       }
+    </button>
+  );
+};
+
+// ─── LanguageSwitcher ─────────────────────────────────────────────────────────
+
+const LanguageSwitcher = () => {
+  const { locale, switchLocale } = useLanguage();
+
+  return (
+    <button
+      onClick={() => switchLocale(locale === 'en' ? 'de' : 'en')}
+      aria-label={`Switch to ${locale === 'en' ? 'Deutsch' : 'English'}`}
+      className="w-9 h-9 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-pointer gap-1"
+      title={locale === 'en' ? 'Deutsch' : 'English'}
+    >
+      <Globe className="w-3.5 h-3.5" />
+      <span className="text-[10px] font-medium uppercase tracking-wider">{locale === 'en' ? 'DE' : 'EN'}</span>
     </button>
   );
 };
@@ -83,26 +104,29 @@ const Logo = ({ className = "h-12 w-auto" }: { className?: string }) => (
 
 // ─── Breadcrumbs ──────────────────────────────────────────────────────────────
 
-export const Breadcrumbs = ({ items }: { items: { label: string; href?: string }[] }) => (
-  <nav aria-label="Breadcrumb" className="mb-6">
-    <ol className="flex items-center gap-2 text-xs tracking-widest uppercase text-foreground/40">
-      {items.map((item, i) => (
-        <li key={i} className="flex items-center gap-2">
-          {i > 0 && <span aria-hidden="true">/</span>}
-          {item.href && i < items.length - 1 ? (
-            <Link to={item.href} className="hover:text-foreground transition-colors">
-              {item.label}
-            </Link>
-          ) : (
-            <span className={i === items.length - 1 ? 'text-foreground/70' : ''} aria-current={i === items.length - 1 ? 'page' : undefined}>
-              {item.label}
-            </span>
-          )}
-        </li>
-      ))}
-    </ol>
-  </nav>
-);
+export const Breadcrumbs = ({ items }: { items: { label: string; href?: string }[] }) => {
+  const { localePath } = useLanguage();
+  return (
+    <nav aria-label="Breadcrumb" className="mb-6">
+      <ol className="flex items-center gap-2 text-xs tracking-widest uppercase text-foreground/40">
+        {items.map((item, i) => (
+          <li key={i} className="flex items-center gap-2">
+            {i > 0 && <span aria-hidden="true">/</span>}
+            {item.href && i < items.length - 1 ? (
+              <Link to={localePath(item.href)} className="hover:text-foreground transition-colors">
+                {item.label}
+              </Link>
+            ) : (
+              <span className={i === items.length - 1 ? 'text-foreground/70' : ''} aria-current={i === items.length - 1 ? 'page' : undefined}>
+                {item.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+};
 
 // ─── Dropdown Menu Types ──────────────────────────────────────────────────────
 
@@ -118,36 +142,6 @@ interface NavDropdown {
   items: DropdownItem[];
 }
 
-const NAV_DROPDOWNS: NavDropdown[] = [
-  {
-    label: 'Infrastructure',
-    id: 'nav-infra',
-    items: [
-      { label: 'Cloud VPS', href: '/infrastructure/cloud/' },
-      { label: 'Dedicated Servers', href: '/infrastructure/dedicated/' },
-      { label: 'Managed Infrastructure', href: '/infrastructure/managed/' },
-      { label: 'Pricing', href: '/pricing/' },
-    ],
-  },
-  {
-    label: 'Software',
-    id: 'nav-software',
-    items: [
-      { label: 'Pegasus', href: '/software/pegasus/' },
-      { label: 'Open Source', href: '/company/open-source/' },
-    ],
-  },
-  {
-    label: 'Company',
-    id: 'nav-company',
-    items: [
-      { label: 'About', href: '/company/about/' },
-      { label: 'Contact', href: '/company/contact/' },
-      { label: 'Status', href: 'https://status.vaultscope.de/status/vs', external: true },
-    ],
-  },
-];
-
 // ─── NavDropdownMenu ──────────────────────────────────────────────────────────
 
 const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
@@ -159,6 +153,7 @@ const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const { localePath } = useLanguage();
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -228,7 +223,7 @@ const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
               <Link
                 key={item.href}
                 ref={el => { itemRefs.current[i] = el; }}
-                to={item.href}
+                to={localePath(item.href)}
                 role="menuitem"
                 tabIndex={-1}
                 onClick={onClose}
@@ -252,6 +247,37 @@ export const Navbar = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
+  const { t } = useLanguage();
+
+  const NAV_DROPDOWNS: NavDropdown[] = [
+    {
+      label: t.nav.infrastructure,
+      id: 'nav-infra',
+      items: [
+        { label: t.nav.cloudVps, href: '/infrastructure/cloud/' },
+        { label: t.nav.dedicatedServers, href: '/infrastructure/dedicated/' },
+        { label: t.nav.managedInfrastructure, href: '/infrastructure/managed/' },
+        { label: t.nav.pricing, href: '/pricing/' },
+      ],
+    },
+    {
+      label: t.nav.software,
+      id: 'nav-software',
+      items: [
+        { label: t.nav.pegasus, href: '/software/pegasus/' },
+        { label: t.nav.openSource, href: '/company/open-source/' },
+      ],
+    },
+    {
+      label: t.nav.company,
+      id: 'nav-company',
+      items: [
+        { label: t.nav.about, href: '/company/about/' },
+        { label: t.nav.contact, href: '/company/contact/' },
+        { label: t.nav.status, href: 'https://status.vaultscope.de/status/vs', external: true },
+      ],
+    },
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -265,7 +291,6 @@ export const Navbar = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
@@ -276,7 +301,6 @@ export const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile drawer on Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -297,9 +321,9 @@ export const Navbar = () => {
     >
       {/* Logo */}
       <div className="flex items-center">
-        <Link to="/" className="flex items-center group">
+        <LocaleLink to="/" className="flex items-center group">
           <Logo />
-        </Link>
+        </LocaleLink>
       </div>
 
       {/* Desktop nav links */}
@@ -313,25 +337,26 @@ export const Navbar = () => {
             onClose={() => setOpenDropdown(null)}
           />
         ))}
-        <Link
+        <LocaleLink
           to="/deploy/"
           className="hover:text-foreground transition-colors py-2 relative group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/50"
         >
-          Deploy
+          {t.nav.deploy}
           <span className="absolute bottom-0 left-1/2 w-0 h-px bg-foreground transition-all duration-300 group-hover:w-full group-hover:left-0" />
-        </Link>
+        </LocaleLink>
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <ThemeToggle />
-        <Link to="/company/contact/" className="hidden sm:flex">
-          <Button className="h-10 px-8">Contact</Button>
-        </Link>
+        <LocaleLink to="/company/contact/" className="hidden sm:flex">
+          <Button className="h-10 px-8">{t.common.contact}</Button>
+        </LocaleLink>
         <button
           onClick={() => setIsOpen(true)}
           className="lg:hidden text-foreground cursor-pointer p-1"
-          aria-label="Open menu"
+          aria-label={t.common.openMenu}
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -348,11 +373,12 @@ export const Navbar = () => {
           <div className="flex justify-between items-center border-b border-border pb-8 mb-8">
             <Logo className="h-9 w-auto" />
             <div className="flex items-center gap-3">
+              <LanguageSwitcher />
               <ThemeToggle />
               <button
                 onClick={() => setIsOpen(false)}
                 className="cursor-pointer p-1 text-foreground/50 hover:text-foreground transition-colors"
-                aria-label="Close menu"
+                aria-label={t.common.closeMenu}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -360,52 +386,46 @@ export const Navbar = () => {
           </div>
 
           <div className="flex flex-col gap-8">
-            {/* Infrastructure */}
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Infrastructure</span>
-              <Link to="/infrastructure/cloud/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Cloud VPS</Link>
-              <Link to="/infrastructure/dedicated/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Dedicated Servers</Link>
-              <Link to="/infrastructure/managed/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Managed Infrastructure</Link>
-              <Link to="/pricing/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Pricing</Link>
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.infrastructure}</span>
+              <LocaleLink to="/infrastructure/cloud/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.cloudVps}</LocaleLink>
+              <LocaleLink to="/infrastructure/dedicated/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.dedicatedServers}</LocaleLink>
+              <LocaleLink to="/infrastructure/managed/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.managedInfrastructure}</LocaleLink>
+              <LocaleLink to="/pricing/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.pricing}</LocaleLink>
             </div>
-            {/* Deploy */}
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Deploy</span>
-              <Link to="/deploy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">One-Click Deploy</Link>
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.deploy}</span>
+              <LocaleLink to="/deploy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.oneClickDeploy}</LocaleLink>
             </div>
-            {/* Software */}
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Software</span>
-              <Link to="/software/pegasus/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Pegasus</Link>
-              <Link to="/company/open-source/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Open Source</Link>
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.software}</span>
+              <LocaleLink to="/software/pegasus/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.pegasus}</LocaleLink>
+              <LocaleLink to="/company/open-source/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.openSource}</LocaleLink>
             </div>
-            {/* Company */}
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Company</span>
-              <Link to="/company/about/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">About</Link>
-              <Link to="/company/contact/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Contact</Link>
-              <a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Status</a>
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.company}</span>
+              <LocaleLink to="/company/about/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.about}</LocaleLink>
+              <LocaleLink to="/company/contact/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.contact}</LocaleLink>
+              <a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.status}</a>
             </div>
-            {/* Resources */}
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Resources</span>
-              <a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Documentation</a>
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.resources}</span>
+              <a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.documentation}</a>
               <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">GitHub</a>
             </div>
-            {/* Legal */}
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Legal</span>
-              <Link to="/legal/privacy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Privacy Policy</Link>
-              <Link to="/legal/terms/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Terms of Service</Link>
-              <Link to="/legal/hosting-terms/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Hosting Terms</Link>
-              <Link to="/legal/imprint/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Imprint</Link>
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.legal}</span>
+              <LocaleLink to="/legal/privacy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.privacyPolicy}</LocaleLink>
+              <LocaleLink to="/legal/terms/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.termsOfService}</LocaleLink>
+              <LocaleLink to="/legal/hosting-terms/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.hostingTerms}</LocaleLink>
+              <LocaleLink to="/legal/imprint/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.imprint}</LocaleLink>
             </div>
           </div>
 
           <div className="mt-auto pt-8 border-t border-border">
-            <Link to="/company/contact/">
-              <Button className="w-full">Get in Touch</Button>
-            </Link>
+            <LocaleLink to="/company/contact/">
+              <Button className="w-full">{t.common.getInTouch}</Button>
+            </LocaleLink>
           </div>
         </div>
       )}
@@ -415,81 +435,80 @@ export const Navbar = () => {
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
-export const Footer = () => (
-  <footer className="border-t border-border bg-background pt-24 pb-12 mt-auto px-6">
-    <div className="container mx-auto">
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-12 mb-24">
+export const Footer = () => {
+  const { t, localePath } = useLanguage();
 
-        {/* Branding */}
-        <div className="col-span-2">
-          <Link to="/" className="flex items-center mb-8">
-            <Logo />
-          </Link>
-          <p className="text-foreground/40 text-sm max-w-sm leading-relaxed">
-            Infrastructure and software, engineered together.
-          </p>
-        </div>
+  return (
+    <footer className="border-t border-border bg-background pt-24 pb-12 mt-auto px-6">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-12 mb-24">
 
-        {/* Infrastructure */}
-        <div>
-          <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Infrastructure</h3>
-          <ul className="space-y-4 text-sm text-foreground/50">
-            <li><Link to="/infrastructure/cloud/" className="hover:text-foreground transition-colors">Cloud VPS</Link></li>
-            <li><Link to="/infrastructure/dedicated/" className="hover:text-foreground transition-colors">Dedicated Servers</Link></li>
-            <li><Link to="/deploy/" className="hover:text-foreground transition-colors">One-Click Deploy</Link></li>
-            <li><Link to="/infrastructure/managed/" className="hover:text-foreground transition-colors">Managed</Link></li>
-          </ul>
-        </div>
+          <div className="col-span-2">
+            <LocaleLink to="/" className="flex items-center mb-8">
+              <Logo />
+            </LocaleLink>
+            <p className="text-foreground/40 text-sm max-w-sm leading-relaxed">
+              {t.footer.tagline}
+            </p>
+          </div>
 
-        {/* Company */}
-        <div>
-          <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Company</h3>
-          <ul className="space-y-4 text-sm text-foreground/50">
-            <li><Link to="/company/open-source/" className="hover:text-foreground transition-colors">Open Source</Link></li>
-            <li><Link to="/company/about/" className="hover:text-foreground transition-colors">About</Link></li>
-            <li><Link to="/company/contact/" className="hover:text-foreground transition-colors">Contact</Link></li>
-          </ul>
-        </div>
-
-        {/* Resources */}
-        <div>
-          <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Resources</h3>
+          <div>
+            <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">{t.nav.infrastructure}</h3>
             <ul className="space-y-4 text-sm text-foreground/50">
-              <li><a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Documentation</a></li>
-              <li><a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">GitHub</a></li>
-              <li><a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Status</a></li>
+              <li><Link to={localePath('/infrastructure/cloud/')} className="hover:text-foreground transition-colors">{t.nav.cloudVps}</Link></li>
+              <li><Link to={localePath('/infrastructure/dedicated/')} className="hover:text-foreground transition-colors">{t.nav.dedicatedServers}</Link></li>
+              <li><Link to={localePath('/deploy/')} className="hover:text-foreground transition-colors">{t.nav.oneClickDeploy}</Link></li>
+              <li><Link to={localePath('/infrastructure/managed/')} className="hover:text-foreground transition-colors">{t.footer.managed}</Link></li>
             </ul>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">{t.nav.company}</h3>
+            <ul className="space-y-4 text-sm text-foreground/50">
+              <li><Link to={localePath('/company/open-source/')} className="hover:text-foreground transition-colors">{t.nav.openSource}</Link></li>
+              <li><Link to={localePath('/company/about/')} className="hover:text-foreground transition-colors">{t.nav.about}</Link></li>
+              <li><Link to={localePath('/company/contact/')} className="hover:text-foreground transition-colors">{t.nav.contact}</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">{t.nav.resources}</h3>
+              <ul className="space-y-4 text-sm text-foreground/50">
+                <li><a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">{t.nav.documentation}</a></li>
+                <li><a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">GitHub</a></li>
+                <li><a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">{t.nav.status}</a></li>
+              </ul>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">{t.nav.legal}</h3>
+            <ul className="space-y-4 text-sm text-foreground/50">
+              <li><Link to={localePath('/legal/privacy/')} className="hover:text-foreground transition-colors">{t.nav.privacyPolicy}</Link></li>
+              <li><Link to={localePath('/legal/terms/')} className="hover:text-foreground transition-colors">{t.nav.termsOfService}</Link></li>
+              <li><Link to={localePath('/legal/hosting-terms/')} className="hover:text-foreground transition-colors">{t.nav.hostingTerms}</Link></li>
+              <li><Link to={localePath('/legal/cancellation/')} className="hover:text-foreground transition-colors">{t.nav.cancellationPolicy}</Link></li>
+              <li><Link to={localePath('/legal/aup/')} className="hover:text-foreground transition-colors">{t.nav.acceptableUse}</Link></li>
+              <li><Link to={localePath('/legal/dpa/')} className="hover:text-foreground transition-colors">{t.nav.dataProcessing}</Link></li>
+              <li><Link to={localePath('/legal/imprint/')} className="hover:text-foreground transition-colors">{t.nav.imprint}</Link></li>
+            </ul>
+          </div>
+
         </div>
 
-        {/* Legal */}
-        <div>
-          <h3 className="font-medium text-xs tracking-wider uppercase text-foreground/30 mb-8">Legal</h3>
-          <ul className="space-y-4 text-sm text-foreground/50">
-            <li><Link to="/legal/privacy/" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-            <li><Link to="/legal/terms/" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-            <li><Link to="/legal/hosting-terms/" className="hover:text-foreground transition-colors">Hosting Terms</Link></li>
-            <li><Link to="/legal/cancellation/" className="hover:text-foreground transition-colors">Cancellation Policy</Link></li>
-            <li><Link to="/legal/aup/" className="hover:text-foreground transition-colors">Acceptable Use</Link></li>
-            <li><Link to="/legal/dpa/" className="hover:text-foreground transition-colors">Data Processing</Link></li>
-            <li><Link to="/legal/imprint/" className="hover:text-foreground transition-colors">Imprint</Link></li>
-          </ul>
+        <div className="border-t border-border pt-8 flex items-center justify-between text-xs tracking-wider uppercase text-foreground/30">
+          <div>
+            <p>{t.footer.copyright}</p>
+          </div>
+          <div className="flex gap-6">
+            <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
+              <GitBranch className="w-4 h-4" />
+            </a>
+          </div>
         </div>
-
       </div>
-
-      <div className="border-t border-border pt-8 flex items-center justify-between text-xs tracking-wider uppercase text-foreground/30">
-        <div>
-          <p>&copy; 2026 VaultScope. All rights reserved.</p>
-        </div>
-        <div className="flex gap-6">
-          <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
-            <GitBranch className="w-4 h-4" />
-          </a>
-        </div>
-      </div>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 // ─── FeatureSection ───────────────────────────────────────────────────────────
 
@@ -512,6 +531,8 @@ export const FeatureSection = ({
   ctaLink?: string;
   visual?: React.ReactNode;
 }) => {
+  const { localePath } = useLanguage();
+
   const textContent = (
     <div className="flex flex-col space-y-12">
       <div>
@@ -543,7 +564,7 @@ export const FeatureSection = ({
 
       {ctaText && ctaLink && (
         <div>
-          <Link to={ctaLink}>
+          <Link to={localePath(ctaLink)}>
             <Button variant="outline">{ctaText}</Button>
           </Link>
         </div>
@@ -594,6 +615,7 @@ export const PageHero = ({
   secondaryLink?: string;
   align?: "center" | "left";
 }) => {
+  const { localePath } = useLanguage();
   const isExternal = (url?: string) => url?.startsWith('http');
   const isAnchor   = (url?: string) => url?.startsWith('#');
 
@@ -602,7 +624,7 @@ export const PageHero = ({
       return <a href={url} target="_blank" rel="noreferrer"><Button variant={variant}>{label}</Button></a>;
     if (isAnchor(url))
       return <a href={url}><Button variant={variant}>{label}</Button></a>;
-    return <Link to={url}><Button variant={variant}>{label}</Button></Link>;
+    return <Link to={localePath(url)}><Button variant={variant}>{label}</Button></Link>;
   };
 
   return (

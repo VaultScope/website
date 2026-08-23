@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Button } from './Shared';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'unconfigured';
 
@@ -7,6 +9,7 @@ const LISTMONK_URL       = import.meta.env.VITE_LISTMONK_URL       as string | u
 const LISTMONK_LIST_UUID = import.meta.env.VITE_LISTMONK_LIST_UUID as string | undefined;
 
 export const WaitlistForm = () => {
+  const { t } = useLanguage();
   const [email,  setEmail]  = useState('');
   const [status, setStatus] = useState<Status>(
     !LISTMONK_URL || !LISTMONK_LIST_UUID ? 'unconfigured' : 'idle'
@@ -114,9 +117,9 @@ export const WaitlistForm = () => {
 
       <p className="mt-3 text-xs text-foreground/30 font-light">
         Double opt-in. No spam. Unsubscribe any time.{' '}
-        <a href="/legal/privacy/" className="hover:text-foreground/50 transition-colors underline underline-offset-2">
-          Privacy Policy
-        </a>
+        <LocaleLink to="/legal/privacy/" className="hover:text-foreground/50 transition-colors underline underline-offset-2">
+          {t.nav.privacyPolicy}
+        </LocaleLink>
       </p>
     </div>
   );

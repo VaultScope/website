@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { PageHero, Button } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { Server, Cpu, Settings2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 
 export const InfrastructureOverview = () => {
+  const { t } = useLanguage();
   useEffect(() => {
     document.title = 'Infrastructure — VaultScope';
     const meta = document.querySelector('meta[name="description"]');
@@ -80,9 +82,9 @@ export const InfrastructureOverview = () => {
                   <p className="text-foreground/50 font-light leading-relaxed mb-8 flex-1 text-lg">
                     {item.desc}
                   </p>
-                  <Link to={item.link}>
+                  <LocaleLink to={item.link}>
                     <Button variant="outline" className="w-full">{item.cta}</Button>
-                  </Link>
+                  </LocaleLink>
                 </motion.div>
               );
             })}
@@ -137,9 +139,9 @@ export const InfrastructureOverview = () => {
             <p className="text-foreground/50 font-light text-lg max-w-3xl mb-12">
               Proxmox-based virtualization on Debian. Monitored with Uptime Kuma and Beszel. Deployed with Coolify. Version-controlled on Forgejo.
             </p>
-            <Link to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground hover:text-foreground/70 transition-colors">
-              See the full technology stack
-            </Link>
+            <LocaleLink to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground hover:text-foreground/70 transition-colors">
+              {t.infrastructureOverview.technology.cta}
+            </LocaleLink>
           </motion.div>
         </div>
       </section>
@@ -159,13 +161,13 @@ export const InfrastructureOverview = () => {
             <div className="mt-8 pt-8 border-t border-border/[0.05]">
               <p className="text-sm text-foreground/30 font-light">
                 Questions before launch?{' '}
-                <Link to="/company/contact/" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
-                  Get in touch
-                </Link>
+                <LocaleLink to="/company/contact/" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
+                  {t.common.getInTouch.toLowerCase()}
+                </LocaleLink>
                 {' '}or review the{' '}
-                <Link to="/legal/hosting-terms/" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
-                  Hosting Terms
-                </Link>
+                <LocaleLink to="/legal/hosting-terms/" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
+                  {t.nav.hostingTerms}
+                </LocaleLink>
                 .
               </p>
             </div>

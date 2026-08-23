@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { PageHero } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { Server, Cpu } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LocaleLink as Link } from '../i18n/LocaleLink';
 import { motion } from 'framer-motion';
 
 const CLOUD_VPS_FEATURES = [

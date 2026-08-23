@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { PageHero, Button } from '../components/Shared';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 
 export const Pricing = () => {
+  const { t } = useLanguage();
   useEffect(() => {
-    document.title = 'Pricing — VaultScope';
+    document.title = t.pricing.title;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute(
@@ -13,7 +15,7 @@ export const Pricing = () => {
         'VaultScope pricing — transparent pricing across Cloud VPS, Dedicated Servers, Deploy, Managed Infrastructure, and Pegasus.'
       );
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
@@ -54,9 +56,9 @@ export const Pricing = () => {
               <p className="text-sm text-foreground/40 font-light mb-8">
                 Pricing will be published at launch.
               </p>
-              <Link to="/infrastructure/cloud/">
+              <LocaleLink to="/infrastructure/cloud/">
                 <Button variant="outline" className="text-xs h-10 px-6">Learn More</Button>
-              </Link>
+              </LocaleLink>
             </motion.div>
 
             <motion.div
@@ -73,9 +75,9 @@ export const Pricing = () => {
               <p className="text-sm text-foreground/40 font-light mb-8">
                 Pricing will be published at launch.
               </p>
-              <Link to="/infrastructure/dedicated/">
+              <LocaleLink to="/infrastructure/dedicated/">
                 <Button variant="outline" className="text-xs h-10 px-6">Learn More</Button>
-              </Link>
+              </LocaleLink>
             </motion.div>
 
             <motion.div
@@ -92,9 +94,9 @@ export const Pricing = () => {
               <p className="text-sm text-foreground/40 font-light mb-8">
                 Custom pricing based on requirements.
               </p>
-              <Link to="/company/contact/">
+              <LocaleLink to="/company/contact/">
                 <Button variant="outline" className="text-xs h-10 px-6">Talk to an Engineer</Button>
-              </Link>
+              </LocaleLink>
             </motion.div>
           </div>
         </div>
@@ -120,9 +122,9 @@ export const Pricing = () => {
                   Pricing will be published at launch.
                 </p>
               </div>
-              <Link to="/deploy/">
+              <LocaleLink to="/deploy/">
                 <Button variant="outline" className="text-xs h-10 px-6">Learn More</Button>
-              </Link>
+              </LocaleLink>
             </div>
           </motion.div>
         </div>
@@ -175,9 +177,9 @@ export const Pricing = () => {
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Regular backups</li>
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Monitoring & support</li>
               </ul>
-              <Link to="/company/contact/" className="mt-auto">
+              <LocaleLink to="/company/contact/" className="mt-auto">
                 <Button className="w-full">Contact Us</Button>
-              </Link>
+              </LocaleLink>
             </div>
 
             <div className="border border-border p-8 flex flex-col bg-background md:col-span-2 lg:col-span-1">
@@ -192,9 +194,9 @@ export const Pricing = () => {
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Integration work</li>
                 <li className="flex items-center gap-2"><span className="text-foreground/30">—</span> Priority support</li>
               </ul>
-              <Link to="/company/contact/" className="mt-auto">
+              <LocaleLink to="/company/contact/" className="mt-auto">
                 <Button variant="outline" className="w-full">Contact Sales</Button>
-              </Link>
+              </LocaleLink>
             </div>
           </div>
         </div>
@@ -208,9 +210,9 @@ export const Pricing = () => {
             <p className="text-foreground/50 font-light mb-8 max-w-xl mx-auto">
               For organizations with unique infrastructure requirements, compliance needs, or scale that requires a tailored solution.
             </p>
-            <Link to="/company/contact/">
+            <LocaleLink to="/company/contact/">
               <Button>Contact VaultScope</Button>
-            </Link>
+            </LocaleLink>
           </div>
         </div>
       </section>
