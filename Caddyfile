@@ -2,5 +2,12 @@
 	root * /srv
 	encode gzip
 	file_server
+
+	handle_path /api/listmonk/* {
+		reverse_proxy https://subscribe.vaultscope.de {
+			header_up Host subscribe.vaultscope.de
+		}
+	}
+
 	try_files {path} /index.html
 }

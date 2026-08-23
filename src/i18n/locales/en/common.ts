@@ -1,0 +1,15 @@
+export const common = {
+  joinWaitlist: 'Join the Waitlist',
+  getInTouch: 'Get in Touch',
+  learnMore: 'Learn More',
+  contact: 'Contact',
+  comingSoon: 'Coming Soon',
+  questionsBeforeLaunch: 'Questions before launch?',
+  questions: 'Questions?',
+  skipToContent: 'Skip to content',
+  openMenu: 'Open menu',
+  closeMenu: 'Close menu',
+  switchToLight: 'Switch to light mode',
+  switchToDark: 'Switch to dark mode',
+  language: 'Language',
+};

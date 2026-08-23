@@ -305,7 +305,7 @@ const InfrastructureSection = () => {
             </div>
             <span className="text-xs font-mono text-foreground">vps-eu-01</span>
           </div>
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">Online</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">{t.home.infraSection.online}</span>
         </div>
 
         <div className="px-6 pt-6 pb-4">
@@ -385,11 +385,11 @@ const InfrastructureSection = () => {
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
               <span className="text-[9px] font-medium uppercase tracking-widest text-foreground/60">
-                100% Exclusive Resources
+                {t.home.infraSection.exclusiveResources}
               </span>
             </div>
             <p className="text-[10px] text-foreground/40">
-              No shared tenancy. Every resource belongs exclusively to you.
+              {t.home.infraSection.exclusiveResourcesDesc}
             </p>
           </div>
         </div>
@@ -449,15 +449,14 @@ const InfrastructureSection = () => {
           <FadeIn>
             <div className="text-center mb-16">
               <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                Infrastructure
+                {t.home.infraSection.eyebrow}
               </p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Cloud VPS &<br />
-                <span className="text-foreground/50">Dedicated Servers.</span>
+                {t.home.infraSection.title}<br />
+                <span className="text-foreground/50">{t.home.infraSection.titleHighlight}</span>
               </h2>
               <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
-                Modern infrastructure built on Proxmox and Debian. Full control, transparent
-                technology, and engineering without unnecessary complexity.
+                {t.home.infraSection.description}
               </p>
             </div>
           </FadeIn>
@@ -473,9 +472,9 @@ const InfrastructureSection = () => {
                       : 'bg-background text-foreground border-border hover:border-foreground/50'
                   }`}
                 >
-                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">Tier 01</span>
-                  <span className="text-2xl font-medium uppercase tracking-wider">Cloud VPS</span>
-                  <p className={`text-xs mt-3 ${activeTab === 'vps' ? 'text-background/60' : 'text-foreground/60'}`}>Virtualized. Shared Hardware.</p>
+                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">{t.home.infraSection.tier01}</span>
+                  <span className="text-2xl font-medium uppercase tracking-wider">{t.home.infraSection.cloudVps}</span>
+                  <p className={`text-xs mt-3 ${activeTab === 'vps' ? 'text-background/60' : 'text-foreground/60'}`}>{t.home.infraSection.vpsSubtitle}</p>
                 </button>
                 <button
                   onClick={() => setActiveTab('dedicated')}
@@ -485,9 +484,9 @@ const InfrastructureSection = () => {
                       : 'bg-background text-foreground border-border hover:border-foreground/50'
                   }`}
                 >
-                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">Tier 02</span>
-                  <span className="text-2xl font-medium uppercase tracking-wider">Dedicated</span>
-                  <p className={`text-xs mt-3 ${activeTab === 'dedicated' ? 'text-background/60' : 'text-foreground/60'}`}>Physical. Full Control.</p>
+                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">{t.home.infraSection.tier02}</span>
+                  <span className="text-2xl font-medium uppercase tracking-wider">{t.home.infraSection.dedicated}</span>
+                  <p className={`text-xs mt-3 ${activeTab === 'dedicated' ? 'text-background/60' : 'text-foreground/60'}`}>{t.home.infraSection.dedicatedSubtitle}</p>
                 </button>
               </div>
 
@@ -550,7 +549,7 @@ const DeploySection = () => {
     { step: '03', title: 'Running', desc: 'Live on infrastructure in seconds.' },
   ];
 
-  const categories = ['Minecraft Servers', 'Code Servers', 'Databases', 'Pegasus'];
+  const categories = ['Docker Containers', 'PostgreSQL', 'Redis', 'Web Services'];
 
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border">
@@ -820,7 +819,7 @@ const TechnologySection = () => {
   const technologies = [
     { name: 'PROXMOX', category: 'Virtualization', desc: 'Open-source hypervisor platform' },
     { name: 'DEBIAN', category: 'Operating System', desc: 'Stable, production-grade Linux' },
-    { name: 'COOLIFY', category: 'Deployment', desc: 'Self-hosted application management' },
+    { name: 'DOCKER', category: 'Containerization', desc: 'Industry-standard container management' },
     { name: 'FORGEJO', category: 'Development', desc: 'Self-hosted Git platform' },
     { name: 'UPTIME KUMA', category: 'Monitoring', desc: 'Service uptime tracking' },
     { name: 'BESZEL', category: 'Monitoring', desc: 'Infrastructure health' },
@@ -964,15 +963,12 @@ export const Home = () => {
   const { t, localePath } = useLanguage();
 
   useEffect(() => {
-    document.title = 'VaultScope — Infrastructure and Software, Engineered Together';
+    document.title = t.home.meta.title;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
-      meta.setAttribute(
-        'content',
-        'VaultScope builds Cloud VPS, Dedicated Servers, and software on transparent, open-source infrastructure. German engineering. EU infrastructure.'
-      );
+      meta.setAttribute('content', t.home.meta.description);
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden bg-background text-foreground">

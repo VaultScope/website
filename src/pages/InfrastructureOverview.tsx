@@ -99,13 +99,13 @@ export const InfrastructureOverview = () => {
             {[
               {
                 label: 'Infrastructure',
-                value: 'OVH SAS',
-                note: 'EU datacentres. VaultScope is an OVH reseller.',
+                value: 'Enterprise Hardware',
+                note: 'Premium EU datacentres.',
               },
               {
                 label: 'Locations',
                 value: 'European Union',
-                note: 'All servers hosted in EU-based OVH datacentres.',
+                note: 'All servers hosted in premium EU-based datacentres across NL, DE, FR, IT, and UK.',
               },
               {
                 label: 'Legal',
@@ -137,7 +137,7 @@ export const InfrastructureOverview = () => {
               Built on open infrastructure.
             </h2>
             <p className="text-foreground/50 font-light text-lg max-w-3xl mb-12">
-              Proxmox-based virtualization on Debian. Monitored with Uptime Kuma and Beszel. Deployed with Coolify. Version-controlled on Forgejo.
+              Proxmox-based virtualization on Debian. Enterprise-grade monitoring and automated deployment pipelines. Version-controlled on Forgejo.
             </p>
             <LocaleLink to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground hover:text-foreground/70 transition-colors">
               {t.infrastructureOverview.technology.cta}

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { en } from './locales/en';
-import { de } from './locales/de';
+import { en } from './locales/en/index';
+import { de } from './locales/de/index';
 
 export type Locale = 'en' | 'de';
 

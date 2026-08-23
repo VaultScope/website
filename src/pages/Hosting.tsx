@@ -10,7 +10,7 @@ const CLOUD_VPS_FEATURES = [
   'Clean resource isolation per instance',
   'Suitable for applications, services, and development',
   'Modern virtualization infrastructure',
-  'EU datacentres via OVH',
+  'EU datacentres',
 ];
 
 const DEDICATED_FEATURES = [
@@ -18,7 +18,7 @@ const DEDICATED_FEATURES = [
   'No shared resources or contention',
   'Full control over the infrastructure layer',
   'Suited to demanding, performance-sensitive workloads',
-  'EU datacentres via OVH',
+  'EU datacentres',
 ];
 
 export const Hosting = () => {
@@ -28,7 +28,7 @@ export const Hosting = () => {
     if (metaDesc) {
       metaDesc.setAttribute(
         'content',
-        'VaultScope Cloud VPS and Dedicated Servers — flexible virtual infrastructure and dedicated physical hosting, built on EU-based OVH infrastructure.'
+        'VaultScope Cloud VPS and Dedicated Servers — flexible virtual infrastructure and dedicated physical hosting, built on EU-based infrastructure.'
       );
     }
   }, []);
@@ -38,7 +38,7 @@ export const Hosting = () => {
       <PageHero
         eyebrow="HOSTING SERVICES"
         title="Cloud VPS & Dedicated Servers."
-        description="Two infrastructure tiers built on EU-based OVH infrastructure. Currently in preparation — join the waitlist to be notified when services launch."
+        description="Two infrastructure tiers built on EU-based infrastructure. Currently in preparation — join the waitlist to be notified when services launch."
         align="left"
       />
 
@@ -136,13 +136,13 @@ export const Hosting = () => {
             {[
               {
                 label: 'Infrastructure',
-                value: 'OVH SAS',
-                note: 'EU datacentres. VaultScope is an OVH reseller.',
+                value: 'Enterprise Hardware',
+                note: 'Premium EU datacentres.',
               },
               {
                 label: 'Locations',
                 value: 'European Union',
-                note: 'All servers hosted in EU-based OVH datacentres.',
+                note: 'All servers hosted in premium EU-based datacentres across NL, DE, FR, IT, and UK.',
               },
               {
                 label: 'Legal',

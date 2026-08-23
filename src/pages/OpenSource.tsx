@@ -103,7 +103,7 @@ export const OpenSource = () => {
     if (metaDesc) {
       metaDesc.setAttribute(
         'content',
-        "The open-source and self-hosted technology stack used across the VaultScope ecosystem. Debian, Coolify, Forgejo, Uptime Kuma, Beszel, Voltius, OpenCode, and more."
+        "The open-source and self-hosted technology stack used across the VaultScope ecosystem. Debian, Forgejo, Voltius, OpenCode, and more."
       );
     }
   }, [t]);

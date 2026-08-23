@@ -10,19 +10,19 @@ export const Contact = () => {
     document.title = t.contact.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
-      metaDesc.setAttribute('content', 'Get in touch with VaultScope. General enquiries, support, and launch notifications.');
+      metaDesc.setAttribute('content', t.contactPage.metaDescription);
     }
   }, [t]);
 
   return (
     <div className="flex flex-col w-full">
       <div className="container mx-auto px-6 lg:px-12 pt-32">
-        <Breadcrumbs items={[{ label: 'Company' }, { label: 'Contact' }]} />
+        <Breadcrumbs items={[{ label: t.contactPage.breadcrumbs.company }, { label: t.contactPage.breadcrumbs.contact }]} />
       </div>
       <PageHero
-        eyebrow="CONTACT"
-        title="Get in touch."
-        description="General enquiries, support questions, or just want to know when hosting launches — here's how to reach us."
+        eyebrow={t.contactPage.eyebrow}
+        title={t.contactPage.heroTitle}
+        description={t.contactPage.heroDescription}
         align="left"
       />
 
@@ -36,11 +36,10 @@ export const Contact = () => {
                 <LifeBuoy className="w-4 h-4 text-foreground/50" />
               </div>
               <div>
-                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">Support</p>
-                <p className="text-xl font-medium text-foreground tracking-tight mb-3">Customer Support</p>
+                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">{t.contactPage.support.label}</p>
+                <p className="text-xl font-medium text-foreground tracking-tight mb-3">{t.contactPage.support.title}</p>
                 <p className="text-sm text-foreground/50 font-light leading-relaxed mb-5">
-                  For questions about your hosting account, billing, or technical issues with
-                  VaultScope services.
+                  {t.contactPage.support.description}
                 </p>
                 <a
                   href="mailto:support@vaultscope.de"
@@ -56,11 +55,10 @@ export const Contact = () => {
                 <Mail className="w-4 h-4 text-foreground/50" />
               </div>
               <div>
-                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">General</p>
-                <p className="text-xl font-medium text-foreground tracking-tight mb-3">General Enquiries</p>
+                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">{t.contactPage.general.label}</p>
+                <p className="text-xl font-medium text-foreground tracking-tight mb-3">{t.contactPage.general.title}</p>
                 <p className="text-sm text-foreground/50 font-light leading-relaxed mb-5">
-                  Business enquiries, partnerships, press, or anything else not covered by
-                  the support channel.
+                  {t.contactPage.general.description}
                 </p>
                 <a
                   href="mailto:cptcr@proton.me"
@@ -78,29 +76,29 @@ export const Contact = () => {
             {[
               {
                 icon: Activity,
-                label: 'Service Status',
-                desc: 'Live infrastructure uptime',
+                label: t.contactPage.links.serviceStatus.label,
+                desc: t.contactPage.links.serviceStatus.desc,
                 href: 'https://status.vaultscope.de/status/vs',
                 external: true,
               },
               {
                 icon: GitBranch,
-                label: 'GitHub',
-                desc: 'Open-source repositories',
+                label: t.contactPage.links.github.label,
+                desc: t.contactPage.links.github.desc,
                 href: 'https://github.com/semi-constructor',
                 external: true,
               },
               {
                 icon: BookOpen,
-                label: 'Documentation',
-                desc: 'Guides and references',
+                label: t.contactPage.links.documentation.label,
+                desc: t.contactPage.links.documentation.desc,
                 href: 'https://pegasusbot.app/docs',
                 external: true,
               },
               {
                 icon: FileText,
-                label: 'Imprint',
-                desc: 'Legal contact details',
+                label: t.contactPage.links.imprint.label,
+                desc: t.contactPage.links.imprint.desc,
                 href: '/legal/imprint/',
                 external: false,
               },
@@ -129,11 +127,10 @@ export const Contact = () => {
         <div className="container mx-auto px-6 lg:px-12">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-medium tracking-tighter text-foreground mb-4">
-              Interested in hosting?
+              {t.contactPage.waitlist.title}
             </h2>
             <p className="text-foreground/50 font-light mb-10 leading-relaxed">
-              Cloud VPS and Dedicated Servers are in preparation. Leave your email and we'll
-              reach out when services are ready to launch.
+              {t.contactPage.waitlist.description}
             </p>
             <WaitlistForm />
           </div>
