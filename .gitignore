@@ -25,3 +25,10 @@ dist-ssr
 opencode.json
 .env
 !.env.example
+
+# QA Operation - Exclude sensitive files
+infrastructure/secrets.env
+infrastructure/*token*
+authentik-config/*token*
+*.secret
+qa-state.json
