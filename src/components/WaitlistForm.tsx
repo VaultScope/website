@@ -41,21 +41,20 @@ export const WaitlistForm = () => {
         setEmail('');
       } else {
         const body = await res.json().catch(() => ({}));
-        setErrorMsg(body?.message ?? 'Something went wrong. Please try again.');
+        setErrorMsg(body?.message ?? t.waitlistForm.errorGeneric);
         setStatus('error');
       }
     } catch {
-      setErrorMsg('Unable to reach the subscription service. Please try again later.');
+      setErrorMsg(t.waitlistForm.errorNetwork);
       setStatus('error');
     }
   };
 
-  // Env vars not configured — show a fallback during development
   if (status === 'unconfigured') {
     return (
       <div className="border border-border p-6 max-w-md w-full">
         <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">
-          Waitlist
+          {t.waitlistForm.unconfiguredEyebrow}
         </p>
         <p className="text-sm text-foreground/40 font-light">
           Set <code className="font-mono bg-foreground/5 px-1 py-0.5 text-xs">VITE_LISTMONK_URL</code> and{' '}
@@ -70,11 +69,10 @@ export const WaitlistForm = () => {
     return (
       <div className="border border-border p-6 max-w-md w-full">
         <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">
-          Subscribed
+          {t.waitlistForm.successEyebrow}
         </p>
         <p className="text-sm text-foreground/60 font-light leading-relaxed">
-          Check your inbox — a confirmation email is on its way. Click the link inside
-          to confirm your place on the waitlist.
+          {t.waitlistForm.successMessage}
         </p>
       </div>
     );
@@ -83,7 +81,7 @@ export const WaitlistForm = () => {
   return (
     <div className="max-w-md w-full">
       <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">
-        Get notified when we launch
+        {t.waitlistForm.eyebrow}
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-0">
         <input
@@ -91,7 +89,7 @@ export const WaitlistForm = () => {
           required
           value={email}
           onChange={(e) => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
-          placeholder="your@email.com"
+          placeholder={t.waitlistForm.placeholder}
           disabled={status === 'loading'}
           className="
             flex-1 h-14 px-5 bg-background border border-border
@@ -107,7 +105,7 @@ export const WaitlistForm = () => {
           disabled={status === 'loading'}
           className="h-14 px-8 shrink-0 sm:border-l-0 border-border disabled:opacity-50"
         >
-          {status === 'loading' ? 'Sending…' : 'Notify me'}
+          {status === 'loading' ? t.waitlistForm.sending : t.waitlistForm.submit}
         </Button>
       </form>
 
@@ -116,7 +114,7 @@ export const WaitlistForm = () => {
       )}
 
       <p className="mt-3 text-xs text-foreground/30 font-light">
-        Double opt-in. No spam. Unsubscribe any time.{' '}
+        {t.waitlistForm.disclaimer}{' '}
         <LocaleLink to="/legal/privacy/" className="hover:text-foreground/50 transition-colors underline underline-offset-2">
           {t.nav.privacyPolicy}
         </LocaleLink>

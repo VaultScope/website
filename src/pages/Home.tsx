@@ -305,7 +305,7 @@ const InfrastructureSection = () => {
             </div>
             <span className="text-xs font-mono text-foreground">vps-eu-01</span>
           </div>
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">Online</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">{t.home.infraSection.online}</span>
         </div>
 
         <div className="px-6 pt-6 pb-4">
@@ -377,7 +377,7 @@ const InfrastructureSection = () => {
             </div>
             <span className="text-xs font-mono text-foreground">srv-eu-ded-01</span>
           </div>
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">Dedicated</span>
+          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">{t.home.infraSection.dedicated}</span>
         </div>
 
         <div className="px-6 pt-4 pb-2">
@@ -385,11 +385,11 @@ const InfrastructureSection = () => {
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
               <span className="text-[9px] font-medium uppercase tracking-widest text-foreground/60">
-                100% Exclusive Resources
+                {t.home.infraSection.exclusiveResources}
               </span>
             </div>
             <p className="text-[10px] text-foreground/40">
-              No shared tenancy. Every resource belongs exclusively to you.
+              {t.home.infraSection.exclusiveResourcesDesc}
             </p>
           </div>
         </div>
@@ -449,15 +449,14 @@ const InfrastructureSection = () => {
           <FadeIn>
             <div className="text-center mb-16">
               <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                Infrastructure
+                {t.home.infraSection.eyebrow}
               </p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Cloud VPS &<br />
-                <span className="text-foreground/50">Dedicated Servers.</span>
+                {t.home.infraSection.title}<br />
+                <span className="text-foreground/50">{t.home.infraSection.titleHighlight}</span>
               </h2>
               <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
-                Modern infrastructure built on Proxmox and Debian. Full control, transparent
-                technology, and engineering without unnecessary complexity.
+                {t.home.infraSection.description}
               </p>
             </div>
           </FadeIn>
@@ -473,9 +472,9 @@ const InfrastructureSection = () => {
                       : 'bg-background text-foreground border-border hover:border-foreground/50'
                   }`}
                 >
-                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">Tier 01</span>
-                  <span className="text-2xl font-medium uppercase tracking-wider">Cloud VPS</span>
-                  <p className={`text-xs mt-3 ${activeTab === 'vps' ? 'text-background/60' : 'text-foreground/60'}`}>Virtualized. Shared Hardware.</p>
+                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">{t.home.infraSection.tier01}</span>
+                  <span className="text-2xl font-medium uppercase tracking-wider">{t.home.infraSection.cloudVps}</span>
+                  <p className={`text-xs mt-3 ${activeTab === 'vps' ? 'text-background/60' : 'text-foreground/60'}`}>{t.home.infraSection.vpsSubtitle}</p>
                 </button>
                 <button
                   onClick={() => setActiveTab('dedicated')}
@@ -485,9 +484,9 @@ const InfrastructureSection = () => {
                       : 'bg-background text-foreground border-border hover:border-foreground/50'
                   }`}
                 >
-                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">Tier 02</span>
-                  <span className="text-2xl font-medium uppercase tracking-wider">Dedicated</span>
-                  <p className={`text-xs mt-3 ${activeTab === 'dedicated' ? 'text-background/60' : 'text-foreground/60'}`}>Physical. Full Control.</p>
+                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">{t.home.infraSection.tier02}</span>
+                  <span className="text-2xl font-medium uppercase tracking-wider">{t.home.infraSection.dedicated}</span>
+                  <p className={`text-xs mt-3 ${activeTab === 'dedicated' ? 'text-background/60' : 'text-foreground/60'}`}>{t.home.infraSection.dedicatedSubtitle}</p>
                 </button>
               </div>
 
@@ -499,29 +498,13 @@ const InfrastructureSection = () => {
 
           <FadeIn delay={0.4}>
             <div className="mt-20 grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'Modern Virtualization',
-                  desc: 'Proxmox-based infrastructure provides enterprise-grade virtualization with clean resource isolation.',
-                  icon: Server,
-                },
-                {
-                  title: 'Full Control',
-                  desc: 'Complete root access and infrastructure control. Deploy, manage, and monitor your resources.',
-                  icon: Cpu,
-                },
-                {
-                  title: 'Transparent Technology',
-                  desc: 'Open-source stack you can inspect, audit, and understand. No black boxes, no vendor lock-in.',
-                  icon: Shield,
-                },
-              ].map((item, i) => (
+              {[Server, Cpu, Shield].map((Icon, i) => (
                 <div key={i} className="border border-border p-8 hover:bg-foreground/[0.02] transition-colors">
                   <div className="w-12 h-12 border border-border flex items-center justify-center mb-6">
-                    <item.icon className="w-6 h-6 text-foreground/60" />
+                    <Icon className="w-6 h-6 text-foreground/60" />
                   </div>
-                  <h3 className="text-2xl font-medium text-foreground mb-4">{item.title}</h3>
-                  <p className="text-foreground/50 font-light leading-relaxed">{item.desc}</p>
+                  <h3 className="text-2xl font-medium text-foreground mb-4">{t.home.infraSection.features[i].title}</h3>
+                  <p className="text-foreground/50 font-light leading-relaxed">{t.home.infraSection.features[i].desc}</p>
                 </div>
               ))}
             </div>
@@ -544,13 +527,6 @@ const InfrastructureSection = () => {
 
 const DeploySection = () => {
   const { t } = useLanguage();
-  const steps = [
-    { step: '01', title: 'Choose', desc: 'Select from pre-configured services.' },
-    { step: '02', title: 'Configure', desc: 'Set parameters — name, region, resources.' },
-    { step: '03', title: 'Running', desc: 'Live on infrastructure in seconds.' },
-  ];
-
-  const categories = ['Minecraft Servers', 'Code Servers', 'Databases', 'Pegasus'];
 
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border">
@@ -559,25 +535,24 @@ const DeploySection = () => {
           <FadeIn>
             <div className="mb-16">
               <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                One-Click Deploy
+                {t.home.deploySection.eyebrow}
               </p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Deploy in seconds.
+                {t.home.deploySection.title}
               </h2>
               <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl">
-                Pre-built images and pre-configured settings. Launch a fully managed service on our
-                infrastructure without manual setup.
+                {t.home.deploySection.description}
               </p>
             </div>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <div className="grid md:grid-cols-3 gap-0 border border-border mb-12">
-              {steps.map((item, i) => (
+              {t.home.deploySection.steps.map((item, i) => (
                 <div
                   key={item.step}
                   className={`p-10 flex flex-col gap-4 ${
-                    i < steps.length - 1 ? 'border-b md:border-b-0 md:border-r border-border' : ''
+                    i < t.home.deploySection.steps.length - 1 ? 'border-b md:border-b-0 md:border-r border-border' : ''
                   }`}
                 >
                   <span className="text-xs font-medium text-foreground/20 tracking-widest uppercase">{item.step}</span>
@@ -590,7 +565,7 @@ const DeploySection = () => {
 
           <FadeIn delay={0.3}>
             <div className="flex flex-wrap gap-3 mb-12">
-              {categories.map((cat) => (
+              {t.home.deploySection.categories.map((cat) => (
                 <span key={cat} className="border border-border px-4 py-2 text-xs font-medium text-foreground/40 uppercase tracking-widest">
                   {cat}
                 </span>
@@ -613,13 +588,7 @@ const DeploySection = () => {
 
 const ManagedSection = () => {
   const { t } = useLanguage();
-  const capabilities = [
-    { icon: Settings, title: 'Architecture', desc: 'Infrastructure designed for your requirements.' },
-    { icon: Rocket, title: 'Deployment', desc: 'Provisioned and configured by engineers.' },
-    { icon: Monitor, title: 'Monitoring', desc: 'Proactive health tracking and alerting.' },
-    { icon: Wrench, title: 'Maintenance', desc: 'Updates, patches, and ongoing management.' },
-    { icon: HardDrive, title: 'Migration', desc: 'Move existing workloads with zero downtime.' },
-  ];
+  const icons = [Settings, Rocket, Monitor, Wrench, HardDrive];
 
   return (
     <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
@@ -639,28 +608,27 @@ const ManagedSection = () => {
           <FadeIn>
             <div className="mb-16">
               <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">
-                Managed Infrastructure
+                {t.home.managedSection.eyebrow}
               </p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88] mb-6">
-                Infrastructure designed for<br />
-                your business.
+                {t.home.managedSection.title}<br />
+                {t.home.managedSection.titleLine2}
               </h2>
               <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl">
-                Operated by engineers. Architecture, deployment, monitoring, and maintenance —
-                all handled for you.
+                {t.home.managedSection.description}
               </p>
             </div>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-0 border border-background/20">
-              {capabilities.map((cap, i) => {
-                const Icon = cap.icon;
+              {t.home.managedSection.capabilities.map((cap, i) => {
+                const Icon = icons[i];
                 return (
                   <div
                     key={cap.title}
                     className={`p-8 ${
-                      i < capabilities.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-background/20' : ''
+                      i < t.home.managedSection.capabilities.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-background/20' : ''
                     }`}
                   >
                     <Icon className="w-5 h-5 text-background/40 mb-4" />
@@ -699,15 +667,13 @@ const SoftwareSection = () => {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                  Software
+                  {t.home.softwareSection.eyebrow}
                 </p>
                 <h2 className="text-5xl md:text-6xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                  Software built by<br />VaultScope.
+                  {t.home.softwareSection.title}<br />{t.home.softwareSection.titleLine2}
                 </h2>
                 <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-xl mb-8">
-                  VaultScope develops software alongside its infrastructure services. Pegasus is
-                  a full-featured Discord community management platform — self-hostable and
-                  source-available.
+                  {t.home.softwareSection.description}
                 </p>
                 <LocaleLink to="/software/pegasus/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
                   {t.home.software.cta}<ArrowRight className="w-4 h-4" />
@@ -721,15 +687,15 @@ const SoftwareSection = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-medium text-foreground">Pegasus</h3>
-                    <p className="text-xs text-foreground/40 uppercase tracking-widest">Discord Platform</p>
+                    <p className="text-xs text-foreground/40 uppercase tracking-widest">{t.home.softwareSection.discordPlatform}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-0 border border-border">
                   {[
-                    { label: 'Modules', value: '8' },
-                    { label: 'License', value: 'PolyForm NC' },
-                    { label: 'Stack', value: 'TypeScript' },
-                    { label: 'Dashboard', value: 'Next.js' },
+                    { label: t.home.softwareSection.stats.modules, value: '8' },
+                    { label: t.home.softwareSection.stats.license, value: 'PolyForm NC' },
+                    { label: t.home.softwareSection.stats.stack, value: 'TypeScript' },
+                    { label: t.home.softwareSection.stats.dashboard, value: 'Next.js' },
                   ].map((stat) => (
                     <div key={stat.label} className="border-b border-r border-border last:border-r-0 px-5 py-4">
                       <div className="text-xs text-foreground/30 uppercase tracking-widest mb-1">{stat.label}</div>
@@ -749,63 +715,39 @@ const SoftwareSection = () => {
 // ─── Why VaultScope Section ────────────────────────────────────────────────────
 
 const WhyVaultScope = () => {
+  const { t } = useLanguage();
+  const items = [
+    { key: 'engineering' as const, n: '01' },
+    { key: 'transparency' as const, n: '02' },
+    { key: 'integration' as const, n: '03' },
+    { key: 'service' as const, n: '04' },
+  ];
+
   return (
     <section className="py-24 lg:py-32 bg-background border-t border-border">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-5xl mx-auto">
           <FadeIn>
             <div className="text-center mb-20">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">Principles</p>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">{t.home.whySection.eyebrow}</p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88]">
-                Why VaultScope.
+                {t.home.whySection.title}
               </h2>
             </div>
           </FadeIn>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <FadeIn delay={0.1}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">01</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Engineering</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Infrastructure designed deliberately. Every component has purpose, every
-                  decision is intentional. No layers of unnecessary abstraction.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.2}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">02</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Transparency</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Open-source stack you can inspect and audit. Infrastructure should be
-                  understandable, observable, and controllable.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.3}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">03</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Integration</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Infrastructure and software, engineered together. Services that work as a
-                  system, not isolated products bolted to third-party platforms.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.4}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">04</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Personal Service</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Talk to engineers, not support tiers. Problems get solved by the people who
-                  built the infrastructure — directly.
-                </p>
-              </div>
-            </FadeIn>
+            {items.map((item, i) => (
+              <FadeIn key={item.key} delay={0.1 * (i + 1)}>
+                <div className="border-l-2 border-foreground/20 pl-8">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">{item.n}</p>
+                  <h3 className="text-3xl font-medium text-foreground mb-4">{t.home.whySection[item.key].title}</h3>
+                  <p className="text-lg text-foreground/50 font-light leading-relaxed">
+                    {t.home.whySection[item.key].desc}
+                  </p>
+                </div>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </div>
@@ -817,14 +759,6 @@ const WhyVaultScope = () => {
 
 const TechnologySection = () => {
   const { t } = useLanguage();
-  const technologies = [
-    { name: 'PROXMOX', category: 'Virtualization', desc: 'Open-source hypervisor platform' },
-    { name: 'DEBIAN', category: 'Operating System', desc: 'Stable, production-grade Linux' },
-    { name: 'COOLIFY', category: 'Deployment', desc: 'Self-hosted application management' },
-    { name: 'FORGEJO', category: 'Development', desc: 'Self-hosted Git platform' },
-    { name: 'UPTIME KUMA', category: 'Monitoring', desc: 'Service uptime tracking' },
-    { name: 'BESZEL', category: 'Monitoring', desc: 'Infrastructure health' },
-  ];
 
   return (
     <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
@@ -843,21 +777,20 @@ const TechnologySection = () => {
         <div className="max-w-6xl mx-auto">
           <FadeIn>
             <div className="mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">The Stack</p>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">{t.home.techSection.eyebrow}</p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88] mb-6">
-                Built on open<br />
-                infrastructure.
+                {t.home.techSection.title}<br />
+                {t.home.techSection.titleLine2}
               </h2>
               <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl">
-                VaultScope runs on curated open-source tools — each chosen for stability,
-                performance, and community support.
+                {t.home.techSection.description}
               </p>
             </div>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-background/20 mb-12">
-              {technologies.map((tech) => (
+              {t.home.techSection.technologies.map((tech) => (
                 <div key={tech.name} className="group border-b border-r border-background/20 p-8 hover:bg-background/10 transition-colors">
                   <div className="text-5xl font-medium text-background/10 mb-3 group-hover:text-background/20 transition-colors">
                     {tech.name[0]}
@@ -884,26 +817,27 @@ const TechnologySection = () => {
 // ─── Pre-Launch / Waitlist Section ─────────────────────────────────────────────
 
 const WaitlistSection = () => {
+  const { t } = useLanguage();
+
   return (
     <section id="waitlist" className="py-24 lg:py-32 bg-background border-t border-border">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-4xl mx-auto">
           <FadeIn>
             <div className="text-center mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">Pre-Launch</p>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">{t.home.waitlistSection.eyebrow}</p>
               <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Built before the<br />first customer.
+                {t.home.waitlistSection.title}<br />{t.home.waitlistSection.titleLine2}
               </h2>
               <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
-                Cloud VPS, Dedicated Servers, and One-Click Deploy are in preparation.
-                Join the waitlist to be notified when services launch.
+                {t.home.waitlistSection.description}
               </p>
             </div>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <div className="border border-border p-10 text-center">
-              <h3 className="text-2xl font-medium text-foreground mb-6">Get notified at launch</h3>
+              <h3 className="text-2xl font-medium text-foreground mb-6">{t.home.waitlistSection.formTitle}</h3>
               <div className="max-w-md mx-auto">
                 <WaitlistForm />
               </div>
@@ -925,15 +859,14 @@ const FinalCTASection = () => {
         <div className="max-w-4xl mx-auto text-center">
           <FadeIn>
             <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter text-foreground leading-[0.88] mb-8">
-              Ready to talk<br />
-              infrastructure?
+              {t.home.finalCtaSection.title}<br />
+              {t.home.finalCtaSection.titleLine2}
             </h2>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <p className="text-xl md:text-2xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto mb-16">
-              Cloud VPS, Dedicated Servers, and managed infrastructure — built for applications
-              that need engineering they can rely on.
+              {t.home.finalCtaSection.description}
             </p>
           </FadeIn>
 
@@ -964,15 +897,12 @@ export const Home = () => {
   const { t, localePath } = useLanguage();
 
   useEffect(() => {
-    document.title = 'VaultScope — Infrastructure and Software, Engineered Together';
+    document.title = t.home.meta.title;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
-      meta.setAttribute(
-        'content',
-        'VaultScope builds Cloud VPS, Dedicated Servers, and software on transparent, open-source infrastructure. German engineering. EU infrastructure.'
-      );
+      meta.setAttribute('content', t.home.meta.description);
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden bg-background text-foreground">
