@@ -5,6 +5,8 @@ export const waitlistForm = {
   getNotified: 'Beim Launch benachrichtigt werden',
   sending: 'Wird gesendet…',
   notifyMe: 'Benachrichtigen',
+  namePlaceholder: 'Dein Name',
+  emailPlaceholder: 'deine@email.de',
   errorGeneric: 'Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.',
   errorNetwork: 'Der Anmeldedienst ist nicht erreichbar. Bitte versuchen Sie es später erneut.',
   disclaimer: 'Double-Opt-in. Kein Spam. Jederzeit abmeldbar.',

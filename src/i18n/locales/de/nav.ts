@@ -6,6 +6,8 @@ export const nav = {
   pricing: 'Preise',
   software: 'Software',
   pegasus: 'Pegasus',
+  vamos: 'Vamos',
+  camos: 'Camos',
   openSource: 'Open Source',
   company: 'Unternehmen',
   about: 'Über uns',

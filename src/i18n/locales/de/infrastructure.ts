@@ -42,7 +42,7 @@ export const infrastructureCloud = {
   metaDescription: 'VaultScope Cloud VPS — flexible virtuelle Infrastruktur auf Proxmox und Debian. EU-basierte Rechenzentren, saubere Ressourcenisolierung, voller Root-Zugriff.',
   breadcrumb: 'Cloud VPS',
   eyebrow: 'CLOUD VPS',
-  heroTitle: 'Flexible virtuelle Infrastruktur.',
+  heroTitle: 'Flexible *virtuelle Infrastruktur*.',
   heroDescription: 'Virtuelle Rechenleistung auf moderner Proxmox-basierter Infrastruktur. Saubere Ressourcenisolierung, voller Root-Zugriff und transparente Technologie — für Anwendungen, Dienste und Entwicklungs-Workloads.',
   useCases: {
     eyebrow: 'Anwendungsfälle',
@@ -79,7 +79,7 @@ export const infrastructureDedicated = {
   metaDescription: 'VaultScope Dedizierte Server — physische Hardware mit vollständiger Ressourcenhoheit. Kein Shared Hosting. EU-basierte Rechenzentren.',
   breadcrumb: 'Dedizierte Server',
   eyebrow: 'DEDIZIERTE SERVER',
-  heroTitle: 'Physische Hardware. Volle Kontrolle.',
+  heroTitle: 'Physische Hardware. *Volle Kontrolle*.',
   heroDescription: 'Dedizierte physische Infrastruktur mit vollständiger Ressourcenhoheit. Keine geteilte Hardware, keine Ressourcenkonflikte — für Workloads, die konsistente Performance und direkten Hardware-Zugriff erfordern.',
   differentiators: {
     eyebrow: 'Dediziert',
@@ -118,7 +118,7 @@ export const infrastructureManaged = {
   metaDescription: 'VaultScope Managed Infrastruktur — individuelle Architektur, entworfen, deployed und betrieben von Ingenieuren. EU-basiert, auf Open-Source-Technologie gebaut.',
   breadcrumb: 'Managed',
   eyebrow: 'MANAGED INFRASTRUKTUR',
-  heroTitle: 'Infrastruktur, betrieben.',
+  heroTitle: '*Infrastruktur*, betrieben.',
   heroDescription: 'Individuelle Architektur, die von Ingenieuren entworfen, deployed und betrieben wird. Von der Provisionierung über das Monitoring bis zur Incident Response — Infrastruktur ohne den operativen Overhead.',
   capabilities: {
     eyebrow: 'Was enthalten ist',

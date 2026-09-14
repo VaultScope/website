@@ -4,15 +4,15 @@ export const home = {
     description: 'VaultScope builds Cloud VPS, Dedicated Servers, and software on transparent, open-source infrastructure. German engineering. EU infrastructure.',
   },
   hero: {
-    title: 'Infrastructure and software, engineered together.',
-    description: 'Cloud VPS, dedicated servers, managed infrastructure, and software — built on open-source technology in EU datacentres. Launching Q4 2026.',
+    title: 'High-performance Cloud & *Dedicated Servers*.',
+    description: 'Enterprise-grade compute, raw bare-metal power, and managed infrastructure—powered by transparent, open-source technology in premium EU datacentres. Launching Q4 2026.',
     primaryCta: 'Explore Infrastructure',
     secondaryCta: 'Get in Touch',
   },
   products: {
-    eyebrow: 'What we build',
-    title: 'Three pillars, one platform.',
-    description: 'Infrastructure, deployment, and software — designed as a unified system.',
+    eyebrow: 'Our Hosting Solutions',
+    title: 'Compute, deployment, and *management*.',
+    description: 'High-performance hosting, one-click deployments, and fully managed server solutions.',
     infrastructure: {
       title: 'Infrastructure',
       desc: 'Cloud VPS, Dedicated Servers, and Managed Infrastructure. EU-based, built on Proxmox and Debian.',
@@ -28,10 +28,10 @@ export const home = {
   },
   infrastructure: {
     eyebrow: 'Infrastructure',
-    title: 'Built on open infrastructure.',
+    title: 'Transparent, *high-performance* infrastructure.',
     description: 'Proxmox-based virtualization on Debian. EU-based datacentres. Transparent technology you can understand and audit.',
-    cloud: { title: 'Cloud VPS', desc: 'Flexible virtual compute with clean resource isolation and full root access.' },
-    dedicated: { title: 'Dedicated', desc: 'Physical hardware with full resource ownership. No shared tenancy.' },
+    cloud: { title: 'Cloud VPS', desc: 'High-speed NVMe Cloud VPS with guaranteed resources, fast networking, and full root access.' },
+    dedicated: { title: 'Dedicated', desc: 'Bare-metal servers with 100% dedicated CPU, RAM, and NVMe storage. No noisy neighbors.' },
     managed: { title: 'Managed', desc: 'Custom architecture designed and operated by engineers.' },
     cta: 'Explore Infrastructure',
   },
@@ -55,8 +55,8 @@ export const home = {
   },
   principles: {
     eyebrow: 'Principles',
-    title: 'How we build.',
-    engineering: { title: 'Engineering', desc: 'Every decision is an engineering decision. No marketing-driven features, no growth hacks.' },
+    title: '*Engineered* for performance.',
+    engineering: { title: 'Engineering', desc: 'Enterprise-grade hardware, redundant networking, and DDoS protection by default. Pure performance, no marketing gimmicks.' },
     transparency: { title: 'Transparency', desc: 'Open-source tooling, public infrastructure choices, honest communication.' },
     control: { title: 'Control', desc: 'You own your data, your configuration, your infrastructure. No vendor lock-in.' },
     service: { title: 'Personal Service', desc: 'Direct access to the engineers who build and operate your infrastructure.' },
@@ -69,7 +69,7 @@ export const home = {
   },
   waitlist: {
     title: 'Be the first to know.',
-    description: 'VaultScope is currently in preparation. Leave your email and we’ll notify you the moment services go live.',
+    description: 'VaultScope is currently in preparation. Leave your email and we\'ll notify you the moment services go live.',
   },
   finalCta: {
     title: 'Ready to build with us?',

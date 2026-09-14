@@ -5,7 +5,7 @@ export const infrastructureOverview = {
   cloud: {
     label: 'Tier 01',
     title: 'Cloud VPS',
-    desc: 'Flexible virtual infrastructure for applications, services, and development workloads. Clean resource isolation on modern virtualization technology.',
+    desc: 'High-performance virtual servers powered by modern CPUs and NVMe SSDs. Clean resource isolation for demanding workloads.',
     cta: 'Explore Cloud VPS',
   },
   dedicated: {
@@ -42,7 +42,7 @@ export const infrastructureCloud = {
   metaDescription: 'VaultScope Cloud VPS — flexible virtual infrastructure built on Proxmox and Debian. EU-based datacentres, clean resource isolation, full root access.',
   breadcrumb: 'Cloud VPS',
   eyebrow: 'CLOUD VPS',
-  heroTitle: 'Flexible virtual infrastructure.',
+  heroTitle: 'Flexible *virtual infrastructure*.',
   heroDescription: 'Virtual compute on modern Proxmox-based infrastructure. Clean resource isolation, full root access, and transparent technology — built for applications, services, and development workloads.',
   useCases: {
     eyebrow: 'Use Cases',
@@ -79,7 +79,7 @@ export const infrastructureDedicated = {
   metaDescription: 'VaultScope Dedicated Servers — physical hardware with full resource ownership. No shared tenancy. EU-based datacentres.',
   breadcrumb: 'Dedicated Servers',
   eyebrow: 'DEDICATED SERVERS',
-  heroTitle: 'Physical hardware. Full control.',
+  heroTitle: 'Physical hardware. *Full control*.',
   heroDescription: 'Dedicated physical infrastructure with full resource ownership. No shared hardware, no resource contention — built for workloads that require consistent performance and direct hardware control.',
   differentiators: {
     eyebrow: 'Dedicated',
@@ -118,7 +118,7 @@ export const infrastructureManaged = {
   metaDescription: 'VaultScope Managed Infrastructure — custom architecture designed, deployed, and operated by engineers. EU-based, built on open-source technology.',
   breadcrumb: 'Managed',
   eyebrow: 'MANAGED INFRASTRUCTURE',
-  heroTitle: 'Infrastructure, operated.',
+  heroTitle: '*Infrastructure*, operated.',
   heroDescription: 'Custom architecture designed, deployed, and operated by engineers. From provisioning to monitoring to incident response — infrastructure without the operational overhead.',
   capabilities: {
     eyebrow: 'What’s included',

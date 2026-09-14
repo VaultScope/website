@@ -4,15 +4,15 @@ export const home = {
     description: 'VaultScope baut Cloud VPS, Dedizierte Server und Software auf transparenter Open-Source-Infrastruktur. Deutsche Ingenieurskunst. EU-Infrastruktur.',
   },
   hero: {
-    title: 'Infrastruktur und Software, gemeinsam entwickelt.',
-    description: 'Cloud VPS, dedizierte Server, Managed Infrastruktur und Software — auf Open-Source-Technologie in EU-Rechenzentren. Launch Q4 2026.',
+    title: 'High-Performance Cloud & *Dedizierte Server*.',
+    description: 'Enterprise-Grade Compute, pure Bare-Metal-Leistung und Managed Infrastructure—angetrieben von transparenter Open-Source-Technologie in Premium-EU-Rechenzentren. Start Q4 2026.',
     primaryCta: 'Infrastruktur entdecken',
     secondaryCta: 'Kontakt aufnehmen',
   },
   products: {
-    eyebrow: 'Was wir bauen',
-    title: 'Drei Säulen, eine Plattform.',
-    description: 'Infrastruktur, Deployment und Software — als einheitliches System konzipiert.',
+    eyebrow: 'Unsere Hosting-Lösungen',
+    title: 'Compute, Deployment und *Management*.',
+    description: 'High-Performance Hosting, One-Click-Deployments und vollständig verwaltete Serverlösungen.',
     infrastructure: {
       title: 'Infrastruktur',
       desc: 'Cloud VPS, Dedizierte Server und Managed Infrastruktur. EU-basiert, aufgebaut auf Proxmox und Debian.',
@@ -30,7 +30,7 @@ export const home = {
     eyebrow: 'Infrastruktur',
     title: 'Auf offener Infrastruktur gebaut.',
     description: 'Proxmox-basierte Virtualisierung auf Debian. EU-basierte Rechenzentren. Transparente Technologie, die Sie verstehen und prüfen können.',
-    cloud: { title: 'Cloud VPS', desc: 'Flexible virtuelle Rechenleistung mit sauberer Ressourcenisolierung und vollem Root-Zugriff.' },
+    cloud: { title: 'Cloud VPS', desc: 'High-Speed NVMe Cloud VPS mit garantierten Ressourcen, schnellem Netzwerk und vollem Root-Zugriff.' },
     dedicated: { title: 'Dediziert', desc: 'Physische Hardware mit vollständiger Ressourcenhoheit. Kein Shared Hosting.' },
     managed: { title: 'Managed', desc: 'Individuelle Architektur, konzipiert und betrieben von Ingenieuren.' },
     cta: 'Infrastruktur entdecken',
@@ -55,7 +55,7 @@ export const home = {
   },
   principles: {
     eyebrow: 'Prinzipien',
-    title: 'Wie wir bauen.',
+    title: 'Für Leistung *entwickelt*.',
     engineering: { title: 'Engineering', desc: 'Jede Entscheidung ist eine Engineering-Entscheidung. Keine Marketing-Features, keine Growth Hacks.' },
     transparency: { title: 'Transparenz', desc: 'Open-Source-Tools, öffentliche Infrastruktur-Entscheidungen, ehrliche Kommunikation.' },
     control: { title: 'Kontrolle', desc: 'Sie besitzen Ihre Daten, Ihre Konfiguration, Ihre Infrastruktur. Kein Vendor Lock-in.' },
