@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { PageHero, Breadcrumbs } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { Mail, LifeBuoy, GitBranch, Activity, BookOpen, FileText } from 'lucide-react';
+import { LifeBuoy, GitBranch, Activity, BookOpen, FileText, Shield, CreditCard, Handshake, Info } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
 export const Contact = () => {
@@ -13,6 +13,16 @@ export const Contact = () => {
       metaDesc.setAttribute('content', t.contactPage.metaDescription);
     }
   }, [t]);
+
+  const contactLinks = [
+    { email: 'support@vaultscope.de', label: 'Technical Support', icon: LifeBuoy, desc: 'For help with your instances and services.' },
+    { email: 'billing@vaultscope.de', label: 'Billing & Sales', icon: CreditCard, desc: 'For invoice and payment inquiries.' },
+    { email: 'data@vaultscope.de', label: 'Data & Privacy', icon: Shield, desc: 'For GDPR and data removal requests.' },
+    { email: 'dmca@vaultscope.de', label: 'Abuse & DMCA', icon: Shield, desc: 'To report abuse or copyright infringement.' },
+    { email: 'opensource@vaultscope.de', label: 'Open Source', icon: GitBranch, desc: 'For open-source project collaboration.' },
+    { email: 'partner@vaultscope.de', label: 'Partnerships', icon: Handshake, desc: 'For business inquiries and partnerships.' },
+    { email: 'pegasus@vaultscope.de', label: 'Pegasus Bot', icon: Info, desc: 'For inquiries regarding Pegasus.' }
+  ];
 
   return (
     <div className="flex flex-col w-full">
@@ -27,52 +37,35 @@ export const Contact = () => {
       />
 
       {/* Contact channels */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
+      <section className="py-20 relative bg-background border-t border-border/[0.05]">
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="grid md:grid-cols-2 gap-0 border border-border max-w-4xl">
-
-            <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-border flex flex-col gap-5">
-              <div className="w-10 h-10 border border-border flex items-center justify-center">
-                <LifeBuoy className="w-4 h-4 text-foreground/50" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">{t.contactPage.support.label}</p>
-                <p className="text-xl font-medium text-foreground tracking-tight mb-3">{t.contactPage.support.title}</p>
-                <p className="text-sm text-foreground/50 font-light leading-relaxed mb-5">
-                  {t.contactPage.support.description}
-                </p>
-                <a
-                  href="mailto:support@vaultscope.de"
-                  className="text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
-                >
-                  support@vaultscope.de
-                </a>
-              </div>
-            </div>
-
-            <div className="p-8 md:p-10 flex flex-col gap-5 bg-foreground/[0.015]">
-              <div className="w-10 h-10 border border-border flex items-center justify-center">
-                <Mail className="w-4 h-4 text-foreground/50" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">{t.contactPage.general.label}</p>
-                <p className="text-xl font-medium text-foreground tracking-tight mb-3">{t.contactPage.general.title}</p>
-                <p className="text-sm text-foreground/50 font-light leading-relaxed mb-5">
-                  {t.contactPage.general.description}
-                </p>
-                <a
-                  href="mailto:cptcr@proton.me"
-                  className="text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
-                >
-                  cptcr@proton.me
-                </a>
-              </div>
-            </div>
-
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-border max-w-6xl">
+            {contactLinks.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.email} className={`p-8 border-border flex flex-col gap-4 ${i % 3 !== 2 ? 'lg:border-r' : ''} ${i < contactLinks.length - (contactLinks.length % 3 || 3) ? 'border-b' : ''}`}>
+                  <div className="w-10 h-10 border border-border flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-foreground/50" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-medium text-foreground tracking-tight mb-2">{item.label}</p>
+                    <p className="text-sm text-foreground/50 font-light leading-relaxed mb-4">
+                      {item.desc}
+                    </p>
+                    <a
+                      href={`mailto:${item.email}`}
+                      className="text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
+                    >
+                      {item.email}
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Secondary links */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-border border-t-0 max-w-4xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-border border-t-0 max-w-6xl mt-8">
             {[
               {
                 icon: Activity,
@@ -104,7 +97,7 @@ export const Contact = () => {
               },
             ].map((item, i) => {
               const Icon = item.icon;
-              const cls = `p-6 flex flex-col gap-3 border-r border-border last:border-r-0 hover:bg-foreground/[0.01] transition-colors ${i >= 2 ? 'border-t border-border' : ''}`;
+              const cls = `p-6 flex flex-col gap-3 border-r border-border last:border-r-0 hover:bg-foreground/[0.01] transition-colors ${i >= 2 ? 'border-t border-border' : ''} md:border-t-0`;
               const content = (
                 <>
                   <Icon className="w-4 h-4 text-foreground/30" />
@@ -123,7 +116,7 @@ export const Contact = () => {
       </section>
 
       {/* Waitlist */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
+      <section className="py-20 relative bg-background border-t border-border/[0.05]">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-medium tracking-tighter text-foreground mb-4">

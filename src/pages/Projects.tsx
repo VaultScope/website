@@ -32,6 +32,28 @@ const PROJECTS = [
       { label: 'GitHub',          href: 'https://github.com/semi-constructor/pegasus-dashboard',     Icon: GitBranch  },
     ],
   },
+  {
+    n: '03',
+    tag: 'API Gateway',
+    icon: Shield,
+    title: 'Vamos',
+    description: 'VaultScope API Management & Operations System. API Layer between CAMOS and VaultScope Website that handles communication to APIs we use.',
+    techTags: ['Rust', 'AGPL 3.0', 'OpenSource'],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/VaultScope/vamos', Icon: GitBranch },
+    ],
+  },
+  {
+    n: '04',
+    tag: 'Internal Dashboard',
+    icon: Shield,
+    title: 'Camos',
+    description: 'Client Administration & Management Operations System. The centralized internal dashboard used by staff to manage VaultScope operations, billing, customer support, and infrastructure API integrations.',
+    techTags: ['React 18', 'Vite', 'Tailwind CSS', 'OpenSource'],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/VaultScope/camos', Icon: GitBranch },
+    ],
+  },
 ];
 
 // ─── Page ────────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { Button } from '../components/Shared';
+import { Button, parseHighlight } from '../components/Shared';
 import {
   ArrowRight, Server, Shield, Cpu, Rocket,
   Code2, Wrench, Monitor, HardDrive, Settings,
@@ -451,9 +451,9 @@ const InfrastructureSection = () => {
               <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
                 {t.home.infraSection.eyebrow}
               </p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-none mb-6">
                 {t.home.infraSection.title}<br />
-                <span className="text-foreground/50">{t.home.infraSection.titleHighlight}</span>
+                <span className="highlight-marker inline-block mt-2">{t.home.infraSection.titleHighlight}</span>
               </h2>
               <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
                 {t.home.infraSection.description}
@@ -622,12 +622,12 @@ const ManagedSection = () => {
 
   return (
     <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none">
         <div
           className="w-full h-full"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,1) 1px, transparent 1px)',
+              'linear-gradient(var(--background) 1px, transparent 1px), linear-gradient(90deg,var(--background) 1px, transparent 1px)',
             backgroundSize: '64px 64px',
           }}
         />
@@ -674,7 +674,7 @@ const ManagedSection = () => {
           <FadeIn delay={0.3}>
             <div className="mt-12">
               <LocaleLink to="/company/contact/">
-                <Button variant="outline" className="border-background/30 text-background hover:bg-background/10 hover:border-background/50">
+                <Button variant="dynamic">
                   {t.common.getInTouch}
                 </Button>
               </LocaleLink>
@@ -827,12 +827,12 @@ const TechnologySection = () => {
 
   return (
     <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none">
         <div
           className="w-full h-full"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,1) 1px, transparent 1px)',
+              'linear-gradient(var(--background) 1px, transparent 1px), linear-gradient(90deg,var(--background) 1px, transparent 1px)',
             backgroundSize: '64px 64px',
           }}
         />
@@ -974,8 +974,8 @@ export const Home = () => {
     <div className="flex flex-col w-full overflow-x-hidden bg-background text-foreground">
       <VaultScopeCanvas />
 
-      <div ref={heroRef} className="relative min-h-screen overflow-hidden border-b border-border flex items-center justify-center">
-        <div className="relative flex flex-col items-center justify-center px-6 py-40">
+      <div ref={heroRef} className="relative min-h-[90vh] lg:min-h-screen overflow-hidden border-b border-border flex items-start justify-center pt-[20vh] lg:pt-[25vh]">
+        <div className="relative flex flex-col items-center justify-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 30, filter: 'blur(12px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -983,7 +983,7 @@ export const Home = () => {
             className="text-center max-w-5xl"
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tighter text-foreground leading-[0.92] mb-8">
-              {t.home.hero.title.split(',').map((part, i) => i === 0 ? <span key={i}>{part},<br /></span> : <span key={i} className="text-foreground/50">{part}</span>)}
+              {parseHighlight(t.home.hero.title)}
             </h1>
           </motion.div>
 
