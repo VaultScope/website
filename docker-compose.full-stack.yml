@@ -1,0 +1,198 @@
+version: '3.8'
+
+# VaultScope Full Stack - Local Development Environment
+# Services: PostgreSQL, Redis, Authentik (server + worker), VaultScope API, Storefront, Admin
+# Generated: 2026-09-12
+
+services:
+  # PostgreSQL 16 - Shared database for VaultScope and Authentik
+  postgres:
+    image: postgres:16-alpine
+    container_name: vaultscope-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vaultscope-network
+
+  # Redis 7 - Cache and session store for Authentik
+  redis:
+    image: redis:7-alpine
+    container_name: vaultscope-redis
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - vaultscope-network
+
+  # Authentik Server - OIDC/OAuth2 Provider
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: vaultscope-authentik-server
+    command: server
+    environment:
+      AUTHENTIK_SECRET_KEY: 2Pi6224gADCeas0Ao1r4UkCleU0YrLYUo03A6HhRbyni0UqWo1
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__PASSWORD: postgres_dev
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_BOOTSTRAP_PASSWORD: admin
+      AUTHENTIK_BOOTSTRAP_EMAIL: admin@localhost
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_LOG_LEVEL: info
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vaultscope-network
+
+  # Authentik Worker - Background task processor
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: vaultscope-authentik-worker
+    command: worker
+    environment:
+      AUTHENTIK_SECRET_KEY: 2Pi6224gADCeas0Ao1r4UkCleU0YrLYUo03A6HhRbyni0UqWo1
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__PASSWORD: postgres_dev
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_LOG_LEVEL: info
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vaultscope-network
+
+  # VaultScope API - Backend API server
+  api:
+    image: vaultscope-api:latest
+    container_name: vaultscope-api
+    environment:
+      # Database
+      DATABASE_URL: postgres://postgres:postgres_dev@postgres:5432/vaultscope
+
+      # Redis (SEC-001: OIDC state validation)
+      REDIS_URL: redis://redis:6379
+
+      # Server
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      # Security
+      JWT_SECRET: uztvJAJV0btOVihUc/JRSdio7JV3toZWScoDtDHd8zIgIfErztEnPQwAkJqgBpdFdIfNmzir/ThKDRM4xPhUJA==
+      ENCRYPTION_KEY: 894145aa34d9c325bd8ccca9e74dbee5c1e16ca3143f915e075ea3cbcc420107
+
+      # OIDC/OAuth2 - Authentik Integration
+      AUTHENTIK_ISSUER: http://authentik-server:9000
+      AUTHENTIK_CLIENT_ID_ADMIN: vaultscope-admin
+      AUTHENTIK_CLIENT_ID_STOREFRONT: vaultscope-storefront
+      AUTHENTIK_CLIENT_SECRET_ADMIN: BOPy2MjTdpjSqug0C9E2NWjmipTyOE9Ft0RDd4ei6azNdt0BWLVLOIpvtFkH2wTkK57YqD2Vy6Fecn9ljbks8uzdmvjuzLnIpBx7hyzIOIDnaAHxZa6kjpkiJZ7VDNEC
+      AUTHENTIK_CLIENT_SECRET_STOREFRONT: bYVpizYklQ25O4iDbkfO1KyuJkFTgDs4oUZJu4Ndp9oWzRr6ySD3EyjkIfp8hcGmoW9A31h9sMLqb1VXUVM84VVnX0EntwH9YvUsFFSbiReuvaT1y47UZgOLa4zKUXuM
+
+      # CORS
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+
+      # Job Processing
+      JOB_POLL_INTERVAL_SECS: 5
+
+      # Logging
+      LOG_LEVEL: info
+    ports:
+      - "8000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      authentik-server:
+        condition: service_started
+    networks:
+      - vaultscope-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # VaultScope Storefront - Customer-facing frontend
+  storefront:
+    image: vaultscope-storefront:test
+    container_name: vaultscope-storefront
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - vaultscope-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # VaultScope Admin - Admin panel frontend
+  admin:
+    image: vaultscope-admin:test
+    container_name: vaultscope-admin
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
+    networks:
+      - vaultscope-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# Persistent volumes
+volumes:
+  postgres_data:
+    name: vaultscope-postgres-data
+  redis_data:
+    name: vaultscope-redis-data
+  authentik_media:
+    name: vaultscope-authentik-media
+  authentik_templates:
+    name: vaultscope-authentik-templates
+
+# Network for service communication
+networks:
+  vaultscope-network:
+    name: vaultscope-network
+    driver: bridge

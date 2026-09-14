@@ -1,0 +1,164 @@
+version: '3.8'
+
+# VaultScope Production Stack
+# Services: API, Storefront, Admin
+# External: PostgreSQL, Redis, Authentik (managed separately)
+# Generated: 2026-09-14
+
+services:
+  # VaultScope API - Backend API server
+  api:
+    image: ${REGISTRY:-ghcr.io/vaultscope}/vaultscope-api:${VERSION:-latest}
+    container_name: vaultscope-api
+    restart: always
+
+    environment:
+      # Database (external managed service)
+      DATABASE_URL: ${DATABASE_URL}
+      DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-20}
+
+      # Redis (external managed service)
+      REDIS_URL: ${REDIS_URL}
+
+      # Server
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      # Security (from secrets manager)
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
+      # OIDC/OAuth2 (external Authentik)
+      AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
+      AUTHENTIK_CLIENT_ID_ADMIN: ${AUTHENTIK_CLIENT_ID_ADMIN}
+      AUTHENTIK_CLIENT_ID_STOREFRONT: ${AUTHENTIK_CLIENT_ID_STOREFRONT}
+      AUTHENTIK_CLIENT_SECRET_ADMIN: ${AUTHENTIK_CLIENT_SECRET_ADMIN}
+      AUTHENTIK_CLIENT_SECRET_STOREFRONT: ${AUTHENTIK_CLIENT_SECRET_STOREFRONT}
+      AUTHENTIK_API_TOKEN: ${AUTHENTIK_API_TOKEN:-}
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+      # Job Processing
+      JOB_POLL_INTERVAL_SECS: ${JOB_POLL_INTERVAL_SECS:-5}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RUST_LOG: ${RUST_LOG:-info}
+
+    ports:
+      - "${API_PORT:-8000}:3000"
+
+    networks:
+      - vaultscope-prod
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=api,environment=production"
+
+  # VaultScope Storefront - Customer-facing frontend
+  storefront:
+    image: ${REGISTRY:-ghcr.io/vaultscope}/vaultscope-storefront:${VERSION:-latest}
+    container_name: vaultscope-storefront
+    restart: always
+
+    ports:
+      - "${STOREFRONT_PORT:-3000}:3000"
+
+    networks:
+      - vaultscope-prod
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=storefront,environment=production"
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # VaultScope Admin - Admin panel frontend
+  admin:
+    image: ${REGISTRY:-ghcr.io/vaultscope}/vaultscope-admin:${VERSION:-latest}
+    container_name: vaultscope-admin
+    restart: always
+
+    ports:
+      - "${ADMIN_PORT:-3001}:80"
+
+    networks:
+      - vaultscope-prod
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=admin,environment=production"
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+networks:
+  vaultscope-prod:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+# Note: No volumes defined - use external managed storage for persistence
+# PostgreSQL and Redis should be managed services (AWS RDS, ElastiCache, etc.)
