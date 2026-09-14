@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { PageHero, Breadcrumbs } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { motion } from 'framer-motion';
@@ -7,6 +7,9 @@ import { LocaleLink } from '../i18n/LocaleLink';
 
 export const InfrastructureCloud = () => {
   const { t } = useLanguage();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
   useEffect(() => {
     document.title = t.infrastructureCloud.title;
     const meta = document.querySelector('meta[name="description"]');
@@ -14,6 +17,16 @@ export const InfrastructureCloud = () => {
       meta.setAttribute('content', t.infrastructureCloud.metaDescription);
     }
   }, [t]);
+
+  useEffect(() => {
+    fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data.filter((p: any) => p.category === 'vps' || p.category === 'cloud'));
+        setLoadingProducts(false);
+      })
+      .catch(() => setLoadingProducts(false));
+  }, []);
 
   return (
     <div className="flex flex-col w-full">
@@ -101,14 +114,67 @@ export const InfrastructureCloud = () => {
         </div>
       </section>
 
-      {/* Pricing state */}
+      {/* Pricing Tiers */}
       <section className="py-24 relative bg-background border-t border-border/[0.05]">
         <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-          <div className="border border-border p-10">
-            <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">{t.nav.pricing}</p>
-            <p className="text-lg text-foreground/60 font-light">
-              {t.infrastructureCloud.pricing}
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">{t.nav.pricing}</p>
+              <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
+                Cloud Compute Instances
+              </h2>
+              <p className="text-foreground/50 font-light text-lg">
+                High-performance virtual machines billed by the month.
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {loadingProducts ? (
+              <div className="col-span-2 text-center text-foreground/50 py-12">Loading compute instances...</div>
+            ) : products.length === 0 ? (
+              <div className="col-span-2 text-center text-foreground/50 py-12">No compute instances available at the moment.</div>
+            ) : products.map((plan, i) => {
+              const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+              const specs = plan.specs as Record<string, any>;
+              
+              return (
+                <motion.div 
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="border border-border p-8 flex flex-col hover:border-foreground/30 transition-colors"
+                >
+                  <h3 className="text-xl font-medium tracking-tight mb-2">{plan.name}</h3>
+                  <p className="text-sm text-foreground/50 mb-6 font-mono">{plan.target}</p>
+                  <div className="text-3xl font-medium mb-6">
+                    €{price.toFixed(2)}<span className="text-sm text-foreground/40 font-light"> / {plan.billing_cycle === 'hourly' ? 'hr' : 'mo'}</span>
+                  </div>
+                  
+                  <div className="text-sm text-foreground/60 mb-8 border-t border-border pt-6 flex-1 space-y-3">
+                    {specs && Object.entries(specs).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="text-foreground/50 capitalize">{key.replace('_', ' ')}</span>
+                        <span className="text-foreground text-right">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <LocaleLink to="/dashboard/new" className="mt-auto">
+                    <button className="w-full border border-border hover:bg-foreground hover:text-background transition-colors py-2.5 text-sm font-medium">
+                      Deploy Now
+                    </button>
+                  </LocaleLink>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>

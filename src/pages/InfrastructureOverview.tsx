@@ -23,7 +23,7 @@ export const InfrastructureOverview = () => {
     <div className="flex flex-col w-full">
       <PageHero
         eyebrow="INFRASTRUCTURE"
-        title="Cloud VPS. Dedicated Servers. Managed Infrastructure."
+        title="Cloud VPS. Dedicated Servers. *Managed Infrastructure*."
         description="Three infrastructure models built on EU-based infrastructure. Transparent technology, open-source tooling, and engineering without unnecessary complexity."
         primaryCta="Join the Waitlist"
         primaryLink="#waitlist"

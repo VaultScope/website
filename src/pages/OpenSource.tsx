@@ -10,34 +10,10 @@ import { useLanguage } from '../i18n';
 
 const INFRA_STACK = [
   {
-    name: 'Proxmox',
-    category: 'Virtualization',
-    desc: 'Open-source virtualization platform used for VaultScope\'s internal infrastructure and service management.',
-    url: 'https://www.proxmox.com',
-  },
-  {
-    name: 'Debian',
-    category: 'Operating System',
-    desc: "Stable, production-grade Linux distribution. The operating system foundation across VaultScope's server infrastructure.",
-    url: 'https://www.debian.org',
-  },
-  {
-    name: 'Coolify',
-    category: 'Deployment',
-    desc: 'Self-hosted application deployment and management platform. Handles container deployments, environment configuration, and service lifecycle management.',
-    url: 'https://coolify.io',
-  },
-  {
-    name: 'Forgejo',
-    category: 'Git Hosting',
-    desc: "Self-hosted Git platform for version control and development collaboration. VaultScope's development infrastructure runs on Forgejo.",
-    url: 'https://forgejo.org',
-  },
-  {
-    name: 'Uptime Kuma',
-    category: 'Uptime Monitoring',
-    desc: "Self-hosted monitoring tool for tracking service availability and uptime across VaultScope's infrastructure stack.",
-    url: 'https://uptime.kuma.pet',
+    name: 'Authentik',
+    category: 'Identity & Security',
+    desc: "Enterprise-grade identity provider used to secure both customer and staff access via Passkeys (WebAuthn), SSO, and granular authorization policies.",
+    url: 'https://goauthentik.io',
   },
   {
     name: 'Beszel',
@@ -46,16 +22,46 @@ const INFRA_STACK = [
     url: 'https://beszel.dev',
   },
   {
-    name: 'Mailcow',
-    category: 'Email Server',
-    desc: "Self-hosted email server suite providing IMAP, SMTP, and webmail. Powers VaultScope's email infrastructure with full control over mail delivery and domain management.",
-    url: 'https://mailcow.email',
+    name: 'Coolify',
+    category: 'Deployment',
+    desc: 'Self-hosted application deployment and management platform. Handles container deployments, environment configuration, and service lifecycle management.',
+    url: 'https://coolify.io',
+  },
+  {
+    name: 'Debian',
+    category: 'Operating System',
+    desc: "Stable, production-grade Linux distribution. The operating system foundation across VaultScope's server infrastructure.",
+    url: 'https://www.debian.org',
+  },
+  {
+    name: 'Forgejo',
+    category: 'Git Hosting',
+    desc: "Self-hosted Git platform for version control and development collaboration. VaultScope's development infrastructure runs on Forgejo.",
+    url: 'https://forgejo.org',
   },
   {
     name: 'Listmonk',
     category: 'Mailing & Newsletters',
     desc: "Self-hosted newsletter and mailing list manager. Handles waitlist subscriptions, product announcements, and transactional email campaigns.",
     url: 'https://listmonk.app',
+  },
+  {
+    name: 'Mailcow',
+    category: 'Email Server',
+    desc: "Self-hosted email server suite providing IMAP, SMTP, and webmail. Powers VaultScope's email infrastructure with full control over mail delivery and domain management.",
+    url: 'https://mailcow.email',
+  },
+  {
+    name: 'Proxmox',
+    category: 'Virtualization',
+    desc: 'Open-source virtualization platform used for VaultScope\'s internal infrastructure and service management.',
+    url: 'https://www.proxmox.com',
+  },
+  {
+    name: 'Uptime Kuma',
+    category: 'Uptime Monitoring',
+    desc: "Self-hosted monitoring tool for tracking service availability and uptime across VaultScope's infrastructure stack.",
+    url: 'https://uptime.kuma.pet',
   },
 ];
 
@@ -90,6 +96,20 @@ const VS_PROJECTS = [
     desc: 'The web management interface for Pegasus. Guild management, module configuration, real-time analytics, and public leaderboards. Built with Next.js. Source-available under the PolyForm Noncommercial license.',
     tags: ['PolyForm Noncommercial', 'TypeScript', 'Next.js'],
     repoUrl: 'https://github.com/semi-constructor/pegasus-dashboard',
+  },
+  {
+    tag: 'API Gateway',
+    title: 'Vamos',
+    desc: 'VaultScope API Management & Operations System. The robust API Layer written in Rust that handles communication between CAMOS, the VaultScope Website, and external APIs.',
+    tags: ['AGPL 3.0', 'Rust', 'OpenSource'],
+    repoUrl: 'https://github.com/VaultScope/vamos',
+  },
+  {
+    tag: 'Internal Dashboard',
+    title: 'Camos',
+    desc: 'Client Administration & Management Operations System. The primary control plane for billing, customer support, infrastructure API integrations, and staff RBAC.',
+    tags: ['OpenSource', 'React 18', 'Vite', 'Tailwind CSS'],
+    repoUrl: 'https://github.com/VaultScope/camos',
   },
 ];
 
