@@ -16,22 +16,31 @@ export const WaitlistForm = () => {
   );
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [name, setName] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (status === 'loading' || status === 'success') return;
 
-    const trimmed = email.trim();
-    if (!trimmed) return;
+    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+    if (!trimmedEmail || !trimmedName) return;
 
     setStatus('loading');
     setErrorMsg('');
 
     try {
-      const res = await fetch('/api/listmonk/api/public/subscription', {
+      const isProd = import.meta.env.PROD;
+      const endpoint = isProd && LISTMONK_URL 
+        ? `${LISTMONK_URL}/api/public/subscription` 
+        : '/api/listmonk/api/public/subscription';
+
+      const res = await fetch(endpoint, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email:      trimmed,
+          email:      trimmedEmail,
+          name:       trimmedName,
           list_uuids: [LISTMONK_LIST_UUID],
         }),
       });
@@ -39,6 +48,7 @@ export const WaitlistForm = () => {
       if (res.ok) {
         setStatus('success');
         setEmail('');
+        setName('');
       } else {
         const body = await res.json().catch(() => ({}));
         setErrorMsg(body?.message ?? t.waitlistForm.errorGeneric);
@@ -50,7 +60,7 @@ export const WaitlistForm = () => {
     }
   };
 
-  // Env vars not configured — show a fallback during development
+  // Env vars not configured - show a fallback during development
   if (status === 'unconfigured') {
     return (
       <div className="border border-border p-6 max-w-md w-full">
@@ -84,16 +94,16 @@ export const WaitlistForm = () => {
       <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">
         {t.waitlistForm.getNotified}
       </p>
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-0">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
-          type="email"
+          type="text"
           required
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
-          placeholder="your@email.com"
+          value={name}
+          onChange={(e) => { setName(e.target.value); if (status === 'error') setStatus('idle'); }}
+          placeholder={(t.waitlistForm as any).namePlaceholder || "Your Name"}
           disabled={status === 'loading'}
           className="
-            flex-1 h-14 px-5 bg-background border border-border
+            w-full h-14 px-5 bg-background border border-border
             text-sm text-foreground font-light
             placeholder:text-foreground/25
             focus:outline-none focus:border-foreground/40
@@ -101,13 +111,31 @@ export const WaitlistForm = () => {
             disabled:opacity-50
           "
         />
-        <Button
-          type="submit"
-          disabled={status === 'loading'}
-          className="h-14 px-8 shrink-0 sm:border-l-0 border-border disabled:opacity-50"
-        >
-          {status === 'loading' ? t.waitlistForm.sending : t.waitlistForm.notifyMe}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-0">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
+            placeholder={(t.waitlistForm as any).emailPlaceholder || "your@email.com"}
+            disabled={status === 'loading'}
+            className="
+              flex-1 h-14 px-5 bg-background border border-border
+              text-sm text-foreground font-light
+              placeholder:text-foreground/25
+              focus:outline-none focus:border-foreground/40
+              transition-colors
+              disabled:opacity-50
+            "
+          />
+          <Button
+            type="submit"
+            disabled={status === 'loading'}
+            className="h-14 px-8 shrink-0 sm:border-l-0 sm:border-t border-border sm:mt-0 mt-3 disabled:opacity-50"
+          >
+            {status === 'loading' ? t.waitlistForm.sending : t.waitlistForm.notifyMe}
+          </Button>
+        </div>
       </form>
 
       {status === 'error' && (

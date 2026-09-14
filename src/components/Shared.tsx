@@ -1,10 +1,30 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X, GitBranch, Sun, Moon, ChevronDown, Globe } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { getInitialDark, applyDark } from '../hooks/useTheme';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+
+export const parseHighlight = (text: React.ReactNode): React.ReactNode => {
+  if (typeof text !== 'string') return text;
+  const parts = text.split(/(\*[^*]+\*)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+          return (
+            <mark key={i} className="highlight-marker inline-block">
+              {part.slice(1, -1)}
+            </mark>
+          );
+        }
+        return <Fragment key={i}>{part}</Fragment>;
+      })}
+    </>
+  );
+};
 
 // ─── useTheme ─────────────────────────────────────────────────────────────────
 
@@ -38,10 +58,11 @@ export const Button = ({ children, variant = 'primary', className = '', ...props
   const variants = {
     primary: "bg-foreground text-background hover:bg-foreground/90 border border-foreground",
     outline: "bg-transparent border border-border text-foreground hover:bg-foreground/5",
-    ghost: "bg-transparent text-foreground/50 hover:text-foreground hover:bg-transparent border-transparent"
+    ghost: "bg-transparent text-foreground/50 hover:text-foreground hover:bg-transparent border-transparent",
+    dynamic: "mix-blend-difference bg-transparent text-white border border-white hover:bg-white hover:text-black transition-colors duration-300"
   };
   return (
-    <button className={`${base} ${variants[variant as keyof typeof variants]} ${className}`} {...props}>
+    <button className={twMerge(base, variants[variant as keyof typeof variants], className)} {...props}>
       {children}
     </button>
   );
@@ -87,7 +108,7 @@ const LanguageSwitcher = () => {
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
-const Logo = ({ className = "h-12 w-auto" }: { className?: string }) => (
+export const Logo = ({ className = "h-14 w-auto" }: { className?: string }) => (
   <>
     <img
       src="/logos/whitemode-logo.png"
@@ -265,6 +286,8 @@ export const Navbar = () => {
       id: 'nav-software',
       items: [
         { label: t.nav.pegasus, href: '/software/pegasus/' },
+        { label: t.nav.vamos, href: '/software/vamos/' },
+        { label: t.nav.camos, href: '/software/camos/' },
         { label: t.nav.openSource, href: '/company/open-source/' },
       ],
     },
@@ -275,6 +298,15 @@ export const Navbar = () => {
         { label: t.nav.about, href: '/company/about/' },
         { label: t.nav.contact, href: '/company/contact/' },
         { label: t.nav.status, href: 'https://status.vaultscope.de/status/vs', external: true },
+      ],
+    },
+    {
+      label: 'Resources',
+      id: 'nav-resources',
+      items: [
+        { label: 'Blog', href: '/resources/blog/' },
+        { label: 'Forum', href: '/resources/forum/' },
+        { label: 'Documentation', href: '/docs' },
       ],
     },
   ];
@@ -350,6 +382,9 @@ export const Navbar = () => {
       <div className="flex items-center gap-2">
         <LanguageSwitcher />
         <ThemeToggle />
+        <LocaleLink to="/dashboard" className="hidden sm:flex mr-2">
+          <Button className="h-10 px-6 gap-2" variant="outline">Sign In</Button>
+        </LocaleLink>
         <LocaleLink to="/company/contact/" className="hidden sm:flex">
           <Button className="h-10 px-8">{t.common.contact}</Button>
         </LocaleLink>
@@ -371,7 +406,7 @@ export const Navbar = () => {
           aria-label="Mobile navigation"
         >
           <div className="flex justify-between items-center border-b border-border pb-8 mb-8">
-            <Logo className="h-9 w-auto" />
+            <Logo className="h-12 w-auto" />
             <div className="flex items-center gap-3">
               <LanguageSwitcher />
               <ThemeToggle />
@@ -400,6 +435,8 @@ export const Navbar = () => {
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.software}</span>
               <LocaleLink to="/software/pegasus/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.pegasus}</LocaleLink>
+              <LocaleLink to="/software/vamos/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.vamos}</LocaleLink>
+              <LocaleLink to="/software/camos/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.camos}</LocaleLink>
               <LocaleLink to="/company/open-source/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.openSource}</LocaleLink>
             </div>
             <div className="flex flex-col gap-4">
@@ -542,7 +579,7 @@ export const FeatureSection = ({
           </div>
         )}
         <h2 className="text-4xl md:text-6xl font-medium tracking-tighter text-foreground mb-6 leading-[0.9]">
-          {title}
+          {parseHighlight(title)}
         </h2>
         {description && (
           <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-xl">
@@ -643,7 +680,7 @@ export const PageHero = ({
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.5, delay: 0.1 }}
           className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.9] mb-8 max-w-5xl"
         >
-          {title}
+          {parseHighlight(title)}
         </motion.h1>
 
         {description && (
