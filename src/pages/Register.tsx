@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, PageHero } from '../components/Shared';
+import { Button } from '../components/Shared';
 import { useLanguage } from '../i18n';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';

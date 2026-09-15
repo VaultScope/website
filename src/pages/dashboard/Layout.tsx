@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n';
 import { getInitialDark, applyDark } from '../../hooks/useTheme';
 import { Logo } from '../../components/Shared';
-import { isAuthenticated, redirectToLogin, logout, getStoredClaims } from '../../lib/auth';
+import { isAuthenticated, redirectToLogin, logout, getStoredClaims, devLoginCustomer } from '../../lib/auth';
 import { api } from '../../lib/api';
 import { Onboarding } from './Onboarding';
 import {
@@ -79,6 +79,20 @@ export function DashboardLayout() {
             className="w-full border border-border bg-foreground text-background font-medium py-3 px-6 hover:bg-foreground/90 transition-colors cursor-pointer"
           >
             Login with VaultScope
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                setLoginError(null);
+                await devLoginCustomer('customer1');
+                window.location.reload();
+              } catch (err) {
+                setLoginError(err instanceof Error ? err.message : 'Dev login failed');
+              }
+            }}
+            className="w-full mt-2 border border-border bg-foreground/5 text-foreground/80 font-medium py-2 px-4 text-xs hover:bg-foreground/10 transition-colors cursor-pointer"
+          >
+            Dev Login as customer1 (Bypass Authentik)
           </button>
           <p className="text-xs text-foreground/40 mt-4">
             Don't have an account?{' '}

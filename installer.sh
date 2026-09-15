@@ -277,6 +277,21 @@ collect_configuration() {
     echo -e "${BOLD}${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
     echo
 
+    # Release Branch Selection (Unified across all repositories)
+    if [ -z "$VAULTSCOPE_BRANCH" ]; then
+        echo -e "${BOLD}Release Branch Selection (Unified across all repositories):${NC}"
+        echo -e "  ${GREEN}1) dev${NC}  - Latest active development (Recommended; required for upcoming updates)"
+        echo -e "  ${BLUE}2) main${NC} - Production stable releases"
+        echo -e "${NC}  Note: Branch selection is unified across Storefront, API, and Admin to ensure inter-service compatibility.${NC}"
+        read -p "$(echo -e ${CYAN}Choose branch [1=dev / 2=main] (default: dev): ${NC})" branch_sel
+        case "$branch_sel" in
+            2|main) BRANCH="main" ;;
+            *)      BRANCH="dev" ;;
+        esac
+        log_info "Selected release branch: ${BRANCH}"
+        echo
+    fi
+
     # Domain Configuration
     echo -e "${BOLD}Domain Configuration:${NC}"
     prompt DOMAIN_BASE "Enter your base domain (e.g., vaultscope.de)" "example.com"

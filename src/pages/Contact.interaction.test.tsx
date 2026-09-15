@@ -82,7 +82,7 @@ describe('Contact page interactions', () => {
     const headings = screen.getAllByRole('heading');
     const hasWaitlistHeading = headings.some(h => h.textContent?.toLowerCase().includes('notif') || h.textContent?.toLowerCase().includes('launch'));
     const hasForm = document.querySelector('form') !== null;
-    const hasViteEnvText = screen.queryByText(/VITE_LISTMONK/) !== null;
+    const hasViteEnvText = screen.queryAllByText(/VITE_LISTMONK/).length > 0;
     expect(hasWaitlistHeading || hasForm || hasViteEnvText).toBe(true);
   });
 

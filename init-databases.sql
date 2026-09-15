@@ -7,5 +7,15 @@ CREATE DATABASE vaultscope;
 -- Create database for Authentik OIDC provider
 CREATE DATABASE authentik;
 
+-- Create application user if it doesn't exist
+DO
+$$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'vaultscope') THEN
+      CREATE ROLE vaultscope LOGIN PASSWORD 'vaultscope_dev' SUPERUSER;
+   END IF;
+END
+$$;
+
 -- Grant permissions (postgres user already has all privileges)
--- Additional users can be created here if needed
+GRANT ALL PRIVILEGES ON DATABASE vaultscope TO vaultscope;

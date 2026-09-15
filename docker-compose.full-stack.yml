@@ -1,5 +1,3 @@
-version: '3.8'
-
 # VaultScope Full Stack - Local Development Environment
 # Services: PostgreSQL, Redis, Authentik (server + worker), VaultScope API, Storefront, Admin
 # Generated: 2026-09-12
@@ -31,6 +29,8 @@ services:
     image: redis:7-alpine
     container_name: vaultscope-redis
     command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -41,8 +41,9 @@ services:
     networks:
       - vaultscope-network
 
-  # Authentik Server - OIDC/OAuth2 Provider
+  # Authentik Server - OIDC/OAuth2 Provider (Optional - profile: authentik)
   authentik-server:
+    profiles: ["authentik"]
     image: ghcr.io/goauthentik/server:latest
     container_name: vaultscope-authentik-server
     command: server
@@ -71,8 +72,9 @@ services:
     networks:
       - vaultscope-network
 
-  # Authentik Worker - Background task processor
+  # Authentik Worker - Background task processor (Optional - profile: authentik)
   authentik-worker:
+    profiles: ["authentik"]
     image: ghcr.io/goauthentik/server:latest
     container_name: vaultscope-authentik-worker
     command: worker
@@ -98,6 +100,9 @@ services:
 
   # VaultScope API - Backend API server
   api:
+    build:
+      context: ../VaultScope-API
+      dockerfile: Dockerfile
     image: vaultscope-api:latest
     container_name: vaultscope-api
     environment:
@@ -115,8 +120,8 @@ services:
       JWT_SECRET: uztvJAJV0btOVihUc/JRSdio7JV3toZWScoDtDHd8zIgIfErztEnPQwAkJqgBpdFdIfNmzir/ThKDRM4xPhUJA==
       ENCRYPTION_KEY: 894145aa34d9c325bd8ccca9e74dbee5c1e16ca3143f915e075ea3cbcc420107
 
-      # OIDC/OAuth2 - Authentik Integration
-      AUTHENTIK_ISSUER: http://authentik-server:9000
+      # OIDC/OAuth2 - Authentik Integration (Excluded / Local Mock)
+      AUTHENTIK_ISSUER: http://localhost:8000/mock
       AUTHENTIK_CLIENT_ID_ADMIN: vaultscope-admin
       AUTHENTIK_CLIENT_ID_STOREFRONT: vaultscope-storefront
       AUTHENTIK_CLIENT_SECRET_ADMIN: BOPy2MjTdpjSqug0C9E2NWjmipTyOE9Ft0RDd4ei6azNdt0BWLVLOIpvtFkH2wTkK57YqD2Vy6Fecn9ljbks8uzdmvjuzLnIpBx7hyzIOIDnaAHxZa6kjpkiJZ7VDNEC
@@ -128,8 +133,10 @@ services:
       # Job Processing
       JOB_POLL_INTERVAL_SECS: 5
 
-      # Logging
+      # Logging & Auth
       LOG_LEVEL: info
+      AUTH_MODE: local
+      AUTHENTIK_ENABLED: "false"
     ports:
       - "8000:3000"
     depends_on:
@@ -137,8 +144,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      authentik-server:
-        condition: service_started
     networks:
       - vaultscope-network
     healthcheck:
@@ -150,6 +155,9 @@ services:
 
   # VaultScope Storefront - Customer-facing frontend
   storefront:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: vaultscope-storefront:test
     container_name: vaultscope-storefront
     ports:
@@ -166,6 +174,9 @@ services:
 
   # VaultScope Admin - Admin panel frontend
   admin:
+    build:
+      context: ../VaultScope-Admin
+      dockerfile: Dockerfile
     image: vaultscope-admin:test
     container_name: vaultscope-admin
     ports:
@@ -175,7 +186,7 @@ services:
     networks:
       - vaultscope-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80"]
       interval: 10s
       timeout: 5s
       retries: 3

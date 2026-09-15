@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Shared';
 import { api } from '../../lib/api';
 
 export function Onboarding() {
-  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
