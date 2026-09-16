@@ -110,17 +110,28 @@ See [documentation/CONFIGURATION.md](documentation/CONFIGURATION.md) for detaile
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `/documentation` folder:
+### Quick Start Guides
+- **[Installation Guide](docs/installation/INSTALL.md)** - Complete production installation (one command!)
+- **[CLI Installer](docs/installation/CLI-INSTALLER.md)** - Local development setup tool
+- **[Getting Started](documentation/GETTING_STARTED.md)** - Setup and configuration guide
 
-- **[Getting Started](documentation/GETTING_STARTED.md)** - Setup and installation guide
+### Deployment & Operations
+- **[Deployment Guide](docs/deployment/DEPLOYMENT.md)** - Production deployment strategies
+- **[Operations Runbook](docs/operations/RUNBOOK.md)** - Monitoring, maintenance, and troubleshooting
+
+### Developer Documentation
+See [/documentation](documentation/) for comprehensive technical guides:
 - **[Development](documentation/DEVELOPMENT.md)** - Development workflows and best practices
 - **[Architecture](documentation/ARCHITECTURE.md)** - Application architecture and design decisions
 - **[API Integration](documentation/API_INTEGRATION.md)** - How the storefront integrates with VAMOS
 - **[Authentication](documentation/AUTHENTICATION.md)** - OIDC authentication flow
 - **[Internationalization](documentation/I18N.md)** - Adding and managing translations
 - **[Testing](documentation/TESTING.md)** - Testing strategy and guidelines
-- **[Deployment](DEPLOYMENT.md)** - Production deployment guide
+
+### Project Policies
 - **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+- **[Security](SECURITY.md)** - Security policies and vulnerability reporting
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community standards
 
 ## 🏗️ Technology Stack
 
@@ -169,7 +180,7 @@ docker run -p 80:80 \
   vaultscope-storefront
 ```
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment instructions.
+See [Deployment Guide](docs/deployment/DEPLOYMENT.md) for comprehensive deployment instructions.
 
 ## 🧪 Testing
 

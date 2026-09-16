@@ -43,10 +43,10 @@ describe('DocsLayout', () => {
     expect(link?.getAttribute('href')).toBe('/docs');
   });
 
-  it('links VAMOS Backend to /docs/vamos', () => {
+  it('links VAMOS Backend to /docs/projects/vamos', () => {
     renderComponent();
     const link = screen.getByText('VAMOS Backend').closest('a');
-    expect(link?.getAttribute('href')).toBe('/docs/vamos');
+    expect(link?.getAttribute('href')).toBe('/docs/projects/vamos');
   });
 
   it('applies active style to Overview on /docs route', () => {

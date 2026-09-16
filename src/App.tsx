@@ -69,6 +69,7 @@ const ReportOther = lazy(() => import('./pages/report/Other').then(m => ({ defau
 // ─── Docs Routes ──────────────────────────────────────────────────────────
 const DocsLayout = lazy(() => import('./pages/docs/Layout').then(m => ({ default: m.DocsLayout })));
 const DocsOverview = lazy(() => import('./pages/docs/Overview').then(m => ({ default: m.DocsOverview })));
+const DocsProjects = lazy(() => import('./pages/docs/Projects').then(m => ({ default: m.DocsProjects })));
 const DocsStorefront = lazy(() => import('./pages/docs/Storefront').then(m => ({ default: m.DocsStorefront })));
 const DocsVamos = lazy(() => import('./pages/docs/Vamos').then(m => ({ default: m.DocsVamos })));
 const DocsCamos = lazy(() => import('./pages/docs/Camos').then(m => ({ default: m.DocsCamos })));
@@ -151,9 +152,13 @@ const PAGE_ROUTES: RouteConfig[] = [
     element: <DocsLayout />,
     children: [
       { path: '', element: <DocsOverview /> },
-      { path: 'storefront', element: <DocsStorefront /> },
-      { path: 'vamos', element: <DocsVamos /> },
-      { path: 'camos', element: <DocsCamos /> },
+      { path: 'projects', element: <DocsProjects /> },
+      { path: 'projects/storefront', element: <DocsStorefront /> },
+      { path: 'projects/vamos', element: <DocsVamos /> },
+      { path: 'projects/camos', element: <DocsCamos /> },
+      { path: 'storefront', element: <Navigate to="/docs/projects/storefront" replace /> },
+      { path: 'vamos', element: <Navigate to="/docs/projects/vamos" replace /> },
+      { path: 'camos', element: <Navigate to="/docs/projects/camos" replace /> },
     ]
   },
   { path: '/register', element: <Register /> },
