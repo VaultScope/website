@@ -1,37 +1,8 @@
 # VaultScope Storefront
 
-## Stack
-
-- **Language / Runtime**: TypeScript 6, Node 22
-- **Framework**: React 19, Vite 8
-- **Key dependencies**: React Router 7, Tailwind 4, Framer Motion, Three.js
-- **Package manager**: npm
-
 ## Build approach
 
 <TBD, set by /scope>
-
-## Commands
-
-```bash
-# Install
-npm install
-
-# Dev server
-npm run dev
-
-# Build
-npm run build
-
-# Test
-npx vitest run
-
-# Lint
-npm run lint
-
-# Preview built app
-npm run preview
-```
 
 ## Rules
 
@@ -42,7 +13,6 @@ npm run preview
 - German routes use /de/ prefix (eg. /de/pricing)
 - Testing with Vitest and React Testing Library
 - Type safety with TypeScript strict mode
-- Component structure: pages under src/pages/, reusable under src/components/
 
 ## Gotchas
 
