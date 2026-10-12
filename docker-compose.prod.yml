@@ -28,13 +28,26 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
 
-      # OIDC/OAuth2 (external Authentik)
-      AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
-      AUTHENTIK_CLIENT_ID_ADMIN: ${AUTHENTIK_CLIENT_ID_ADMIN}
-      AUTHENTIK_CLIENT_ID_STOREFRONT: ${AUTHENTIK_CLIENT_ID_STOREFRONT}
-      AUTHENTIK_CLIENT_SECRET_ADMIN: ${AUTHENTIK_CLIENT_SECRET_ADMIN}
-      AUTHENTIK_CLIENT_SECRET_STOREFRONT: ${AUTHENTIK_CLIENT_SECRET_STOREFRONT}
-      AUTHENTIK_API_TOKEN: ${AUTHENTIK_API_TOKEN:-}
+      # Environment
+      DEV_MODE: "false"
+
+      # Provisioning Connectors (Environment-based)
+      HETZNER_API_TOKEN: ${HETZNER_API_TOKEN:-}
+      RELIABLESITE_API_KEY: ${RELIABLESITE_API_KEY:-}
+      RELIABLESITE_API_URL: ${RELIABLESITE_API_URL:-}
+      SFTPGO_URL: ${SFTPGO_URL:-}
+      SFTPGO_USER: ${SFTPGO_USER:-}
+      SFTPGO_PASS: ${SFTPGO_PASS:-}
+
+      # Payments & Invoicing
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+
+      # Mailer (SMTP)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-support@vaultscope.de}
 
       # CORS
       CORS_ORIGINS: ${CORS_ORIGINS}
@@ -48,6 +61,9 @@ services:
 
     ports:
       - "${API_PORT:-8000}:3000"
+
+    volumes:
+      - uploads_data:/app/uploads
 
     networks:
       - vaultscope-prod
@@ -160,5 +176,6 @@ networks:
       config:
         - subnet: 172.21.0.0/16
 
-# Note: No volumes defined - use external managed storage for persistence
-# PostgreSQL and Redis should be managed services (AWS RDS, ElastiCache, etc.)
+volumes:
+  uploads_data:
+    driver: local
