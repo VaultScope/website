@@ -44,7 +44,7 @@ function CheckoutForm({ onPaymentSuccess, amount, productId, hostname }: { onPay
         { product_id: productId }
       );
 
-      const { error: confirmError } = await stripe.confirmPayment({
+      const res = await stripe.confirmPayment({
         elements,
         clientSecret: client_secret,
         confirmParams: {
@@ -53,13 +53,17 @@ function CheckoutForm({ onPaymentSuccess, amount, productId, hostname }: { onPay
         redirect: 'if_required',
       });
 
-      if (confirmError) {
-        setError(confirmError.message || 'Payment failed');
+      if (res.error) {
+        setError(res.error.message || 'Payment failed');
         setProcessing(false);
         return;
       }
 
-      await api.post('/storefront/orders', { product_id: productId, hostname });
+      await api.post('/storefront/orders', {
+        product_id: productId,
+        hostname,
+        payment_intent_id: res.paymentIntent?.id,
+      });
       setProcessing(false);
       onPaymentSuccess();
     } catch (err: any) {
@@ -190,7 +194,7 @@ export function NewService() {
                       </div>
                     </div>
                     <div className="flex items-center gap-5">
-                      <span className="text-sm font-medium">€{parseFloat(p.price as string).toFixed(2)} / mo</span>
+                      <span className="text-sm font-medium">€{(parseFloat(p.price as string) * 1.19).toFixed(2)} / mo incl. VAT</span>
                       <div className={`w-3.5 h-3.5 border flex items-center justify-center ${
                         selectedProductId === p.id ? 'border-foreground bg-foreground' : 'border-foreground/20'
                       }`}>

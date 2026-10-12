@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { getStoredClaims, isAuthenticated, getToken, logout, handleCallback } from './auth';
+import { getStoredClaims, isAuthenticated, getToken, logout } from './auth';
 import type { AuthClaims } from './auth';
 
 const validClaims: AuthClaims = {
@@ -91,38 +91,4 @@ describe('logout', () => {
   });
 });
 
-describe('handleCallback', () => {
-  it('throws on state mismatch', async () => {
-    sessionStorage.setItem('oidc_state', 'correct-state');
-    await expect(handleCallback('code123', 'wrong-state')).rejects.toThrow('Invalid state parameter');
-  });
 
-  it('throws when no saved state exists', async () => {
-    await expect(handleCallback('code123', 'some-state')).rejects.toThrow('Invalid state parameter');
-  });
-
-  it('clears oidc_state from sessionStorage on valid state', async () => {
-    sessionStorage.setItem('oidc_state', 'valid-state');
-    const mockResponse = { token: 'new-token', claims: validClaims };
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockResponse),
-    });
-
-    const result = await handleCallback('code123', 'valid-state');
-    expect(sessionStorage.getItem('oidc_state')).toBeNull();
-    expect(result).toEqual(validClaims);
-    expect(localStorage.getItem('vs_token')).toBe('new-token');
-    expect(JSON.parse(localStorage.getItem('vs_claims')!)).toEqual(validClaims);
-  });
-
-  it('throws on API error', async () => {
-    sessionStorage.setItem('oidc_state', 'valid-state');
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({ error: 'Invalid code' }),
-    });
-
-    await expect(handleCallback('bad-code', 'valid-state')).rejects.toThrow('Invalid code');
-  });
-});

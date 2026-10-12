@@ -155,7 +155,7 @@ export const InfrastructureCloud = () => {
                   <h3 className="text-xl font-medium tracking-tight mb-2">{plan.name}</h3>
                   <p className="text-sm text-foreground/50 mb-6 font-mono">{plan.target}</p>
                   <div className="text-3xl font-medium mb-6">
-                    €{price.toFixed(2)}<span className="text-sm text-foreground/40 font-light"> / {plan.billing_cycle === 'hourly' ? 'hr' : 'mo'}</span>
+                    €{(price * 1.19).toFixed(2)}<span className="text-sm text-foreground/40 font-light"> / {plan.billing_cycle === 'hourly' ? 'hr' : 'mo'} incl. VAT</span>
                   </div>
                   
                   <div className="text-sm text-foreground/60 mb-8 border-t border-border pt-6 flex-1 space-y-3">

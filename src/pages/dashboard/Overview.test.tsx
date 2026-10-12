@@ -69,7 +69,7 @@ describe('DashboardOverview', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('€79.98 / month')).toBeDefined();
+      expect(screen.getByText('€95.18 / month incl. VAT')).toBeDefined();
     });
   });
 

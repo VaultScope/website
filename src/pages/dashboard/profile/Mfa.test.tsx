@@ -1,7 +1,15 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { ProfileMfa } from './Mfa';
+import { api } from '../../../lib/api';
+
+vi.mock('../../../lib/api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
+}));
 
 function renderComponent() {
   return render(
@@ -12,35 +20,33 @@ function renderComponent() {
 }
 
 describe('ProfileMfa', () => {
-  it('renders the Authentik heading', () => {
-    renderComponent();
-    expect(screen.getByText('VaultScope ID (Authentik)')).toBeDefined();
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('renders the description text', () => {
+  it('renders disabled state when 2FA is inactive', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ two_factor_enabled: false });
+
     renderComponent();
-    expect(screen.getByText(/Authentication and Multi-Factor Security/)).toBeDefined();
-    expect(screen.getByText(/Passkeys, YubiKeys, and TOTP/)).toBeDefined();
+
+    await waitFor(() => {
+      expect(screen.getByText('Two-Factor Authentication (TOTP)')).toBeDefined();
+    });
+
+    expect(screen.getByText('Set up 2FA')).toBeDefined();
+    expect(screen.getByText(/Protect your VaultScope account and cloud infrastructure/)).toBeDefined();
   });
 
-  it('renders link to Authentik user portal', () => {
-    renderComponent();
-    const link = screen.getByRole('link', { name: /Manage Security in Authentik/ });
-    expect(link).toBeDefined();
-    expect(link.getAttribute('href')).toBe('https://auth.vaultscope.de/if/user/');
-  });
+  it('renders active state when 2FA is enabled', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ two_factor_enabled: true });
 
-  it('link opens in new tab', () => {
     renderComponent();
-    const link = screen.getByRole('link', { name: /Manage Security in Authentik/ });
-    expect(link.getAttribute('target')).toBe('_blank');
-    expect(link.getAttribute('rel')).toContain('noopener');
-    expect(link.getAttribute('rel')).toContain('noreferrer');
-  });
 
-  it('renders a KeyRound icon area', () => {
-    renderComponent();
-    const container = screen.getByText('VaultScope ID (Authentik)').closest('div');
-    expect(container).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText('Two-Factor Authentication (TOTP)')).toBeDefined();
+    });
+
+    expect(screen.getByText('Disable 2FA')).toBeDefined();
+    expect(screen.getByText(/Your account is actively protected/)).toBeDefined();
   });
 });

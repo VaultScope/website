@@ -47,7 +47,7 @@ export function DashboardOverview() {
         <div className="flex gap-10 text-sm">
           <div>
             <div className="text-muted-foreground mb-1">Current billing</div>
-            <div className="font-medium text-lg">{loading ? '...' : `€${totalMonthly.toFixed(2)} / month`}</div>
+            <div className="font-medium text-lg">{loading ? '...' : `€${(totalMonthly * 1.19).toFixed(2)} / month incl. VAT`}</div>
           </div>
           <div>
             <div className="text-muted-foreground mb-1">Support</div>
@@ -101,7 +101,7 @@ export function DashboardOverview() {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-muted-foreground font-mono text-xs">{svc.ip || '—'}</td>
-                    <td className="px-5 py-4 text-muted-foreground">€{parseFloat(svc.price).toFixed(2)}/mo</td>
+                    <td className="px-5 py-4 text-muted-foreground">€{(parseFloat(svc.price) * 1.19).toFixed(2)}/mo incl. VAT</td>
                     <td className="px-5 py-4 text-right">
                       <Link to={`/dashboard/vps/${svc.id}`} className="text-sm text-foreground/60 hover:text-foreground transition-colors">
                         Manage
