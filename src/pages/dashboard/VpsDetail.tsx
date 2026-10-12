@@ -4,9 +4,10 @@ import { api } from '../../lib/api';
 import { useToast } from '../../components/Toast';
 import {
   Power, Terminal, Network, Square,
-  Cpu, HardDrive, AlertTriangle, ArrowLeft, Tag, Activity, X
+  Cpu, HardDrive, AlertTriangle, ArrowLeft, Tag, Activity, X, Key, ChevronDown
 } from 'lucide-react';
 import { Button } from '../../components/Shared';
+import { VncConsoleModal } from '../../components/VncConsoleModal';
 
 export function VpsDetail() {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export function VpsDetail() {
   const [loading, setLoading] = useState(true);
   const [osImages, setOsImages] = useState<any[]>([]);
   const [sshKeys, setSshKeys] = useState<any[]>([]);
+  const [showConsole, setShowConsole] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -148,7 +150,7 @@ export function VpsDetail() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="h-8 px-3 text-xs gap-1.5">
+            <Button onClick={() => setShowConsole(true)} variant="outline" className="h-8 px-3 text-xs gap-1.5">
               <Terminal className="w-3.5 h-3.5" /> Console
             </Button>
             <Button onClick={() => handleAction('restart')} variant="outline" className="h-8 px-3 text-xs gap-1.5">
@@ -332,12 +334,16 @@ export function VpsDetail() {
                 </label>
               </div>
               {authMethod === 'ssh' && (
-                <select className="w-full bg-transparent border border-border p-2 text-sm outline-none">
-                  <option value="">Select an SSH Key...</option>
-                  {sshKeys.map(key => (
-                    <option key={key.id} value={key.id}>{key.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Key className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select className="w-full bg-background border border-border pl-9 pr-8 p-2 text-sm outline-none appearance-none rounded cursor-pointer">
+                    <option value="">Select an SSH Key...</option>
+                    {sshKeys.map(key => (
+                      <option key={key.id} value={key.id}>{key.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               )}
             </div>
 
@@ -348,6 +354,12 @@ export function VpsDetail() {
           </div>
         </div>
       )}
+
+      <VncConsoleModal
+        isOpen={showConsole}
+        onClose={() => setShowConsole(false)}
+        service={service}
+      />
     </div>
   );
 }

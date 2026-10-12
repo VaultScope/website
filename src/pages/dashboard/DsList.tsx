@@ -12,8 +12,12 @@ export function DsList() {
       api.get<any[]>('/storefront/services'),
       api.get<any[]>('/storefront/catalog')
     ]).then(([svcs, catalog]) => {
-      const dsCatalogIds = new Set(catalog.filter(p => p.category === 'ds').map(p => p.id));
-      const dsServices = svcs.filter(s => dsCatalogIds.has(s.product_id));
+      const dsCatalogIds = new Set(
+        catalog
+          .filter(p => p.category === 'ds' || p.category === 'dedicated' || p.provider === 'reliablesite')
+          .map(p => p.id)
+      );
+      const dsServices = svcs.filter(s => dsCatalogIds.has(s.product_id) || s.name?.toLowerCase().includes('dedicated'));
       setServices(dsServices.map(s => {
         const prod = catalog.find(p => p.id === s.product_id);
         return {
