@@ -21,6 +21,14 @@ export default defineConfig(({ mode }) => {
           target: listmonkUrl,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/listmonk/, '')
+        },
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+        '/uploads': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
         }
       }
     }

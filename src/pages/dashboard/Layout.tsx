@@ -122,6 +122,7 @@ export function DashboardLayout() {
     { name: 'VPS', href: '/dashboard/vps', icon: Server },
     { name: 'Dedicated Servers', href: '/dashboard/ds', icon: HardDrive },
     { name: 'ODP', href: '/dashboard/odp', icon: Cloud },
+    { name: 'SFTP Storage', href: '/dashboard/sftp', icon: HardDrive },
     { name: 'Order New Service', href: '/dashboard/new', icon: PlusCircle },
     { name: 'Support', href: '/dashboard/support', icon: LifeBuoy },
     { name: 'Profile', href: '/dashboard/profile', icon: UserCircle },

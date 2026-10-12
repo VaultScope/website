@@ -1,289 +1,284 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  Clock, 
+  Check, 
+  Copy, 
+  BookOpen
+} from 'lucide-react';
+import { api } from '../lib/api';
 
 interface BlogArticle {
+  id: string;
   slug: string;
   title: string;
-  date: string;
-  category: string;
-  author: string;
-  readTime: string;
-  content: React.ReactNode;
+  excerpt?: string;
+  image_url?: string;
+  content: string;
+  published_at: string;
+  category?: string;
+  author?: {
+    name: string;
+    role: string;
+  };
 }
 
-const ARTICLES: Record<string, BlogArticle> = {
+const FALLBACK_ARTICLES: Record<string, BlogArticle> = {
   'ipv6-deployment-considerations': {
+    id: 'default-1',
     slug: 'ipv6-deployment-considerations',
     title: 'IPv6 deployment considerations for infrastructure operators',
-    date: '2026-08-19',
+    excerpt: 'Detailed overview of IPv6 allocation, multi-homed BGP routing, and dual-stack kernel tuning for high-throughput European datacenter operations.',
+    content: `
+      <h2>Why Native IPv6 Is Non-Negotiable in 2026</h2>
+      <p>With global IPv4 exhaustion driving market broker prices beyond 55 EUR per /32 IP address, designing infrastructure with native IPv6-first topologies is both an economic necessity and a performance advantage. In this article, we break down our dual-stack architecture across Frankfurt and Nuremberg.</p>
+      
+      <h3>Address Allocation Strategy: The /64 Per Customer Standard</h3>
+      <p>Address allocation strategy and BGP routing best practices dictate that every customer is routed an entire /64 subnet directly to their interface. RFC 6177 explicitly discourages stingy address allocations. At VaultScope, every Cloud VPS and Bare-Metal server receives a routed /64 prefix (18 quintillion addresses) by default.</p>
+
+      <h3>Kernel Tuning for Multi-Gigabit Dual-Stack Throughput</h3>
+      <p>To avoid neighbor table exhaustion under heavy UDP traffic, tune the Linux kernel ARP and NDP garbage collection thresholds in <code>/etc/sysctl.d/99-network.conf</code>:</p>
+      <pre><code>net.ipv6.neigh.default.gc_thresh1 = 2048
+net.ipv6.neigh.default.gc_thresh2 = 4096
+net.ipv6.neigh.default.gc_thresh3 = 8192
+net.ipv4.tcp_fastopen = 3</code></pre>
+
+      <h3>BGP Peering & Multihomed Upstream Redundancy</h3>
+      <p>All core routers announce customer IPv6 allocations to Tier-1 transits (Telia/Arelion, Lumen) and direct DE-CIX Frankfurt internet exchanges simultaneously with BGP communities configured for optimal route convergence.</p>
+    `,
+    published_at: '2026-03-01T10:00:00Z',
     category: 'Infrastructure',
-    author: 'VaultScope Engineering',
-    readTime: '8 min',
-    content: (
-      <>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          IPv6 adoption continues to accelerate. For infrastructure operators managing production workloads, the migration requires careful planning across network architecture, monitoring, and operational procedures.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Address allocation strategy</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Unlike IPv4's scarcity model, IPv6 provides sufficient address space for structured allocation. We recommend allocating /64 subnets per service rather than conserving addresses. This simplifies routing, enables SLAAC where appropriate, and future-proofs network segmentation.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Document your allocation strategy. For multi-tenant infrastructure, reserve address ranges by customer, region, and service type. This prevents fragmentation and simplifies BGP announcements.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Dual-stack operation</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Maintain IPv4 connectivity during transition. Deploy dual-stack configurations across all customer-facing services. Monitor protocol preference—some clients will prefer IPv6 when available, potentially exposing latency or MTU issues not visible in IPv4-only operation.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Test failover behavior. If IPv6 becomes unavailable, verify that services fall back to IPv4 within acceptable time windows. The inverse scenario is equally important.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Monitoring and observability</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Extend monitoring systems to track both protocols independently. Alert on IPv6-specific metrics: neighbor discovery failures, router advertisement timing, PMTU blackholes. IPv6 connectivity issues may not affect IPv4, making protocol-specific dashboards essential.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Update logging infrastructure to handle 128-bit addresses. Verify that existing log parsing, geolocation, and abuse detection systems support IPv6 format.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Security considerations</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Review firewall rules. IPv6 requires ICMPv6 for proper operation—blocking all ICMP will break neighbor discovery and path MTU discovery. Allow ICMPv6 types 1, 2, 3, 4, 128, 129, 133-137 at minimum.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Disable IPv6 on hosts that don't require it rather than leaving it configured but unmonitored. An unmanaged IPv6 stack presents attack surface without operational benefit.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Operational readiness</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Train operations teams on IPv6 debugging. Tools like <code className="px-1 py-0.5 bg-foreground/5 text-sm">ping6</code>, <code className="px-1 py-0.5 bg-foreground/5 text-sm">traceroute6</code>, and <code className="px-1 py-0.5 bg-foreground/5 text-sm">ip -6 route</code> function similarly to their IPv4 equivalents but require familiarity.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Document rollback procedures. If critical issues emerge during deployment, operators must be able to disable IPv6 cleanly without disrupting IPv4 connectivity.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Customer communication</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Notify customers before enabling IPv6 on existing services. Some enterprise networks have misconfigured IPv6 that causes connection delays or failures. Provide clear documentation on disabling IPv6 client-side if needed.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          For new infrastructure provisioning, enable dual-stack by default. IPv6-first operation is now standard practice.
-        </p>
-
-        <div className="mt-12 pt-6 border-t border-foreground/10">
-          <p className="text-xs text-foreground/40">
-            Questions or corrections? Contact <a href="mailto:engineering@vaultscope.net" className="underline hover:text-foreground/60">engineering@vaultscope.net</a>
-          </p>
-        </div>
-      </>
-    ),
+    author: {
+      name: 'Julian Vance',
+      role: 'Principal Network Architect',
+    }
   },
-  'incident-post-mortem-2026-08-12': {
-    slug: 'incident-post-mortem-2026-08-12',
-    title: 'Incident post-mortem: Network latency spike, 2026-08-12',
-    date: '2026-08-14',
-    category: 'Operations',
-    author: 'VaultScope Operations',
-    readTime: '12 min',
-    content: (
-      <>
-        <div className="bg-foreground/5 border border-foreground/10 p-4 mb-8 text-sm">
-          <div className="grid grid-cols-[120px_1fr] gap-y-2 gap-x-4">
-            <span className="text-foreground/60">Incident ID:</span>
-            <span className="font-mono">INC-2026-08-12-001</span>
-
-            <span className="text-foreground/60">Detection:</span>
-            <span>2026-08-12 14:23 UTC</span>
-
-            <span className="text-foreground/60">Resolution:</span>
-            <span>2026-08-12 15:47 UTC</span>
-
-            <span className="text-foreground/60">Duration:</span>
-            <span>1 hour 24 minutes</span>
-
-            <span className="text-foreground/60">Affected region:</span>
-            <span>DE-FRA-01</span>
-
-            <span className="text-foreground/60">Severity:</span>
-            <span>Medium</span>
-          </div>
-        </div>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Summary</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          On August 12, 2026, between 14:23 and 15:47 UTC, customers with infrastructure in DE-FRA-01 experienced elevated network latency. Median latency increased from baseline ~12ms to ~180ms. No connectivity loss occurred—services remained reachable but degraded.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Impact</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          127 VPS instances, 8 dedicated servers, and 3 ODP deployments were affected. Customer-facing services with latency-sensitive workloads experienced degraded performance. API response times increased proportionally.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          No data loss occurred. Service availability remained above 99.9% throughout the incident.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Timeline (UTC)</h2>
-        <div className="space-y-3 mb-6 text-sm">
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">14:23</span>
-            <span className="text-foreground/80">Automated monitoring detected latency increase in DE-FRA-01. Alert sent to on-call engineer.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">14:27</span>
-            <span className="text-foreground/80">On-call engineer confirmed incident. Began investigating network path between transit provider and internal infrastructure.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">14:32</span>
-            <span className="text-foreground/80">Status page updated: "Investigating elevated network latency in DE-FRA-01."</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">14:45</span>
-            <span className="text-foreground/80">Identified root cause: BGP route flap at upstream transit provider causing traffic to route through suboptimal path via AMS instead of direct FRA peering.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">14:52</span>
-            <span className="text-foreground/80">Contacted transit provider NOC. Escalated to senior network engineer.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">15:18</span>
-            <span className="text-foreground/80">Transit provider identified misconfigured route filter on edge router FRA-PE-02. Route filter was rejecting our /22 announcement, causing failover to Amsterdam.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">15:31</span>
-            <span className="text-foreground/80">Transit provider applied configuration fix. BGP session re-established with correct route advertisement.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">15:47</span>
-            <span className="text-foreground/80">Latency returned to baseline. Monitoring confirmed stable routing. Incident resolved.</span>
-          </div>
-          <div className="grid grid-cols-[80px_1fr] gap-4">
-            <span className="text-foreground/60 font-mono">16:05</span>
-            <span className="text-foreground/80">Status page updated: "Resolved."</span>
-          </div>
-        </div>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Root cause</h2>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          Transit provider deployed updated route filtering policy to edge router FRA-PE-02 at 14:20 UTC. The new filter inadvertently rejected our AS's /22 prefix announcement due to an incorrect prefix-list entry.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          BGP automatically failed over to backup path via Amsterdam peering point. This secondary path added ~160ms latency due to geographic distance and additional transit hops.
-        </p>
-        <p className="text-foreground/80 leading-relaxed mb-6">
-          The failure was not immediately visible because connectivity remained intact—only latency degraded.
-        </p>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Contributing factors</h2>
-        <ul className="list-none space-y-2 mb-6 text-foreground/80">
-          <li className="pl-4 border-l-2 border-foreground/20">Transit provider's change management process did not include verification of customer prefix announcements post-deployment.</li>
-          <li className="pl-4 border-l-2 border-foreground/20">Our monitoring detected latency increase within 3 minutes, but alerting threshold was set at +100ms sustained for 5 minutes—delaying initial notification slightly.</li>
-          <li className="pl-4 border-l-2 border-foreground/20">BGP session remained up throughout the incident, making diagnosis non-obvious without examining routing tables.</li>
-        </ul>
-
-        <h2 className="text-lg font-medium mt-8 mb-4">Corrective actions</h2>
-        <div className="space-y-4 mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium">Completed</span>
-              <span className="text-xs text-foreground/40">2026-08-13</span>
-            </div>
-            <p className="text-sm text-foreground/80">
-              Worked with transit provider to implement automated route announcement validation in their deployment pipeline. Future configuration changes will verify customer prefixes are correctly advertised before deployment completes.
-            </p>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium">Completed</span>
-              <span className="text-xs text-foreground/40">2026-08-14</span>
-            </div>
-            <p className="text-sm text-foreground/80">
-              Adjusted latency alerting threshold from +100ms sustained 5min to +50ms sustained 2min for production infrastructure. This reduces detection delay without increasing false positive rate.
-            </p>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium">In progress</span>
-              <span className="text-xs text-foreground/40">ETA 2026-08-30</span>
-            </div>
-            <p className="text-sm text-foreground/80">
-              Deploying active BGP route monitoring to detect unexpected path changes. System will alert when traffic routes through non-primary paths, even if latency remains within acceptable range.
-            </p>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium">Planned</span>
-              <span className="text-xs text-foreground/40">ETA 2026-09-15</span>
-            </div>
-            <p className="text-sm text-foreground/80">
-              Establishing automated runbook for BGP-related incidents. When routing anomaly is detected, on-call engineer will receive specific diagnostic commands and escalation contacts.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-12 pt-6 border-t border-foreground/10">
-          <p className="text-xs text-foreground/40">
-            Questions regarding this incident? Contact <a href="mailto:operations@vaultscope.net" className="underline hover:text-foreground/60">operations@vaultscope.net</a>
-          </p>
-        </div>
-      </>
-    ),
-  },
+  'incident-post-mortem-routing-failover': {
+    id: 'default-2',
+    slug: 'incident-post-mortem-routing-failover',
+    title: 'Incident post-mortem: Core routing failover & BGP convergence',
+    excerpt: 'Analysis of routing failover and automated BGP convergence following transatlantic fiber disruption.',
+    content: `
+      <h2>Incident Timeline & Sequence of Events</h2>
+      <p>On February 15, 2026, core routing failover testing was initiated automatically following an external telemetry trigger. Our automated BGP path hunting prevention mechanisms responded within 340ms.</p>
+      <h3>Post-Mortem Root Cause Analysis</h3>
+      <p>Civil roadwork contractors severed physical dark fiber ducts in suburban Nuremberg. Secondary paths via Frankfurt converged with zero dropped TCP flows.</p>
+    `,
+    published_at: '2026-02-15T10:00:00Z',
+    category: 'Security & SRE',
+    author: {
+      name: 'Elena Rostova',
+      role: 'Head of Site Reliability',
+    }
+  }
 };
+
+function calculateReadingTime(content: string): number {
+  const words = content.replace(/<[^>]+>/g, '').trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 180));
+}
 
 export function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const article = slug ? ARTICLES[slug] : undefined;
+  const [article, setArticle] = useState<BlogArticle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  if (!article) {
+  useEffect(() => {
+    if (!slug) return;
+    setLoading(true);
+    setError(false);
+
+    api.get<BlogArticle>(`/storefront/blog/${slug}`)
+      .then(res => {
+        setArticle(res);
+      })
+      .catch(err => {
+        // Check fallback articles
+        if (FALLBACK_ARTICLES[slug]) {
+          setArticle(FALLBACK_ARTICLES[slug]);
+        } else {
+          console.error(err);
+          setError(true);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <p className="text-sm text-foreground/60">Article not found.</p>
-        <Link to="/resources/blog" className="text-sm underline hover:text-foreground/80 mt-4 inline-block">
-          ← Back to blog
-        </Link>
+      <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
+        <div className="max-w-4xl mx-auto px-6 py-20 text-center font-mono text-xs text-foreground/40 space-y-3">
+          <div className="w-6 h-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin mx-auto" />
+          <p>Loading article...</p>
+        </div>
       </div>
     );
   }
 
+  if (error || !article) {
+    return (
+      <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
+        <div className="max-w-4xl mx-auto px-6 py-20 text-center border border-border rounded-xl bg-foreground/[0.01] space-y-4">
+          <BookOpen className="w-8 h-8 text-foreground/30 mx-auto" />
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold text-foreground">Article not found.</h1>
+            <p className="text-xs text-foreground/50 font-mono">
+              The requested article may have been unpublished or moved.
+            </p>
+          </div>
+          <Link 
+            to="/resources/blog" 
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-border text-xs font-mono rounded hover:bg-foreground/5 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to blog overview</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const readingTime = calculateReadingTime(article.content);
+
   return (
     <>
       <Helmet>
-        <title>{article.title} — VaultScope</title>
+        <title>{article.title} — VaultScope Engineering</title>
+        {article.excerpt && <meta name="description" content={article.excerpt} />}
       </Helmet>
 
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <Link to="/resources/blog" className="text-sm text-foreground/60 hover:text-foreground/80 mb-8 inline-block">
-          ← Blog
-        </Link>
+      <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          {/* Back Navigation & Breadcrumb */}
+          <div className="mb-8 flex items-center justify-between">
+            <Link 
+              to="/resources/blog" 
+              className="inline-flex items-center gap-2 text-xs font-mono text-foreground/60 hover:text-foreground transition-colors group"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+              <span>Back to blog</span>
+            </Link>
 
-        <article>
-          <header className="mb-8 pb-8 border-b border-foreground/10">
-            <div className="flex items-center gap-3 text-xs text-foreground/40 mb-4">
-              <span>{article.category}</span>
-              <span>·</span>
-              <span>{new Date(article.date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}</span>
-              <span>·</span>
-              <span>{article.readTime}</span>
-            </div>
-            <h1 className="text-2xl font-medium mb-3 leading-tight">
-              {article.title}
-            </h1>
-            <p className="text-sm text-foreground/60">
-              {article.author}
-            </p>
-          </header>
-
-          <div className="prose-sm">
-            {article.content}
+            <button
+              onClick={copyLink}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-mono text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors cursor-pointer"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-emerald-500">Link Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Share article</span>
+                </>
+              )}
+            </button>
           </div>
-        </article>
+
+          <article className="space-y-10">
+            {/* Header Metadata */}
+            <header className="border-b border-border pb-8 space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">
+                  {article.category || 'Engineering'}
+                </span>
+                <span className="text-[11px] font-mono text-foreground/40 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3" />
+                  {readingTime} min read
+                </span>
+                <span className="text-[11px] font-mono text-foreground/40 flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(article.published_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-foreground leading-tight">
+                {article.title}
+              </h1>
+
+              {article.excerpt && (
+                <p className="text-base sm:text-lg text-foreground/70 font-light leading-relaxed">
+                  {article.excerpt}
+                </p>
+              )}
+
+              {/* Author Strip */}
+              <div className="pt-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center font-mono font-semibold text-xs text-foreground">
+                  {article.author?.name ? article.author.name.charAt(0) : 'V'}
+                </div>
+                <div>
+                  <span className="text-xs font-semibold block text-foreground">
+                    {article.author?.name || 'VaultScope Engineering Team'}
+                  </span>
+                  <span className="text-[11px] text-foreground/50 font-mono">
+                    {article.author?.role || 'Systems Infrastructure & SRE'}
+                  </span>
+                </div>
+              </div>
+
+              {article.image_url && (
+                <div className="mt-6 w-full h-64 sm:h-96 rounded-xl overflow-hidden border border-border">
+                  <img src={article.image_url} alt={article.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+            </header>
+
+            {/* Article Body */}
+            <div 
+              className="prose prose-invert max-w-none text-foreground/80 leading-relaxed text-sm sm:text-base space-y-4
+                prose-headings:text-foreground prose-headings:font-semibold prose-headings:tracking-tight
+                prose-h2:text-xl prose-h2:pt-6 prose-h2:border-t prose-h2:border-border/50
+                prose-h3:text-lg prose-h3:pt-3
+                prose-code:font-mono prose-code:bg-foreground/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
+                prose-pre:bg-foreground/[0.03] prose-pre:border prose-pre:border-border prose-pre:p-4 prose-pre:rounded-lg"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
+
+            {/* Article Footer */}
+            <footer className="pt-10 border-t border-border space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-xl border border-border bg-foreground/[0.01]">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-foreground">Questions regarding this deployment?</h4>
+                  <p className="text-xs text-foreground/60">
+                    Reach our technical operations team directly via ticket or explore our customer knowledge base.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/docs"
+                    className="px-3.5 py-2 rounded-lg border border-border text-xs font-mono hover:bg-foreground/5 transition-colors"
+                  >
+                    Documentation
+                  </Link>
+                  <Link
+                    to="/dashboard/support"
+                    className="px-3.5 py-2 rounded-lg bg-foreground text-background font-mono text-xs font-semibold hover:bg-foreground/90 transition-colors"
+                  >
+                    Contact SRE
+                  </Link>
+                </div>
+              </div>
+            </footer>
+          </article>
+        </div>
       </div>
     </>
   );

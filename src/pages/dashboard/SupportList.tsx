@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Plus, X } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Plus, X, Server, Tag, AlertCircle, ChevronDown } from 'lucide-react';
 import { Button } from '../../components/Shared';
 import { api } from '../../lib/api';
 import { useToast } from '../../components/Toast';
@@ -15,14 +15,38 @@ interface Ticket {
   related_service_id?: string;
 }
 
+interface UserService {
+  id: string;
+  name: string;
+  hostname?: string;
+  ip?: string;
+  status: string;
+}
+
 export function SupportList() {
+  const [searchParams] = useSearchParams();
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [services, setServices] = useState<UserService[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [newTicket, setNewTicket] = useState({ subject: '', content: '', category: 'support', priority: 'normal' });
+  const [newTicket, setNewTicket] = useState({
+    subject: '',
+    content: '',
+    category: 'support',
+    priority: 'normal',
+    related_service_id: '',
+  });
   const { error, success } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const serviceParam = searchParams.get('service_id');
+    if (serviceParam) {
+      setNewTicket(prev => ({ ...prev, related_service_id: serviceParam }));
+      setShowNew(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     api.get<Ticket[]>('/storefront/tickets')
@@ -35,6 +59,10 @@ export function SupportList() {
         error('Failed to load tickets');
         setLoading(false);
       });
+
+    api.get<UserService[]>('/storefront/services')
+      .then(setServices)
+      .catch(() => {});
   }, [error]);
 
   const handleCreateTicket = async () => {
@@ -44,7 +72,14 @@ export function SupportList() {
     }
     setSubmitting(true);
     try {
-      const created = await api.post<Ticket>('/storefront/tickets', newTicket);
+      const payload = {
+        subject: newTicket.subject.trim(),
+        content: newTicket.content.trim(),
+        category: newTicket.category,
+        priority: newTicket.priority,
+        related_service_id: newTicket.related_service_id || undefined,
+      };
+      const created = await api.post<Ticket>('/storefront/tickets', payload);
       success('Ticket created');
       navigate(`/dashboard/support/${created.id}`);
     } catch (err: any) {
@@ -85,18 +120,65 @@ export function SupportList() {
             placeholder="Subject"
             className="w-full border border-border bg-transparent p-2.5 text-sm focus:outline-none focus:border-foreground"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <select value={newTicket.category} onChange={e => setNewTicket({ ...newTicket, category: e.target.value })} className="border border-border bg-background p-2.5 text-sm focus:outline-none focus:border-foreground">
-              <option value="support">General Support</option>
-              <option value="abuse">Abuse Report</option>
-              <option value="dmca">DMCA</option>
-            </select>
-            <select value={newTicket.priority} onChange={e => setNewTicket({ ...newTicket, priority: e.target.value })} className="border border-border bg-background p-2.5 text-sm focus:outline-none focus:border-foreground">
-              <option value="low">Low</option>
-              <option value="normal">Normal</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                <Tag className="w-3.5 h-3.5 text-foreground/50" />
+                <span>Category</span>
+              </label>
+              <div className="relative">
+                <select 
+                  value={newTicket.category} 
+                  onChange={e => setNewTicket({ ...newTicket, category: e.target.value })} 
+                  className="w-full border border-border bg-background p-2.5 pr-8 text-sm focus:outline-none focus:border-foreground appearance-none rounded cursor-pointer"
+                >
+                  <option value="support">General Support</option>
+                  <option value="abuse">Abuse Report</option>
+                  <option value="dmca">DMCA</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-foreground/50" />
+                <span>Priority</span>
+              </label>
+              <div className="relative">
+                <select 
+                  value={newTicket.priority} 
+                  onChange={e => setNewTicket({ ...newTicket, priority: e.target.value })} 
+                  className="w-full border border-border bg-background p-2.5 pr-8 text-sm focus:outline-none focus:border-foreground appearance-none rounded cursor-pointer"
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                <Server className="w-3.5 h-3.5 text-foreground/50" />
+                <span>Related Service (Optional)</span>
+              </label>
+              <div className="relative">
+                <select 
+                  value={newTicket.related_service_id} 
+                  onChange={e => setNewTicket({ ...newTicket, related_service_id: e.target.value })} 
+                  className="w-full border border-border bg-background p-2.5 pr-8 text-sm focus:outline-none focus:border-foreground appearance-none rounded cursor-pointer"
+                >
+                  <option value="">None / General Inquiry</option>
+                  {services.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.hostname || s.ip || s.id.slice(0, 8)})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
           </div>
           <textarea
             value={newTicket.content}
@@ -134,7 +216,15 @@ export function SupportList() {
                 <tr key={tkt.id} className="hover:bg-foreground/[0.02] transition-colors">
                   <td className="px-5 py-4">
                     <div className="font-medium mb-0.5">{tkt.subject}</div>
-                    <div className="text-xs font-mono text-muted-foreground">{tkt.ticket_number}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-muted-foreground">{tkt.ticket_number}</span>
+                      {tkt.related_service_id && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-mono bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/50">
+                          <Server className="w-3 h-3 text-blue-400" />
+                          {services.find(s => s.id === tkt.related_service_id)?.name || 'Linked Service'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-5 py-4">
                     <span className={`text-xs ${

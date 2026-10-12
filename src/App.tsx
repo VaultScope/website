@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Navbar, Footer } from './components/Shared';
 import { LanguageProvider } from './i18n';
 import { ToastProvider } from './components/Toast';
+import { ExplainModeProvider } from './components/HelpTooltip';
 
 // ─── Eagerly loaded (homepage + primary routes) ───────────────────────────────
 import { Home }       from './pages/Home';
@@ -11,12 +12,13 @@ import { InfrastructureOverview } from './pages/InfrastructureOverview';
 import { Odp }        from './pages/Odp';
 import { Contact }    from './pages/Contact';
 import { NotFound }   from './pages/NotFound';
-import { AuthCallback } from './pages/AuthCallback';
+
 
 // ─── Lazily loaded ───────────────────────────────────────────────────────────
 const InfrastructureCloud     = lazy(() => import('./pages/InfrastructureCloud').then(m => ({ default: m.InfrastructureCloud })));
 const InfrastructureDedicated = lazy(() => import('./pages/InfrastructureDedicated').then(m => ({ default: m.InfrastructureDedicated })));
 const InfrastructureManaged   = lazy(() => import('./pages/InfrastructureManaged').then(m => ({ default: m.InfrastructureManaged })));
+const InfrastructureStorage   = lazy(() => import('./pages/InfrastructureStorage').then(m => ({ default: m.InfrastructureStorage })));
 const OpenSource   = lazy(() => import('./pages/OpenSource').then(m => ({ default: m.OpenSource })));
 const About        = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
 const Team         = lazy(() => import('./pages/Team').then(m => ({ default: m.Team })));
@@ -43,6 +45,7 @@ const DsList = lazy(() => import('./pages/dashboard/DsList').then(m => ({ defaul
 const DsDetail = lazy(() => import('./pages/dashboard/DsDetail').then(m => ({ default: m.DsDetail })));
 const OdpList = lazy(() => import('./pages/dashboard/OdpList').then(m => ({ default: m.OdpList })));
 const OdpDetail = lazy(() => import('./pages/dashboard/OdpDetail').then(m => ({ default: m.OdpDetail })));
+const SftpStorage = lazy(() => import('./pages/dashboard/SftpStorage').then(m => ({ default: m.default })));
 
 const SupportList = lazy(() => import('./pages/dashboard/SupportList').then(m => ({ default: m.SupportList })));
 const SupportDetail = lazy(() => import('./pages/dashboard/SupportDetail').then(m => ({ default: m.SupportDetail })));
@@ -69,14 +72,38 @@ const ReportOther = lazy(() => import('./pages/report/Other').then(m => ({ defau
 // ─── Docs Routes ──────────────────────────────────────────────────────────
 const DocsLayout = lazy(() => import('./pages/docs/Layout').then(m => ({ default: m.DocsLayout })));
 const DocsOverview = lazy(() => import('./pages/docs/Overview').then(m => ({ default: m.DocsOverview })));
+const DocsArchitecture = lazy(() => import('./pages/docs/Architecture').then(m => ({ default: m.DocsArchitecture })));
+const DocsAuthentikGuide = lazy(() => import('./pages/docs/AuthentikGuide').then(m => ({ default: m.DocsAuthentikGuide })));
+const DocsApiReference = lazy(() => import('./pages/docs/ApiReference').then(m => ({ default: m.DocsApiReference })));
+const DocsRunbooks = lazy(() => import('./pages/docs/Runbooks').then(m => ({ default: m.DocsRunbooks })));
 const DocsProjects = lazy(() => import('./pages/docs/Projects').then(m => ({ default: m.DocsProjects })));
+
 const DocsStorefront = lazy(() => import('./pages/docs/Storefront').then(m => ({ default: m.DocsStorefront })));
+const StorefrontInstall = lazy(() => import('./pages/docs/storefront/StorefrontInstall').then(m => ({ default: m.StorefrontInstall })));
+const StorefrontConfig = lazy(() => import('./pages/docs/storefront/StorefrontConfig').then(m => ({ default: m.StorefrontConfig })));
+const StorefrontLifecycle = lazy(() => import('./pages/docs/storefront/StorefrontLifecycle').then(m => ({ default: m.StorefrontLifecycle })));
+
 const DocsVamos = lazy(() => import('./pages/docs/Vamos').then(m => ({ default: m.DocsVamos })));
+const VamosInstall = lazy(() => import('./pages/docs/vamos/VamosInstall').then(m => ({ default: m.VamosInstall })));
+const VamosConfig = lazy(() => import('./pages/docs/vamos/VamosConfig').then(m => ({ default: m.VamosConfig })));
+const VamosLifecycle = lazy(() => import('./pages/docs/vamos/VamosLifecycle').then(m => ({ default: m.VamosLifecycle })));
+
 const DocsCamos = lazy(() => import('./pages/docs/Camos').then(m => ({ default: m.DocsCamos })));
+const CamosInstall = lazy(() => import('./pages/docs/camos/CamosInstall').then(m => ({ default: m.CamosInstall })));
+const CamosConfig = lazy(() => import('./pages/docs/camos/CamosConfig').then(m => ({ default: m.CamosConfig })));
+const CamosLifecycle = lazy(() => import('./pages/docs/camos/CamosLifecycle').then(m => ({ default: m.CamosLifecycle })));
+
+const CustomerGettingStarted = lazy(() => import('./pages/docs/customer/GettingStarted').then(m => ({ default: m.GettingStarted })));
+const CustomerVpsGuide = lazy(() => import('./pages/docs/customer/VpsGuide').then(m => ({ default: m.VpsGuide })));
+const CustomerSftpGuide = lazy(() => import('./pages/docs/customer/SftpGuide').then(m => ({ default: m.SftpGuide })));
+const CustomerDedicatedGuide = lazy(() => import('./pages/docs/customer/DedicatedGuide').then(m => ({ default: m.DedicatedGuide })));
+const CustomerBillingGuide = lazy(() => import('./pages/docs/customer/BillingGuide').then(m => ({ default: m.BillingGuide })));
+const CustomerSupportGuide = lazy(() => import('./pages/docs/customer/SupportGuide').then(m => ({ default: m.SupportGuide })));
 
 // ─── Registration ────────────────────────────────────────────────────────────
 const Register = lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
-const RegisterSuccess = lazy(() => import('./pages/Register').then(m => ({ default: m.RegisterSuccess })));
+const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail').then(m => ({ default: m.VerifyEmail })));
 
 // ─── Route definitions ───────────────────────────────────────────────────────
 
@@ -92,6 +119,7 @@ const PAGE_ROUTES: RouteConfig[] = [
   { path: '/infrastructure/cloud', element: <InfrastructureCloud /> },
   { path: '/infrastructure/dedicated', element: <InfrastructureDedicated /> },
   { path: '/infrastructure/managed', element: <InfrastructureManaged /> },
+  { path: '/infrastructure/storage', element: <InfrastructureStorage /> },
   { path: '/deploy', element: <Odp /> },
   { 
     path: '/dashboard', 
@@ -107,6 +135,7 @@ const PAGE_ROUTES: RouteConfig[] = [
       { path: 'ds/:id', element: <DsDetail /> },
       { path: 'odp', element: <OdpList /> },
       { path: 'odp/:id', element: <OdpDetail /> },
+      { path: 'sftp', element: <SftpStorage /> },
       { path: 'support', element: <SupportList /> },
       { path: 'support/:id', element: <SupportDetail /> },
       { 
@@ -152,17 +181,39 @@ const PAGE_ROUTES: RouteConfig[] = [
     element: <DocsLayout />,
     children: [
       { path: '', element: <DocsOverview /> },
+      { path: 'customer', element: <Navigate to="/docs/customer/getting-started" replace /> },
+      { path: 'customer/getting-started', element: <CustomerGettingStarted /> },
+      { path: 'customer/vps', element: <CustomerVpsGuide /> },
+      { path: 'customer/sftp', element: <CustomerSftpGuide /> },
+      { path: 'customer/dedicated', element: <CustomerDedicatedGuide /> },
+      { path: 'customer/billing', element: <CustomerBillingGuide /> },
+      { path: 'customer/support', element: <CustomerSupportGuide /> },
+      { path: 'architecture', element: <DocsArchitecture /> },
+      { path: 'authentik', element: <DocsAuthentikGuide /> },
+      { path: 'api', element: <DocsApiReference /> },
+      { path: 'runbooks', element: <DocsRunbooks /> },
       { path: 'projects', element: <DocsProjects /> },
       { path: 'projects/storefront', element: <DocsStorefront /> },
+      { path: 'projects/storefront/install', element: <StorefrontInstall /> },
+      { path: 'projects/storefront/config', element: <StorefrontConfig /> },
+      { path: 'projects/storefront/lifecycle', element: <StorefrontLifecycle /> },
       { path: 'projects/vamos', element: <DocsVamos /> },
+      { path: 'projects/vamos/install', element: <VamosInstall /> },
+      { path: 'projects/vamos/config', element: <VamosConfig /> },
+      { path: 'projects/vamos/lifecycle', element: <VamosLifecycle /> },
       { path: 'projects/camos', element: <DocsCamos /> },
+      { path: 'projects/camos/install', element: <CamosInstall /> },
+      { path: 'projects/camos/config', element: <CamosConfig /> },
+      { path: 'projects/camos/lifecycle', element: <CamosLifecycle /> },
       { path: 'storefront', element: <Navigate to="/docs/projects/storefront" replace /> },
       { path: 'vamos', element: <Navigate to="/docs/projects/vamos" replace /> },
       { path: 'camos', element: <Navigate to="/docs/projects/camos" replace /> },
     ]
   },
   { path: '/register', element: <Register /> },
-  { path: '/register/success', element: <RegisterSuccess /> },
+  { path: '/login', element: <Login /> },
+  { path: '/verify-email', element: <VerifyEmail /> },
+  { path: '/profile', element: <Navigate to="/dashboard/profile" replace /> },
   { path: '/legal', element: <Navigate to="/legal/privacy" replace /> },
   { path: '/legal/privacy', element: <Privacy /> },
   { path: '/legal/terms', element: <Terms /> },
@@ -232,8 +283,8 @@ function AppContent() {
               <Route key={path} path={path} element={element} />
             ))}
 
-            {/* ─── Auth callback ──────────────────────────────────── */}
-            <Route path="/auth/callback" element={<AuthCallback />} />
+            {/* ─── Auth ───────────────────────────────────────────── */}
+            <Route path="/login" element={<Login />} />
 
             {/* ─── 404 ────────────────────────────────────────────── */}
             <Route path="*" element={<NotFound />} />
@@ -251,7 +302,9 @@ export default function App() {
       <HelmetProvider>
         <ToastProvider>
           <LanguageProvider>
-            <AppContent />
+            <ExplainModeProvider>
+              <AppContent />
+            </ExplainModeProvider>
           </LanguageProvider>
         </ToastProvider>
       </HelmetProvider>

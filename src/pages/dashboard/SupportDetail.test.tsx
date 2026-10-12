@@ -103,7 +103,7 @@ describe('SupportDetail', () => {
     fireEvent.click(screen.getByText('Send Reply'));
 
     await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/storefront/tickets/tkt-1/messages', { content: 'Thanks!' });
+      expect(mockPost).toHaveBeenCalledWith('/storefront/tickets/tkt-1/messages', { content: 'Thanks!', attachments: [] });
     });
   });
 
@@ -131,6 +131,75 @@ describe('SupportDetail', () => {
     await waitFor(() => {
       const link = screen.getByText('Tickets').closest('a');
       expect(link?.getAttribute('href')).toBe('/dashboard/support');
+    });
+  });
+
+  it('renders attached images in messages', async () => {
+    const dataWithAttachment = {
+      ...mockTicketData,
+      messages: [
+        {
+          id: 'msg-att',
+          author_id: 'cust-1',
+          author_type: 'customer',
+          content: 'Here is screenshot',
+          created_at: '2026-08-25T10:00:00Z',
+          attachments: [
+            {
+              id: 'att-1',
+              filename: 'error.png',
+              url: '/uploads/tickets/error.png',
+              size: 20480,
+              content_type: 'image/png',
+            },
+          ],
+        },
+      ],
+    };
+    mockGet.mockResolvedValue(dataWithAttachment);
+    renderComponent();
+
+    await waitFor(() => {
+      const img = screen.getByRole('img', { name: 'error.png' });
+      expect(img).toBeDefined();
+      expect(img.getAttribute('src')).toBe('/uploads/tickets/error.png');
+    });
+  });
+
+  it('rejects non-image files with error message', async () => {
+    mockGet.mockResolvedValue(mockTicketData);
+    const { container } = renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Type your reply...')).toBeDefined();
+    });
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const fakePdf = new File(['%PDF-1.4'], 'document.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(fileInput, { target: { files: [fakePdf] } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Only PNG, JPEG, WebP, and GIF images are permitted/)).toBeDefined();
+    });
+  });
+
+  it('rejects files larger than 10MB', async () => {
+    mockGet.mockResolvedValue(mockTicketData);
+    const { container } = renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Type your reply...')).toBeDefined();
+    });
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const bigFile = new File(['x'.repeat(100)], 'huge.png', { type: 'image/png' });
+    Object.defineProperty(bigFile, 'size', { value: 11 * 1024 * 1024 });
+
+    fireEvent.change(fileInput, { target: { files: [bigFile] } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/exceeds the 10MB limit/)).toBeDefined();
     });
   });
 });

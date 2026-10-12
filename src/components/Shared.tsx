@@ -1,7 +1,29 @@
 import { twMerge } from 'tailwind-merge';
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, GitBranch, Sun, Moon, ChevronDown, Globe } from 'lucide-react';
+import { 
+  Menu, 
+  X, 
+  GitBranch, 
+  Sun, 
+  Moon, 
+  ChevronDown, 
+  Globe,
+  Server,
+  HardDrive,
+  ShieldCheck,
+  CreditCard,
+  Cpu,
+  Box,
+  Zap,
+  Layers,
+  Users,
+  Mail,
+  Activity,
+  BookOpen,
+  MessageSquare,
+  Newspaper
+} from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { getInitialDark, applyDark } from '../hooks/useTheme';
 import { useLanguage } from '../i18n';
@@ -155,6 +177,7 @@ interface DropdownItem {
   label: string;
   href: string;
   external?: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 interface NavDropdown {
@@ -223,10 +246,22 @@ const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
         <div
           id={dropdown.id}
           role="menu"
-          className="absolute top-full left-0 mt-2 min-w-[200px] border border-border bg-background z-50"
+          className="absolute top-full left-0 mt-2 min-w-[240px] border border-border bg-background/95 backdrop-blur-md shadow-xl rounded-lg py-1.5 z-50 overflow-hidden"
         >
-          {dropdown.items.map((item, i) => (
-            item.external ? (
+          {dropdown.items.map((item, i) => {
+            const Icon = item.icon;
+            const content = (
+              <div className="flex items-center gap-3">
+                {Icon && (
+                  <div className="w-6 h-6 rounded bg-foreground/[0.04] flex items-center justify-center shrink-0 text-foreground/50 group-hover:text-foreground transition-colors">
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                )}
+                <span className="truncate">{item.label}</span>
+              </div>
+            );
+
+            return item.external ? (
               <a
                 key={item.href}
                 ref={el => { itemRefs.current[i] = el; }}
@@ -236,9 +271,9 @@ const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
                 role="menuitem"
                 tabIndex={-1}
                 onClick={onClose}
-                className="block px-5 py-3 text-xs tracking-wider uppercase text-foreground/60 hover:text-foreground hover:bg-foreground/[0.03] transition-colors focus-visible:outline-none focus-visible:bg-foreground/[0.05]"
+                className="group flex items-center justify-between px-4 py-2.5 text-xs tracking-wider uppercase text-foreground/70 hover:text-foreground hover:bg-foreground/[0.04] transition-colors focus-visible:outline-none focus-visible:bg-foreground/[0.05]"
               >
-                {item.label}
+                {content}
               </a>
             ) : (
               <Link
@@ -248,12 +283,12 @@ const NavDropdownMenu = ({ dropdown, isOpen, onToggle, onClose }: {
                 role="menuitem"
                 tabIndex={-1}
                 onClick={onClose}
-                className="block px-5 py-3 text-xs tracking-wider uppercase text-foreground/60 hover:text-foreground hover:bg-foreground/[0.03] transition-colors focus-visible:outline-none focus-visible:bg-foreground/[0.05]"
+                className="group flex items-center justify-between px-4 py-2.5 text-xs tracking-wider uppercase text-foreground/70 hover:text-foreground hover:bg-foreground/[0.04] transition-colors focus-visible:outline-none focus-visible:bg-foreground/[0.05]"
               >
-                {item.label}
+                {content}
               </Link>
-            )
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -275,38 +310,39 @@ export const Navbar = () => {
       label: t.nav.infrastructure,
       id: 'nav-infra',
       items: [
-        { label: t.nav.cloudVps, href: '/infrastructure/cloud/' },
-        { label: t.nav.dedicatedServers, href: '/infrastructure/dedicated/' },
-        { label: t.nav.managedInfrastructure, href: '/infrastructure/managed/' },
-        { label: t.nav.pricing, href: '/pricing/' },
+        { label: t.nav.cloudVps, href: '/infrastructure/cloud/', icon: Server },
+        { label: t.nav.dedicatedServers, href: '/infrastructure/dedicated/', icon: Cpu },
+        { label: t.nav.managedInfrastructure, href: '/infrastructure/managed/', icon: ShieldCheck },
+        { label: 'SFTP Storage', href: '/infrastructure/storage/', icon: HardDrive },
+        { label: t.nav.pricing, href: '/pricing/', icon: CreditCard },
       ],
     },
     {
       label: t.nav.software,
       id: 'nav-software',
       items: [
-        { label: t.nav.pegasus, href: '/software/pegasus/' },
-        { label: t.nav.vamos, href: '/software/vamos/' },
-        { label: t.nav.camos, href: '/software/camos/' },
-        { label: t.nav.openSource, href: '/company/open-source/' },
+        { label: t.nav.pegasus, href: '/software/pegasus/', icon: Box },
+        { label: t.nav.vamos, href: '/software/vamos/', icon: Zap },
+        { label: t.nav.camos, href: '/software/camos/', icon: Layers },
+        { label: t.nav.openSource, href: '/company/open-source/', icon: GitBranch },
       ],
     },
     {
       label: t.nav.company,
       id: 'nav-company',
       items: [
-        { label: t.nav.about, href: '/company/about/' },
-        { label: t.nav.contact, href: '/company/contact/' },
-        { label: t.nav.status, href: 'https://status.vaultscope.de/status/vs', external: true },
+        { label: t.nav.about, href: '/company/about/', icon: Users },
+        { label: t.nav.contact, href: '/company/contact/', icon: Mail },
+        { label: t.nav.status, href: 'https://status.vaultscope.de/status/vs', external: true, icon: Activity },
       ],
     },
     {
       label: 'Resources',
       id: 'nav-resources',
       items: [
-        { label: 'Blog', href: '/resources/blog/' },
-        { label: 'Forum', href: '/resources/forum/' },
-        { label: 'Documentation', href: '/docs' },
+        { label: 'Documentation', href: '/docs', icon: BookOpen },
+        { label: 'Blog', href: '/resources/blog/', icon: Newspaper },
+        { label: 'Forum', href: '/resources/forum/', icon: MessageSquare },
       ],
     },
   ];
@@ -370,6 +406,13 @@ export const Navbar = () => {
           />
         ))}
         <LocaleLink
+          to="/resources/blog/"
+          className="hover:text-foreground transition-colors py-2 relative group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/50"
+        >
+          Blog
+          <span className="absolute bottom-0 left-1/2 w-0 h-px bg-foreground transition-all duration-300 group-hover:w-full group-hover:left-0" />
+        </LocaleLink>
+        <LocaleLink
           to="/deploy/"
           className="hover:text-foreground transition-colors py-2 relative group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/50"
         >
@@ -426,11 +469,16 @@ export const Navbar = () => {
               <LocaleLink to="/infrastructure/cloud/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.cloudVps}</LocaleLink>
               <LocaleLink to="/infrastructure/dedicated/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.dedicatedServers}</LocaleLink>
               <LocaleLink to="/infrastructure/managed/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.managedInfrastructure}</LocaleLink>
+              <LocaleLink to="/infrastructure/storage/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">SFTP Storage</LocaleLink>
               <LocaleLink to="/pricing/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.pricing}</LocaleLink>
             </div>
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.deploy}</span>
               <LocaleLink to="/deploy/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">{t.nav.oneClickDeploy}</LocaleLink>
+            </div>
+            <div className="flex flex-col gap-4">
+              <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">Blog</span>
+              <LocaleLink to="/resources/blog/" className="text-sm tracking-wider uppercase text-foreground/70 hover:text-foreground transition-colors">Blog</LocaleLink>
             </div>
             <div className="flex flex-col gap-4">
               <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">{t.nav.software}</span>

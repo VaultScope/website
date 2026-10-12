@@ -1,29 +1,30 @@
 # VaultScope Storefront
 
-## Build approach
+## Verified Commands
+- Install: `npm i`
+- Dev Server: `npm run dev`
+- Build: `npm run build` (tsc -b && vite build)
+- Lint: `npm run lint` (oxlint)
+- Test: `npx vitest run`
 
-<TBD, set by /scope>
+## Invariants & Conventions
+- React 19 functional components with hooks.
+- Tailwind 4 for styling with `clsx` and `tailwind-merge`.
+- Lazy loading for route components with React.lazy().
+- i18n with context-based German and English translations (German routes use `/de/` prefix).
+- Types are currently defined inline or duplicated; do not assume backend types match without verifying.
 
-## Rules
+## Interfaces to Ecosystem
+- **API**: Connects exclusively to `VaultScope-API` endpoints under `/api/storefront/*`.
+- **Admin**: No direct link. Data modified by Admin will be reflected via the API.
+- All backend communication handled via `src/lib/api.ts` which automatically attaches JWTs from `localStorage` (`vs_token`).
 
-- React functional components with hooks (React 19)
-- Tailwind 4 for styling with `clsx` and `tailwind-merge` for conditional classes
-- Lazy loading for route components with React.lazy()
-- i18n with context based German and English translations
-- German routes use /de/ prefix (eg. /de/pricing)
-- Testing with Vitest and React Testing Library
-- Type safety with TypeScript strict mode
+## No-Go Areas & Pitfalls
+- **State Updates**: React tests must wrap state updates in `act(...)`.
+- **Environment**: `VITE_*` env vars are strictly build-time.
+- **Images**: `sharp` package requires specific version updates due to vulnerabilities.
+- **3D**: `three.js` is used; watch for memory leaks in unmounted components.
 
-## Gotchas
-
-- Vite environment variables (VITE_*) must be set at build time, not runtime
-- German routing requires URL structure awareness (eg. LocaleLink component for navigation)
-- Image optimization requires sharp package (note: sharp 0.35.3 has known vulnerabilities, update to 0.35.4+)
-- Build command includes TypeScript compilation before Vite build
-- Three.js used for 3D visualizations requires careful performance consideration
-
-## Context files
-
-- [src/i18n/AGENTS.md](src/i18n/AGENTS.md): Internationalization system for German/English support
-
-_Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
+## Detail Docs
+- [API Contract](/CONTRACT_MISMATCHES.md)
+- [Auth Flow](docs/auth.md)
