@@ -61,8 +61,13 @@ export function Login() {
         return;
       }
 
-      const { token, claims, email_verified } = data;
+      const { token, claims, name, email_verified } = data;
       localStorage.setItem('vs_token', token);
+      if (name) {
+        localStorage.setItem('vs_user_name', name);
+      } else if (form.email) {
+        localStorage.setItem('vs_user_name', form.email.split('@')[0]);
+      }
       if (claims) {
         localStorage.setItem('vs_claims', JSON.stringify(claims));
       } else {

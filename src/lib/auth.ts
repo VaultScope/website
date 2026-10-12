@@ -58,4 +58,5 @@ export async function devLoginCustomer(persona: string = 'customer1'): Promise<A
 export function logout() {
   localStorage.removeItem('vs_token');
   localStorage.removeItem('vs_claims');
+  localStorage.removeItem('vs_user_name');
 }

@@ -22,12 +22,19 @@ import {
   Activity,
   BookOpen,
   MessageSquare,
-  Newspaper
+  Newspaper,
+  User,
+  LayoutDashboard,
+  Settings,
+  LifeBuoy,
+  LogOut
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { getInitialDark, applyDark } from '../hooks/useTheme';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { getStoredClaims, logout } from '../lib/auth';
+import { api } from '../lib/api';
 
 export const parseHighlight = (text: React.ReactNode): React.ReactNode => {
   if (typeof text !== 'string') return text;
@@ -303,7 +310,19 @@ export const Navbar = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
-  const { t } = useLanguage();
+  const { t, localePath } = useLanguage();
+
+  const [user, setUser] = useState<{ name: string; email: string } | null>(() => {
+    const claims = getStoredClaims();
+    if (!claims) return null;
+    const storedName = localStorage.getItem('vs_user_name');
+    return {
+      name: storedName || claims.email.split('@')[0],
+      email: claims.email,
+    };
+  });
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const NAV_DROPDOWNS: NavDropdown[] = [
     {
@@ -348,6 +367,28 @@ export const Navbar = () => {
   ];
 
   useEffect(() => {
+    const claims = getStoredClaims();
+    if (claims) {
+      const storedName = localStorage.getItem('vs_user_name');
+      if (storedName) {
+        setUser({ name: storedName, email: claims.email });
+      } else {
+        setUser({ name: claims.email.split('@')[0], email: claims.email });
+        api.get<{ name?: string; email?: string }>('/storefront/profile')
+          .then(profile => {
+            if (profile.name) {
+              localStorage.setItem('vs_user_name', profile.name);
+              setUser({ name: profile.name, email: profile.email || claims.email });
+            }
+          })
+          .catch(() => {});
+      }
+    } else {
+      setUser(null);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -356,6 +397,7 @@ export const Navbar = () => {
   useEffect(() => {
     setIsOpen(false);
     setOpenDropdown(null);
+    setUserMenuOpen(false);
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
@@ -363,6 +405,9 @@ export const Navbar = () => {
     const handleClickOutside = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -374,11 +419,12 @@ export const Navbar = () => {
       if (e.key === 'Escape') {
         if (isOpen) setIsOpen(false);
         if (openDropdown) setOpenDropdown(null);
+        if (userMenuOpen) setUserMenuOpen(false);
       }
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, openDropdown]);
+  }, [isOpen, openDropdown, userMenuOpen]);
 
   return (
     <motion.nav
@@ -425,12 +471,90 @@ export const Navbar = () => {
       <div className="flex items-center gap-2">
         <LanguageSwitcher />
         <ThemeToggle />
-        <LocaleLink to="/dashboard" className="hidden sm:flex mr-2">
-          <Button className="h-10 px-6 gap-2" variant="outline">Sign In</Button>
-        </LocaleLink>
-        <LocaleLink to="/company/contact/" className="hidden sm:flex">
-          <Button className="h-10 px-8">{t.common.contact}</Button>
-        </LocaleLink>
+
+        {user ? (
+          <div className="relative hidden sm:block" ref={userMenuRef}>
+            <button
+              onClick={() => setUserMenuOpen(prev => !prev)}
+              className="flex items-center gap-2 h-10 px-3.5 border border-border bg-foreground/5 hover:bg-foreground/10 text-foreground text-xs font-medium tracking-wide transition-colors cursor-pointer"
+              aria-expanded={userMenuOpen}
+              aria-haspopup="true"
+            >
+              <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
+                <User className="w-3.5 h-3.5" />
+              </div>
+              <span className="max-w-[120px] truncate">{user.name}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-foreground/50 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {userMenuOpen && (
+              <div
+                className="absolute right-0 mt-2 w-56 bg-background border border-border shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-1"
+                role="menu"
+              >
+                <div className="px-4 py-2 border-b border-border mb-1">
+                  <p className="text-xs font-semibold text-foreground truncate">{user.name}</p>
+                  <p className="text-[11px] text-foreground/50 truncate">{user.email}</p>
+                </div>
+
+                <LocaleLink
+                  to="/dashboard"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors"
+                  role="menuitem"
+                >
+                  <LayoutDashboard className="w-4 h-4 text-foreground/60" />
+                  <span>{t.common.dashboard || 'Dashboard'}</span>
+                </LocaleLink>
+
+                <LocaleLink
+                  to="/dashboard/profile"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors"
+                  role="menuitem"
+                >
+                  <Settings className="w-4 h-4 text-foreground/60" />
+                  <span>{t.common.profile || 'Profile & Security'}</span>
+                </LocaleLink>
+
+                <LocaleLink
+                  to="/dashboard/support"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors"
+                  role="menuitem"
+                >
+                  <LifeBuoy className="w-4 h-4 text-foreground/60" />
+                  <span>{t.common.support || 'Support Tickets'}</span>
+                </LocaleLink>
+
+                <div className="border-t border-border my-1" />
+
+                <button
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    logout();
+                    window.location.href = localePath('/');
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-500/80 hover:text-red-500 hover:bg-red-500/5 transition-colors text-left cursor-pointer"
+                  role="menuitem"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>{t.common.signOut || 'Sign Out'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <LocaleLink to="/login" className="hidden sm:flex mr-2">
+              <Button className="h-10 px-6 gap-2" variant="outline">{t.common.signIn || 'Sign In'}</Button>
+            </LocaleLink>
+            <LocaleLink to="/register" className="hidden sm:flex">
+              <Button className="h-10 px-8">{t.common.register || 'Register'}</Button>
+            </LocaleLink>
+          </>
+        )}
+
         <button
           onClick={() => setIsOpen(true)}
           className="lg:hidden text-foreground cursor-pointer p-1"
@@ -507,11 +631,52 @@ export const Navbar = () => {
             </div>
           </div>
 
-          <div className="mt-auto pt-8 border-t border-border">
-            <LocaleLink to="/company/contact/">
-              <Button className="w-full">{t.common.getInTouch}</Button>
-            </LocaleLink>
-          </div>
+          {user ? (
+            <div className="mt-auto pt-8 border-t border-border flex flex-col gap-2">
+              <div className="px-3 py-2.5 mb-2 bg-foreground/5 border border-border">
+                <p className="text-xs font-semibold text-foreground truncate">{user.name}</p>
+                <p className="text-[11px] text-foreground/50 truncate">{user.email}</p>
+              </div>
+              <LocaleLink to="/dashboard" onClick={() => setIsOpen(false)}>
+                <Button className="w-full justify-start gap-2.5" variant="outline">
+                  <LayoutDashboard className="w-4 h-4" />
+                  {t.common.dashboard || 'Dashboard'}
+                </Button>
+              </LocaleLink>
+              <LocaleLink to="/dashboard/profile" onClick={() => setIsOpen(false)}>
+                <Button className="w-full justify-start gap-2.5" variant="outline">
+                  <Settings className="w-4 h-4" />
+                  {t.common.profile || 'Profile & Security'}
+                </Button>
+              </LocaleLink>
+              <LocaleLink to="/dashboard/support" onClick={() => setIsOpen(false)}>
+                <Button className="w-full justify-start gap-2.5" variant="outline">
+                  <LifeBuoy className="w-4 h-4" />
+                  {t.common.support || 'Support Tickets'}
+                </Button>
+              </LocaleLink>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  logout();
+                  window.location.href = localePath('/');
+                }}
+                className="w-full mt-2 py-2.5 text-xs text-red-500 hover:bg-red-500/10 border border-red-500/30 transition-colors flex items-center justify-center gap-2 cursor-pointer font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                {t.common.signOut || 'Sign Out'}
+              </button>
+            </div>
+          ) : (
+            <div className="mt-auto pt-8 border-t border-border flex flex-col gap-2">
+              <LocaleLink to="/register" onClick={() => setIsOpen(false)}>
+                <Button className="w-full">{t.common.register || 'Register'}</Button>
+              </LocaleLink>
+              <LocaleLink to="/login" onClick={() => setIsOpen(false)}>
+                <Button variant="outline" className="w-full">{t.common.signIn || 'Sign In'}</Button>
+              </LocaleLink>
+            </div>
+          )}
         </div>
       )}
     </motion.nav>
