@@ -189,7 +189,7 @@ export default function SftpStorage() {
                 </div>
               <div className="mt-6 border-t border-border pt-6 flex flex-col sm:flex-row items-center gap-3">
                 <a 
-                  href="https://sftp.vaultscope.de/web/client" 
+                  href="/web/client" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="bg-foreground text-background hover:bg-foreground/90 flex-1 w-full flex justify-center items-center gap-2 py-2.5 rounded-md font-medium text-sm transition-colors"
