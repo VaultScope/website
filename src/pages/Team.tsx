@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { PageHero, Breadcrumbs } from '../components/Shared';
+import { SeoHead } from '../components/SeoHead';
 
 const TEAM_MEMBERS = [
   {
@@ -41,16 +41,13 @@ const TEAM_MEMBERS = [
 ];
 
 export const Team = () => {
-  useEffect(() => {
-    document.title = 'Team | VaultScope';
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', 'Meet the VaultScope team.');
-    }
-  }, []);
-
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="Team & Engineering Philosophy"
+        description="Meet the engineers and operators behind VaultScope building next-generation sovereign infrastructure."
+        path="/company/team"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: 'Company' }, { label: 'Team' }]} />
       </div>

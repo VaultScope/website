@@ -3,19 +3,12 @@ import { PageHero, Breadcrumbs } from '../components/Shared';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const InfrastructureStorage = () => {
   const { t } = useLanguage();
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-
-  useEffect(() => {
-    document.title = 'SFTP Storage — VaultScope';
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute('content', 'High-performance SFTP storage for your clipping software and file management needs.');
-    }
-  }, []);
 
   useEffect(() => {
     fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
@@ -32,6 +25,11 @@ export const InfrastructureStorage = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="SFTP & NVMe Cloud Storage"
+        description="High-performance SFTP storage for your backup, clipping software, and automated file workflows. European data sovereignty, unmetered bandwidth, and zero egress fees."
+        path="/infrastructure/storage"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: t.nav.infrastructure, href: '/infrastructure/' }, { label: 'SFTP Storage' }]} />
       </div>

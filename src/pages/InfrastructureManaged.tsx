@@ -1,19 +1,12 @@
-import { useEffect } from 'react';
 import { PageHero, Button, Breadcrumbs } from '../components/Shared';
 import { motion } from 'framer-motion';
 import { Settings2, Server, Activity, Wrench, ArrowRight, Shield } from 'lucide-react';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const InfrastructureManaged = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    document.title = t.infrastructureManaged.title;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute('content', t.infrastructureManaged.metaDescription);
-    }
-  }, [t]);
 
   const capabilities = [
     { icon: Settings2, ...t.infrastructureManaged.capabilities.items[0] },
@@ -26,6 +19,11 @@ export const InfrastructureManaged = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title={t.infrastructureManaged.title.replace(' — VaultScope', '')}
+        description={t.infrastructureManaged.metaDescription}
+        path="/infrastructure/managed"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: t.nav.infrastructure, href: '/infrastructure/' }, { label: t.infrastructureManaged.breadcrumb }]} />
       </div>

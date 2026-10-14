@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { SeoHead } from '../components/SeoHead';
 import { 
   Search, 
   X, 
@@ -94,13 +94,11 @@ export function ForumList() {
 
   return (
     <>
-      <Helmet>
-        <title>Community Forum & Systems Exchange — VaultScope</title>
-        <meta 
-          name="description" 
-          content="Connect with VaultScope engineers, infrastructure architects, and system operators. Technical discussions on VPS, sovereign SFTP, BGP routing, and security." 
-        />
-      </Helmet>
+      <SeoHead
+        title="Community Forum & Systems Exchange"
+        description="Connect with VaultScope engineers, infrastructure architects, and system operators. Technical discussions on VPS, sovereign SFTP, BGP routing, and security."
+        path="/resources/forum"
+      />
 
       <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">

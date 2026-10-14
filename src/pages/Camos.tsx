@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PageHero } from '../components/Shared';
 import { 
   Shield, 
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HelpTooltip, useExplainMode } from '../components/HelpTooltip';
+import { SeoHead } from '../components/SeoHead';
 
 const FEATURES = [
   {
@@ -59,16 +60,13 @@ export const Camos = () => {
   const { explainMode, toggleExplainMode } = useExplainMode();
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'services' | 'billing'>('overview');
 
-  useEffect(() => {
-    document.title = "CAMOS — Operations Control Plane | VaultScope";
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute("content", "CAMOS is the centralized internal operations dashboard used by staff to manage VaultScope services, automated job queues, billing, and telemetry.");
-    }
-  }, []);
-
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="CAMOS — Cloud Administration & Management Operating System"
+        description="The sovereign cloud control plane powering automated server provisioning, multi-tenant billing, job queues, and telemetry."
+        path="/software/camos"
+      />
       <PageHero
         eyebrow="OPERATIONS SUITE"
         title="CAMOS Control Plane"

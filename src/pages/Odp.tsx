@@ -1,10 +1,10 @@
-import { useEffect } from "react";
 import { PageHero } from "../components/Shared";
 import { WaitlistForm } from "../components/WaitlistForm";
 import { PackageOpen, Zap, Shield, Settings2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../i18n";
 import { LocaleLink } from "../i18n/LocaleLink";
+import { SeoHead } from "../components/SeoHead";
 
 const SERVICE_CATEGORIES = [
   "Minecraft Servers",
@@ -69,19 +69,14 @@ const PILLARS = [
 
 export const Odp = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    document.title = t.deploy.title;
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute(
-        "content",
-        "VaultScope Deploy — launch pre-configured services on managed infrastructure instantly. A deployment platform for applications, databases, and services."
-      );
-    }
-  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="ODP — Open Deployment Platform"
+        description="One-click deployment engine for open-source applications, databases, and microservices with instant DNS and SSL provisioning."
+        path="/deploy"
+      />
       {/* Hero */}
       <PageHero
         eyebrow={t.deploy?.eyebrow || "ONE-CLICK DEPLOY (OCD)"}

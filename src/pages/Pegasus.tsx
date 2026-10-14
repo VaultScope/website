@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PageHero, FeatureSection, Button, Breadcrumbs } from '../components/Shared';
 import {
   Shield, Zap, TrendingUp, Gift, Volume2, Tag, Star,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { motion } from 'framer-motion';
+import { SeoHead } from '../components/SeoHead';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -161,19 +162,13 @@ const DEPLOY_LABELS: Record<DeployMethod, string> = {
 export const Pegasus = () => {
   const [activeDeployment, setActiveDeployment] = useState<DeployMethod>('docker');
 
-  useEffect(() => {
-    document.title = "Pegasus — VaultScope Software";
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute(
-        "content",
-        "Pegasus is a full-featured Discord community management platform with advanced moderation, economy, XP, tickets, giveaways, and a complete web dashboard and REST API."
-      );
-    }
-  }, []);
-
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="Project Pegasus — Autonomous Cloud Ecosystem"
+        description="Next-generation autonomous infrastructure orchestrator bridging bare-metal hardware and modern microservices."
+        path="/software/pegasus"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: 'Software' }, { label: 'Pegasus' }]} />
       </div>

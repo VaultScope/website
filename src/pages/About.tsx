@@ -1,21 +1,19 @@
-import { useEffect } from 'react';
 import { PageHero, Button, Breadcrumbs } from '../components/Shared';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const About = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    document.title = t.about.title;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute('content', t.aboutPage.metaDescription);
-    }
-  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="About VaultScope — Independent Cloud & Software Engineering"
+        description="Learn about VaultScope's mission: delivering transparent, high-performance infrastructure and open-source software engineered in Germany."
+        path="/company/about"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: t.aboutPage.breadcrumbs.company }, { label: t.aboutPage.breadcrumbs.about }]} />
       </div>

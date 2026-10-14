@@ -15,7 +15,7 @@ ARG VITE_STRIPE_PUBLISHABLE_KEY
 ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
 
 COPY . .
-RUN npx vite build
+RUN npm run build
 
 # Production stage
 FROM caddy:2-alpine

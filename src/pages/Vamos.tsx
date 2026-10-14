@@ -1,19 +1,16 @@
-import { useEffect } from 'react';
 import { PageHero } from '../components/Shared';
 import { Shield, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SeoHead } from '../components/SeoHead';
 
 export const Vamos = () => {
-  useEffect(() => {
-    document.title = "Vamos — VaultScope API Management & Operations System";
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute("content", "Vamos is the VaultScope API Management & Operations System. It acts as an API Layer between CAMOS and the VaultScope Website.");
-    }
-  }, []);
-
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="VAMOS — High-Speed Open Source Storage & Backup"
+        description="VaultScope Advanced Modular Object & Storage system. Distributed, encrypted, and designed for mission-critical backups."
+        path="/software/vamos"
+      />
       <PageHero
         eyebrow="API GATEWAY"
         title="Vamos"

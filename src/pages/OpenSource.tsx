@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { PageHero, Button, Breadcrumbs } from '../components/Shared';
 import { ExternalLink, GitBranch } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
+import { SeoHead } from '../components/SeoHead';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -117,19 +117,14 @@ const VS_PROJECTS = [
 
 export const OpenSource = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    document.title = t.openSource.title;
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute(
-        'content',
-        "The open-source and self-hosted technology stack used across the VaultScope ecosystem. Debian, Forgejo, Voltius, OpenCode, and more."
-      );
-    }
-  }, [t]);
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="Open Source Commitment"
+        description="Explore our open-source repositories, architectural standards, and public code contributions."
+        path="/company/open-source"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: t.nav.company }, { label: t.openSource.breadcrumb }]} />
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { SeoHead } from '../components/SeoHead';
 import { 
   Search, 
   X, 
@@ -142,10 +142,11 @@ export function BlogList() {
 
   return (
     <>
-      <Helmet>
-        <title>Blog & Updates — VaultScope</title>
-        <meta name="description" content="Product releases, announcements, guides, and stories from the VaultScope team." />
-      </Helmet>
+      <SeoHead
+        title="Engineering Blog & Technical Insights"
+        description="Deep dives into cloud architecture, Rust backend development, Linux storage systems, and infrastructure automation."
+        path="/resources/blog"
+      />
 
       <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24 relative overflow-hidden">
         {/* Ambient Top Glow */}

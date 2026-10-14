@@ -119,7 +119,11 @@ export function DashboardOverview() {
                         {st.label}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs">{svc.ip || '—'}</td>
+                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs">
+                      {svc.name?.toLowerCase().includes('sftp')
+                        ? (svc.hostname || 'sftp.vaultscope.de')
+                        : (svc.ip === '10.20.10.60' ? (svc.hostname || 'sftp.vaultscope.de') : (svc.ip || svc.hostname || '—'))}
+                    </td>
                     <td className="px-5 py-4 text-muted-foreground">€{(parseFloat(svc.price) * 1.19).toFixed(2)}/mo incl. VAT</td>
                     <td className="px-5 py-4 text-right">
                       <Link to={getServiceManageLink(svc)} className="text-sm text-foreground/60 hover:text-foreground transition-colors">

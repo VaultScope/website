@@ -1,26 +1,21 @@
-import { useEffect } from 'react';
 import { PageHero, Button } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { Server, Cpu, HardDrive, Cloud, Settings2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const InfrastructureOverview = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    document.title = 'Infrastructure — VaultScope';
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute(
-        'content',
-        'VaultScope infrastructure: Cloud VPS, Dedicated Servers, Storage & SFTP, One-Click Deploy, and Managed Infrastructure built on EU-based infrastructure with transparent, open-source technology.'
-      );
-    }
-  }, []);
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="Infrastructure Overview — Cloud VPS, Dedicated & Storage"
+        description="Enterprise Cloud VPS, bare-metal Dedicated Servers, and NVMe SFTP storage in premium European datacentres with unmetered bandwidth."
+        path="/infrastructure"
+      />
       <PageHero
         eyebrow="INFRASTRUCTURE"
         title="Compute. Storage. Deployments. *Managed Infrastructure*."

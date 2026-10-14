@@ -4,19 +4,12 @@ import { WaitlistForm } from '../components/WaitlistForm';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const InfrastructureDedicated = () => {
   const { t } = useLanguage();
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-
-  useEffect(() => {
-    document.title = t.infrastructureDedicated.title;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute('content', t.infrastructureDedicated.metaDescription);
-    }
-  }, [t]);
 
   useEffect(() => {
     fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
@@ -33,6 +26,11 @@ export const InfrastructureDedicated = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title={t.infrastructureDedicated.title.replace(' — VaultScope', '')}
+        description={t.infrastructureDedicated.metaDescription}
+        path="/infrastructure/dedicated"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: t.nav.infrastructure, href: '/infrastructure/' }, { label: t.infrastructureDedicated.breadcrumb }]} />
       </div>

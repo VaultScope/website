@@ -18,5 +18,5 @@
 		}
 	}
 
-	try_files {path} /index.html
+	try_files {path} {path}/index.html {path}/ /index.html
 }

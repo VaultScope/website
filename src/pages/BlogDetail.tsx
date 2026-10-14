@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { SeoHead } from '../components/SeoHead';
 import { marked } from 'marked';
 import { 
   ArrowLeft, 
@@ -110,10 +110,15 @@ export function BlogDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{article.title} — VaultScope Blog</title>
-        {article.excerpt && <meta name="description" content={article.excerpt} />}
-      </Helmet>
+      <SeoHead
+        title={article.title}
+        description={article.excerpt || (article.content ? article.content.substring(0, 160).replace(/[#*`\n]/g, ' ') : undefined)}
+        path={`/resources/blog/${article.slug}`}
+        image={article.image_url}
+        type="article"
+        publishedTime={article.published_at}
+        author={article.author?.name || article.author_name}
+      />
 
       <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
         <div className="max-w-4xl mx-auto px-6 lg:px-8">

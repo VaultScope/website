@@ -17,6 +17,7 @@ import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { api } from '../lib/api';
 import { isAuthenticated } from '../lib/auth';
+import { SeoHead } from '../components/SeoHead';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -178,6 +179,11 @@ export function PartnerLanding() {
 
   return (
     <div className="flex flex-col w-full pb-28">
+      <SeoHead
+        title={`${partner.name} × VaultScope — Exclusive Partner Offer`}
+        description={partner.description || partner.headline || `Claim your free ${trialDays}-day trial sponsored by ${partner.name}.`}
+        path={`/ps/${partner.slug}`}
+      />
       {/* Hero Header */}
       <section className="pt-32 pb-16 border-b border-border/10 bg-radial-[circle_at_top,_var(--tw-gradient-stops)] from-blue-900/10 via-transparent to-transparent">
         <div className="container mx-auto px-6 lg:px-12 text-center max-w-4xl">

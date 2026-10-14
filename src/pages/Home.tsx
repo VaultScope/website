@@ -9,6 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 // ─── Helper Components ─────────────────────────────────────────────────────────
 
@@ -972,6 +973,10 @@ export const Home = () => {
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden bg-background text-foreground">
+      <SeoHead
+        title={t.home.meta.title.replace(' — VaultScope', '')}
+        description={t.home.meta.description}
+      />
       <VaultScopeCanvas />
 
       <div ref={heroRef} className="relative min-h-[90vh] lg:min-h-screen overflow-hidden border-b border-border flex items-start justify-center pt-[20vh] lg:pt-[25vh]">

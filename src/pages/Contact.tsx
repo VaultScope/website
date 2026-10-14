@@ -1,18 +1,11 @@
-import { useEffect } from 'react';
 import { PageHero, Breadcrumbs } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { LifeBuoy, GitBranch, Activity, BookOpen, FileText, Shield, CreditCard, Handshake, Info, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../i18n';
+import { SeoHead } from '../components/SeoHead';
 
 export const Contact = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    document.title = t.contact.title;
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', t.contactPage.metaDescription);
-    }
-  }, [t]);
 
   const contactLinks = [
     { email: 'support@vaultscope.de', label: 'Technical Support', icon: LifeBuoy, desc: 'For help with your instances and services.' },
@@ -26,6 +19,11 @@ export const Contact = () => {
 
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="Contact & Enterprise Support"
+        description="Get in touch with the VaultScope engineering team for enterprise deployments, custom setups, or technical support."
+        path="/company/contact"
+      />
       <div className="container mx-auto px-6 lg:px-12 pt-32">
         <Breadcrumbs items={[{ label: t.contactPage.breadcrumbs.company }, { label: t.contactPage.breadcrumbs.contact }]} />
       </div>

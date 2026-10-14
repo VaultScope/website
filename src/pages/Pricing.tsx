@@ -1,24 +1,16 @@
-import { useEffect } from 'react';
 import { PageHero, Button } from '../components/Shared';
 import { motion } from 'framer-motion';
-import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const Pricing = () => {
-  const { t } = useLanguage();
-  useEffect(() => {
-    document.title = t.pricing.title;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute(
-        'content',
-        'VaultScope pricing — transparent pricing across Cloud VPS, Dedicated Servers, Deploy, Managed Infrastructure, and Pegasus.'
-      );
-    }
-  }, [t]);
-
   return (
     <div className="flex flex-col w-full">
+      <SeoHead
+        title="Transparent Pricing — Cloud VPS, Dedicated & Storage"
+        description="Predictable pricing with no hidden fees or egress charges. Pay only for what you use with European data privacy and 19% VAT clarity."
+        path="/pricing"
+      />
       <PageHero
         title="Pricing"
         description="Transparent pricing across all VaultScope services."

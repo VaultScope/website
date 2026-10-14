@@ -143,11 +143,14 @@ export default function SftpStorage() {
               )}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground block text-xs">Hostname</span>
+                  <span className="text-muted-foreground block text-xs">Hostname / Server Domain</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono">{s.hostname || 'sftp.vaultscope.de'}</span>
                     <button onClick={() => copyToClipboard(s.hostname || 'sftp.vaultscope.de')}><Copy size={14} /></button>
                   </div>
+                  <span className="text-[11px] text-muted-foreground font-mono block mt-0.5">
+                    Direct IP: {s.ip && s.ip !== '10.20.10.60' ? s.ip : '176.9.0.171'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Port</span>
