@@ -59,7 +59,7 @@ export function OdpDetail() {
       {/* Header */}
       <div className="pb-6 border-b border-border">
         <Link to="/dashboard/odp" className="text-muted-foreground hover:text-foreground text-xs uppercase tracking-wider flex items-center gap-1.5 mb-4">
-          <ArrowLeft className="w-3.5 h-3.5" /> ODP
+          <ArrowLeft className="w-3.5 h-3.5" /> One-Click Deploy (OCD)
         </Link>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

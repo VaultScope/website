@@ -37,11 +37,11 @@ export function OdpList() {
     <div>
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-light mb-1">Optimized Deployment Platform</h1>
-          <p className="text-sm text-muted-foreground">Manage your containerized ODP services.</p>
+          <h1 className="text-2xl font-light mb-1">One-Click Deploy (OCD)</h1>
+          <p className="text-sm text-muted-foreground">Manage your containerized One-Click Deploy (OCD) services.</p>
         </div>
         <Link to="/dashboard/new">
-          <Button className="h-9 px-5 text-sm">Deploy ODP</Button>
+          <Button className="h-9 px-5 text-sm">Deploy OCD</Button>
         </Link>
       </div>
 
@@ -65,7 +65,7 @@ export function OdpList() {
             )}
             {!loading && services.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No ODP instances found.</td>
+                <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No OCD instances found.</td>
               </tr>
             )}
             {!loading && services.map(odp => (

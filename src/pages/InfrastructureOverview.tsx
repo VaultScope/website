@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { PageHero, Button } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { Server, Cpu, Settings2 } from 'lucide-react';
+import { Server, Cpu, HardDrive, Cloud, Settings2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
@@ -14,7 +14,7 @@ export const InfrastructureOverview = () => {
     if (meta) {
       meta.setAttribute(
         'content',
-        'VaultScope infrastructure: Cloud VPS, Dedicated Servers, and Managed Infrastructure built on EU-based infrastructure with transparent, open-source technology.'
+        'VaultScope infrastructure: Cloud VPS, Dedicated Servers, Storage & SFTP, One-Click Deploy, and Managed Infrastructure built on EU-based infrastructure with transparent, open-source technology.'
       );
     }
   }, []);
@@ -23,17 +23,17 @@ export const InfrastructureOverview = () => {
     <div className="flex flex-col w-full">
       <PageHero
         eyebrow="INFRASTRUCTURE"
-        title="Cloud VPS. Dedicated Servers. *Managed Infrastructure*."
-        description="Three infrastructure models built on EU-based infrastructure. Transparent technology, open-source tooling, and engineering without unnecessary complexity."
+        title="Compute. Storage. Deployments. *Managed Infrastructure*."
+        description="Comprehensive infrastructure stack built on EU-based infrastructure. Transparent technology, open-source tooling, and engineering without unnecessary complexity."
         primaryCta="Join the Waitlist"
         primaryLink="#waitlist"
         align="left"
       />
 
-      {/* Three models */}
+      {/* Infrastructure models */}
       <section className="py-32 relative bg-background border-t border-border/[0.05]">
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="grid md:grid-cols-3 gap-0 border border-border">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border border border-border">
             {[
               {
                 icon: Server,
@@ -52,6 +52,22 @@ export const InfrastructureOverview = () => {
                 cta: 'Explore Dedicated',
               },
               {
+                icon: HardDrive,
+                label: 'Tier 03',
+                title: 'Storage & SFTP',
+                desc: 'High-speed storage boxes and dedicated SFTP/FTPS endpoints with automated snapshotting, quota controls, and EU data privacy compliance.',
+                link: '/infrastructure/storage/',
+                cta: 'Explore Storage',
+              },
+              {
+                icon: Cloud,
+                label: 'Platform',
+                title: 'One-Click Deploy (OCD)',
+                desc: 'Instant containerized application deployment. Run databases, Minecraft servers, dev environments, and tools in seconds without configuration hassle.',
+                link: '/deploy/',
+                cta: 'Explore OCD',
+              },
+              {
                 icon: Settings2,
                 label: 'Managed',
                 title: 'Managed Infrastructure',
@@ -67,8 +83,8 @@ export const InfrastructureOverview = () => {
                   initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className={`p-10 md:p-12 flex flex-col ${i < 2 ? 'border-b md:border-b-0 md:border-r border-border' : ''}`}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                  className="p-10 md:p-12 flex flex-col bg-background"
                 >
                   <div className="flex items-start justify-between mb-8">
                     <div className="w-12 h-12 border border-border flex items-center justify-center">

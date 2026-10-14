@@ -21,6 +21,25 @@ const STATUS_DISPLAY: Record<string, { label: string; color: string }> = {
   terminated: { label: 'Terminated', color: 'neutral' },
 };
 
+function getServiceManageLink(svc: any): string {
+  const name = (svc.name || '').toLowerCase();
+  const category = (svc.category || '').toLowerCase();
+  const type = (svc.type || '').toLowerCase();
+  const targetApi = (svc.target_api || '').toLowerCase();
+  const providerId = (svc.provider_resource_id || '').toLowerCase();
+
+  if (name.includes('sftp') || category === 'sftp' || type === 'sftp' || targetApi === 'sftpgo' || providerId.startsWith('vs_')) {
+    return '/dashboard/sftp';
+  }
+  if (name.includes('dedicated') || category === 'ds' || type === 'ds') {
+    return `/dashboard/ds/${svc.id}`;
+  }
+  if (name.includes('odp') || category === 'odp' || type === 'odp') {
+    return `/dashboard/odp/${svc.id}`;
+  }
+  return `/dashboard/vps/${svc.id}`;
+}
+
 export function DashboardOverview() {
   const { data: services, loading } = useApi<Service[]>('/storefront/services');
 
@@ -103,7 +122,7 @@ export function DashboardOverview() {
                     <td className="px-5 py-4 text-muted-foreground font-mono text-xs">{svc.ip || '—'}</td>
                     <td className="px-5 py-4 text-muted-foreground">€{(parseFloat(svc.price) * 1.19).toFixed(2)}/mo incl. VAT</td>
                     <td className="px-5 py-4 text-right">
-                      <Link to={`/dashboard/vps/${svc.id}`} className="text-sm text-foreground/60 hover:text-foreground transition-colors">
+                      <Link to={getServiceManageLink(svc)} className="text-sm text-foreground/60 hover:text-foreground transition-colors">
                         Manage
                       </Link>
                     </td>

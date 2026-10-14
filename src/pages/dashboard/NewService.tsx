@@ -16,6 +16,7 @@ interface Product {
     image?: string;
   };
   price: number | string;
+  trial_days?: number | null;
 }
 
 function CheckoutForm({ onPaymentSuccess, amount, productId, hostname }: { onPaymentSuccess: () => void; amount: number; productId: string; hostname: string }) {
@@ -138,9 +139,10 @@ export function NewService() {
   const handleBack = () => setCurrentStep(prev => Math.max(prev - 1, 0));
 
   const selectedProduct = products.find(p => p.id === selectedProductId);
+  const isTrial = selectedProduct ? ((selectedProduct.trial_days && selectedProduct.trial_days > 0) || parseFloat(selectedProduct.price as string) === 0) : false;
   const priceNum = selectedProduct ? parseFloat(selectedProduct.price as string) : 0;
   const vat = priceNum * 0.19;
-  const total = priceNum + vat;
+  const total = isTrial ? 0 : priceNum + vat;
 
   return (
     <div>
@@ -188,7 +190,14 @@ export function NewService() {
                     }`}
                   >
                     <div>
-                      <div className="font-medium text-sm">{p.name} <span className="text-xs text-muted-foreground uppercase">({p.category})</span></div>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        {p.name} <span className="text-xs text-muted-foreground uppercase">({p.category})</span>
+                        {p.trial_days && p.trial_days > 0 ? (
+                          <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono">
+                            {p.trial_days}d trial
+                          </span>
+                        ) : null}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {p.specs?.server_type} - {p.specs?.location}
                       </div>
@@ -263,7 +272,9 @@ export function NewService() {
                 </div>
                 <div className="flex justify-between text-base font-medium pt-3 border-t border-border">
                   <span>Total due today</span>
-                  <span>€{total.toFixed(2)}</span>
+                  <span className={isTrial ? "text-green-500 font-semibold" : ""}>
+                    €{total.toFixed(2)} {isTrial && `(${selectedProduct?.trial_days || 30}-day trial)`}
+                  </span>
                 </div>
               </div>
             </div>
@@ -272,40 +283,77 @@ export function NewService() {
 
         {currentStep === 3 && (
           <div>
-            <h2 className="text-sm font-medium uppercase tracking-wider text-foreground/50 mb-4">Payment</h2>
-            <div className="border border-border p-5">
-              <div className="flex justify-between items-center mb-5 pb-4 border-b border-border text-sm">
-                <span className="text-muted-foreground">Amount due</span>
-                <span className="font-medium text-lg">€{total.toFixed(2)}</span>
-              </div>
-              {stripePromise ? (
-                <Elements
-                  stripe={stripePromise}
-                  options={{
-                    mode: 'payment',
-                    amount: Math.max(Math.round(total * 100), 1),
-                    currency: 'eur',
-                    appearance: {
-                      theme: 'night',
-                      variables: {
-                        colorPrimary: '#ffffff',
-                        colorBackground: '#1a1a1a',
-                        colorText: '#ffffff',
-                        colorDanger: '#ef4444',
-                        borderRadius: '0px',
-                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                      },
-                      rules: {
-                        '.Input': { border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' },
-                        '.Input:focus': { border: '1px solid rgba(255,255,255,0.3)', boxShadow: 'none' },
+            <h2 className="text-sm font-medium uppercase tracking-wider text-foreground/50 mb-4">
+              {isTrial ? 'Free Trial Confirmation' : 'Payment'}
+            </h2>
+            <div className="border border-border p-6 bg-background">
+              {isTrial ? (
+                <div className="space-y-6">
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 text-sm text-blue-400">
+                    <p className="font-medium text-base mb-1">
+                      {selectedProduct?.trial_days ? `${selectedProduct.trial_days}-Day Free Trial Active` : 'Free Trial Active'}
+                    </p>
+                    <p className="text-xs text-blue-400/80 leading-relaxed">
+                      No payment is due today. You can evaluate this instance risk-free. You will only be billed the regular price (€{(priceNum * 1.19).toFixed(2)}/mo incl. VAT) after your trial concludes unless cancelled in your dashboard.
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-y border-border text-sm">
+                    <span className="text-muted-foreground">Due today</span>
+                    <span className="font-semibold text-lg text-green-500">€0.00</span>
+                  </div>
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        await api.post('/storefront/orders', {
+                          product_id: selectedProductId,
+                          hostname,
+                        });
+                        handleNext();
+                      } catch (err: any) {
+                        alert(err?.message || 'Failed to start trial');
                       }
-                    }
-                  }}
-                >
-                  <CheckoutForm onPaymentSuccess={handleNext} amount={total} productId={selectedProductId} hostname={hostname} />
-                </Elements>
+                    }} 
+                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  >
+                    Start {selectedProduct?.trial_days ? `${selectedProduct.trial_days}-Day ` : ''}Free Trial
+                  </Button>
+                </div>
               ) : (
-                <div className="text-sm text-muted-foreground p-5 text-center">Loading payment processor...</div>
+                <>
+                  <div className="flex justify-between items-center mb-5 pb-4 border-b border-border text-sm">
+                    <span className="text-muted-foreground">Amount due</span>
+                    <span className="font-medium text-lg">€{total.toFixed(2)}</span>
+                  </div>
+                  {stripePromise ? (
+                    <Elements
+                      stripe={stripePromise}
+                      options={{
+                        mode: 'payment',
+                        amount: Math.max(Math.round(total * 100), 1),
+                        currency: 'eur',
+                        appearance: {
+                          theme: 'night',
+                          variables: {
+                            colorPrimary: '#ffffff',
+                            colorBackground: '#1a1a1a',
+                            colorText: '#ffffff',
+                            colorDanger: '#ef4444',
+                            borderRadius: '0px',
+                            fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                          },
+                          rules: {
+                            '.Input': { border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' },
+                            '.Input:focus': { border: '1px solid rgba(255,255,255,0.3)', boxShadow: 'none' },
+                          }
+                        }
+                      }}
+                    >
+                      <CheckoutForm onPaymentSuccess={handleNext} amount={total} productId={selectedProductId} hostname={hostname} />
+                    </Elements>
+                  ) : (
+                    <div className="text-sm text-muted-foreground p-5 text-center">Loading payment processor...</div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -317,7 +365,7 @@ export function NewService() {
             <div className="border border-border p-6 mb-6">
               <div className="space-y-4 text-sm font-mono">
                 <div className="flex items-center justify-between">
-                  <span>Payment confirmed</span>
+                  <span>{isTrial ? 'Trial verified' : 'Payment confirmed'}</span>
                   <span className="text-green-500">✓</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -360,7 +408,7 @@ export function NewService() {
             }
             className="h-9 px-5 text-sm gap-2"
           >
-            {currentStep === 2 ? 'Proceed to Payment' : 'Continue'} <ArrowRight className="w-3.5 h-3.5" />
+            {currentStep === 2 ? (isTrial ? 'Confirm & Start Trial' : 'Proceed to Payment') : 'Continue'} <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
       )}

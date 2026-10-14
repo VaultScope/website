@@ -21,7 +21,10 @@ export const InfrastructureStorage = () => {
     fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
       .then(res => res.json())
       .then(data => {
-        setProducts(data.filter((p: any) => p.category === 'storage' || p.category === 'sftp'));
+        setProducts(data.filter((p: any) => {
+          const cat = (p.category || '').toLowerCase();
+          return cat.includes('storage') || cat.includes('sftp');
+        }));
         setLoadingProducts(false);
       })
       .catch(() => setLoadingProducts(false));
@@ -108,7 +111,8 @@ export const InfrastructureStorage = () => {
             ) : products.map((plan, i) => {
               const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
               const specs = plan.specs as Record<string, any>;
-              const isFreeTrial = price === 0;
+              const hasTrial = (plan.trial_days && plan.trial_days > 0) || price === 0;
+              const trialBadge = plan.trial_days && plan.trial_days > 0 ? `${plan.trial_days}-Day FREE Trial` : '1st Month FREE';
               
               return (
                 <motion.div 
@@ -117,11 +121,11 @@ export const InfrastructureStorage = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className={`border ${isFreeTrial ? 'border-blue-600/50' : 'border-border'} p-8 flex flex-col hover:border-foreground/30 transition-colors relative`}
+                  className={`border ${hasTrial ? 'border-blue-600/50' : 'border-border'} p-8 flex flex-col hover:border-foreground/30 transition-colors relative`}
                 >
-                  {isFreeTrial && (
+                  {hasTrial && (
                     <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      1st Month FREE
+                      {trialBadge}
                     </div>
                   )}
                   <h3 className="text-xl font-medium tracking-tight mb-2">{plan.name}</h3>
@@ -146,9 +150,9 @@ export const InfrastructureStorage = () => {
                   
                   <LocaleLink to="/dashboard/sftp" className="mt-auto">
                     <button className={`w-full border py-2.5 text-sm font-medium transition-colors ${
-                      isFreeTrial ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700' : 'border-border hover:bg-foreground hover:text-background'
+                      hasTrial ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700' : 'border-border hover:bg-foreground hover:text-background'
                     }`}>
-                      {isFreeTrial ? 'Start Free Trial' : 'Subscribe Now'}
+                      {hasTrial ? 'Start Free Trial' : 'Subscribe Now'}
                     </button>
                   </LocaleLink>
                 </motion.div>

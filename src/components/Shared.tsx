@@ -726,6 +726,7 @@ export const Footer = () => {
               <ul className="space-y-4 text-sm text-foreground/50">
                 <li><a href="https://pegasusbot.app/docs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">{t.nav.documentation}</a></li>
                 <li><a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">GitHub</a></li>
+                <li><a href="https://discord.gg/84kMAY2aKm" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Discord Community</a></li>
                 <li><a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">{t.nav.status}</a></li>
               </ul>
           </div>
@@ -749,8 +750,11 @@ export const Footer = () => {
           <div>
             <p>{t.footer.copyright}</p>
           </div>
-          <div className="flex gap-6">
-            <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
+          <div className="flex gap-6 items-center">
+            <a href="https://discord.gg/84kMAY2aKm" target="_blank" rel="noreferrer" title="Join our Discord Community" className="hover:text-foreground transition-colors">
+              <MessageSquare className="w-4 h-4" />
+            </a>
+            <a href="https://github.com/semi-constructor" target="_blank" rel="noreferrer" title="GitHub" className="hover:text-foreground transition-colors">
               <GitBranch className="w-4 h-4" />
             </a>
           </div>

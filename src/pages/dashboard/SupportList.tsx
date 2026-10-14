@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, X, Server, Tag, AlertCircle, ChevronDown } from 'lucide-react';
+import { Plus, X, Server, Tag, AlertCircle, ChevronDown, MessageSquare, ExternalLink } from 'lucide-react';
 import { Button } from '../../components/Shared';
 import { api } from '../../lib/api';
 import { useToast } from '../../components/Toast';
@@ -105,6 +105,35 @@ export function SupportList() {
         <Button onClick={() => setShowNew(true)} className="h-9 px-5 text-sm gap-2">
           <Plus className="w-3.5 h-3.5" /> Open Ticket
         </Button>
+      </div>
+
+      <div className="mb-6 p-4 border border-indigo-500/20 bg-indigo-500/5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0">
+            <MessageSquare className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-foreground">Discord Community & Developer Exchange</p>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                No Customer Support
+              </span>
+            </div>
+            <p className="text-muted-foreground mt-0.5">
+              We do not provide customer support on Discord (please open a ticket above for account & service issues). You are welcome to join our Discord to discuss new features, upcoming products, UI/UX improvements, and chat directly with the developers!
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://discord.gg/84kMAY2aKm"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded font-medium transition-colors shrink-0 whitespace-nowrap"
+          title="Community & developer exchange (no customer support)"
+        >
+          <span>Join Discord</span>
+          <ExternalLink className="w-3 h-3" />
+        </a>
       </div>
 
       {showNew && (

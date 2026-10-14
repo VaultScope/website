@@ -28,8 +28,52 @@ export function VpsDetail() {
       api.get<any[]>('/storefront/catalog'),
       api.get<any>('/storefront/options').catch(() => ({ osImages: [], sshKeys: [] }))
     ]).then(([svc, catalog, options]) => {
+      if (!svc) {
+        setService(null);
+        setLoading(false);
+        return;
+      }
+
+      const prod = catalog.find((p: any) => p.id === svc.product_id);
+      
+      const isSftp = (svc.name && svc.name.toLowerCase().includes('sftp')) ||
+                     prod?.category === 'sftp' ||
+                     svc.category === 'sftp' ||
+                     svc.target_api === 'sftpgo' ||
+                     svc.provider_resource_id?.startsWith('vs_');
+
+      const isDs = (svc.name && svc.name.toLowerCase().includes('dedicated')) ||
+                   prod?.category === 'ds' ||
+                   svc.category === 'ds';
+
+      const isOdp = (svc.name && svc.name.toLowerCase().includes('odp')) ||
+                    prod?.category === 'odp' ||
+                    svc.category === 'odp';
+
+      if (isSftp) {
+        error('This service is an SFTP Storage instance, not a VPS.');
+        navigate('/dashboard/sftp', { replace: true });
+        return;
+      }
+
+      if (isDs) {
+        navigate(`/dashboard/ds/${svc.id}`, { replace: true });
+        return;
+      }
+
+      if (isOdp) {
+        navigate(`/dashboard/odp/${svc.id}`, { replace: true });
+        return;
+      }
+
+      if (prod && prod.category !== 'vps') {
+        error('Requested service is not a VPS.');
+        navigate('/dashboard/vps', { replace: true });
+        return;
+      }
+
       setService(svc);
-      setProduct(catalog.find((p: any) => p.id === svc.product_id));
+      setProduct(prod);
       setOsImages(options.osImages || []);
       setSshKeys(options.sshKeys || []);
       setLoading(false);

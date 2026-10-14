@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Loader2, MapPin, Mail, AlertTriangle, ArrowRight, RefreshCw } from 'lucide-react';
 import { Button } from '../components/Shared';
@@ -49,6 +49,14 @@ export function Register() {
     phone: '',
     vat_id: '',
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      sessionStorage.setItem('vs_redirect', redirect);
+    }
+  }, []);
 
   // Address Autocomplete States
   const [suggestions, setSuggestions] = useState<any[]>([]);

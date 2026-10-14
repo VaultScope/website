@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { ShieldCheck, AlertTriangle, RefreshCw, Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, RefreshCw, Loader2, CheckCircle2, MapPin, Trash2 } from 'lucide-react';
 import { Button } from '../../../components/Shared';
 import { api } from '../../../lib/api';
 
@@ -44,6 +44,23 @@ export function ProfileAccount() {
   const [resendingEmail, setResendingEmail] = useState(false);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteAccount = async () => {
+    if (!account || deletingAccount) return;
+    if (!confirm('Are you absolutely sure you want to permanently delete your VaultScope account? All services, configuration, and data will be removed.')) return;
+    setDeletingAccount(true);
+    setDeleteError(null);
+    try {
+      await api.delete('/storefront/profile');
+      localStorage.removeItem('vs_token');
+      window.location.href = '/login';
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Failed to delete account. Ensure all active services are terminated first.');
+      setDeletingAccount(false);
+    }
+  };
 
   // VAT verification state
   const [verifyingVat, setVerifyingVat] = useState(false);
@@ -443,6 +460,30 @@ export function ProfileAccount() {
             <span className="text-sm text-muted-foreground">Last login</span>
             <span className="text-sm">{account.last_login ? new Date(account.last_login).toLocaleString() : 'Never'}</span>
           </div>
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-red-500/20">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-red-500 mb-2">Danger Zone</h2>
+        <div className="border border-red-500/30 bg-red-500/5 p-5 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Delete Account</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Permanently close your customer account and erase your identity and configuration. Active running services must be terminated first.
+            </p>
+            {deleteError && (
+              <p className="text-xs text-red-400 mt-2 font-medium">{deleteError}</p>
+            )}
+          </div>
+          <Button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={deletingAccount}
+            className="bg-red-600 hover:bg-red-700 text-white shrink-0 h-9 text-xs gap-1.5"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            {deletingAccount ? 'Deleting...' : 'Delete Account'}
+          </Button>
         </div>
       </div>
     </div>

@@ -22,7 +22,10 @@ export const InfrastructureDedicated = () => {
     fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
       .then(res => res.json())
       .then(data => {
-        setProducts(data.filter((p: any) => p.category === 'dedicated' || p.category === 'ds'));
+        setProducts(data.filter((p: any) => {
+          const cat = (p.category || '').toLowerCase();
+          return cat.includes('dedicated') || cat.includes('ds') || cat.includes('baremetal');
+        }));
         setLoadingProducts(false);
       })
       .catch(() => setLoadingProducts(false));

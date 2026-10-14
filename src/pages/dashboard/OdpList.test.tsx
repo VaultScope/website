@@ -42,7 +42,7 @@ describe('OdpList', () => {
   it('renders page heading', () => {
     mockGet.mockReturnValue(new Promise(() => {}));
     renderComponent();
-    expect(screen.getByText('Optimized Deployment Platform')).toBeDefined();
+    expect(screen.getByText('One-Click Deploy (OCD)')).toBeDefined();
   });
 
   it('filters services to only show ODP category', async () => {
@@ -85,13 +85,13 @@ describe('OdpList', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('No ODP instances found.')).toBeDefined();
+      expect(screen.getByText('No OCD instances found.')).toBeDefined();
     });
   });
 
-  it('renders "Deploy ODP" button', () => {
+  it('renders "Deploy OCD" button', () => {
     mockGet.mockReturnValue(new Promise(() => {}));
     renderComponent();
-    expect(screen.getByText('Deploy ODP')).toBeDefined();
+    expect(screen.getByText('Deploy OCD')).toBeDefined();
   });
 });

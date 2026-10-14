@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { marked } from 'marked';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -18,63 +19,19 @@ interface BlogArticle {
   excerpt?: string;
   image_url?: string;
   content: string;
+  tags?: string[];
   published_at: string;
   category?: string;
+  author_name?: string;
+  author_username?: string;
+  author_avatar?: string;
   author?: {
     name: string;
-    role: string;
+    role?: string;
+    avatar?: string;
+    username?: string;
   };
 }
-
-const FALLBACK_ARTICLES: Record<string, BlogArticle> = {
-  'ipv6-deployment-considerations': {
-    id: 'default-1',
-    slug: 'ipv6-deployment-considerations',
-    title: 'IPv6 deployment considerations for infrastructure operators',
-    excerpt: 'Detailed overview of IPv6 allocation, multi-homed BGP routing, and dual-stack kernel tuning for high-throughput European datacenter operations.',
-    content: `
-      <h2>Why Native IPv6 Is Non-Negotiable in 2026</h2>
-      <p>With global IPv4 exhaustion driving market broker prices beyond 55 EUR per /32 IP address, designing infrastructure with native IPv6-first topologies is both an economic necessity and a performance advantage. In this article, we break down our dual-stack architecture across Frankfurt and Nuremberg.</p>
-      
-      <h3>Address Allocation Strategy: The /64 Per Customer Standard</h3>
-      <p>Address allocation strategy and BGP routing best practices dictate that every customer is routed an entire /64 subnet directly to their interface. RFC 6177 explicitly discourages stingy address allocations. At VaultScope, every Cloud VPS and Bare-Metal server receives a routed /64 prefix (18 quintillion addresses) by default.</p>
-
-      <h3>Kernel Tuning for Multi-Gigabit Dual-Stack Throughput</h3>
-      <p>To avoid neighbor table exhaustion under heavy UDP traffic, tune the Linux kernel ARP and NDP garbage collection thresholds in <code>/etc/sysctl.d/99-network.conf</code>:</p>
-      <pre><code>net.ipv6.neigh.default.gc_thresh1 = 2048
-net.ipv6.neigh.default.gc_thresh2 = 4096
-net.ipv6.neigh.default.gc_thresh3 = 8192
-net.ipv4.tcp_fastopen = 3</code></pre>
-
-      <h3>BGP Peering & Multihomed Upstream Redundancy</h3>
-      <p>All core routers announce customer IPv6 allocations to Tier-1 transits (Telia/Arelion, Lumen) and direct DE-CIX Frankfurt internet exchanges simultaneously with BGP communities configured for optimal route convergence.</p>
-    `,
-    published_at: '2026-03-01T10:00:00Z',
-    category: 'Infrastructure',
-    author: {
-      name: 'Julian Vance',
-      role: 'Principal Network Architect',
-    }
-  },
-  'incident-post-mortem-routing-failover': {
-    id: 'default-2',
-    slug: 'incident-post-mortem-routing-failover',
-    title: 'Incident post-mortem: Core routing failover & BGP convergence',
-    excerpt: 'Analysis of routing failover and automated BGP convergence following transatlantic fiber disruption.',
-    content: `
-      <h2>Incident Timeline & Sequence of Events</h2>
-      <p>On February 15, 2026, core routing failover testing was initiated automatically following an external telemetry trigger. Our automated BGP path hunting prevention mechanisms responded within 340ms.</p>
-      <h3>Post-Mortem Root Cause Analysis</h3>
-      <p>Civil roadwork contractors severed physical dark fiber ducts in suburban Nuremberg. Secondary paths via Frankfurt converged with zero dropped TCP flows.</p>
-    `,
-    published_at: '2026-02-15T10:00:00Z',
-    category: 'Security & SRE',
-    author: {
-      name: 'Elena Rostova',
-      role: 'Head of Site Reliability',
-    }
-  }
-};
 
 function calculateReadingTime(content: string): number {
   const words = content.replace(/<[^>]+>/g, '').trim().split(/\s+/).length;
@@ -98,13 +55,8 @@ export function BlogDetail() {
         setArticle(res);
       })
       .catch(err => {
-        // Check fallback articles
-        if (FALLBACK_ARTICLES[slug]) {
-          setArticle(FALLBACK_ARTICLES[slug]);
-        } else {
-          console.error(err);
-          setError(true);
-        }
+        console.error(err);
+        setError(true);
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -114,6 +66,11 @@ export function BlogDetail() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const contentHtml = useMemo(() => {
+    if (!article?.content) return '';
+    return marked.parse(article.content) as string;
+  }, [article?.content]);
 
   if (loading) {
     return (
@@ -154,7 +111,7 @@ export function BlogDetail() {
   return (
     <>
       <Helmet>
-        <title>{article.title} — VaultScope Engineering</title>
+        <title>{article.title} — VaultScope Blog</title>
         {article.excerpt && <meta name="description" content={article.excerpt} />}
       </Helmet>
 
@@ -192,9 +149,16 @@ export function BlogDetail() {
             {/* Header Metadata */}
             <header className="border-b border-border pb-8 space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">
-                  {article.category || 'Engineering'}
-                </span>
+                {article.category && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">
+                    {article.category}
+                  </span>
+                )}
+                {article.tags?.map(tag => (
+                  <span key={tag} className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-foreground/[0.04] text-foreground/70 border border-border">
+                    #{tag}
+                  </span>
+                ))}
                 <span className="text-[11px] font-mono text-foreground/40 flex items-center gap-1.5">
                   <Clock className="w-3 h-3" />
                   {readingTime} min read
@@ -221,15 +185,15 @@ export function BlogDetail() {
 
               {/* Author Strip */}
               <div className="pt-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center font-mono font-semibold text-xs text-foreground">
-                  {article.author?.name ? article.author.name.charAt(0) : 'V'}
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center font-mono font-bold text-xs text-blue-500 shadow-inner shrink-0">
+                  {(article.author?.name || article.author_name || article.author_username || 'V').charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <span className="text-xs font-semibold block text-foreground">
-                    {article.author?.name || 'VaultScope Engineering Team'}
+                    {article.author?.name || article.author_name || (article.author_username ? `@${article.author_username}` : 'VaultScope Team')}
                   </span>
                   <span className="text-[11px] text-foreground/50 font-mono">
-                    {article.author?.role || 'Systems Infrastructure & SRE'}
+                    {article.author?.role || (article.author_username ? `Published by @${article.author_username}` : 'VaultScope Author')}
                   </span>
                 </div>
               </div>
@@ -243,22 +207,17 @@ export function BlogDetail() {
 
             {/* Article Body */}
             <div 
-              className="prose prose-invert max-w-none text-foreground/80 leading-relaxed text-sm sm:text-base space-y-4
-                prose-headings:text-foreground prose-headings:font-semibold prose-headings:tracking-tight
-                prose-h2:text-xl prose-h2:pt-6 prose-h2:border-t prose-h2:border-border/50
-                prose-h3:text-lg prose-h3:pt-3
-                prose-code:font-mono prose-code:bg-foreground/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
-                prose-pre:bg-foreground/[0.03] prose-pre:border prose-pre:border-border prose-pre:p-4 prose-pre:rounded-lg"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              className="markdown-preview max-w-none text-foreground/80 leading-relaxed text-sm sm:text-base"
+              dangerouslySetInnerHTML={{ __html: contentHtml }}
             />
 
             {/* Article Footer */}
             <footer className="pt-10 border-t border-border space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-xl border border-border bg-foreground/[0.01]">
                 <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-foreground">Questions regarding this deployment?</h4>
+                  <h4 className="text-sm font-semibold text-foreground">Questions or feedback regarding this article?</h4>
                   <p className="text-xs text-foreground/60">
-                    Reach our technical operations team directly via ticket or explore our customer knowledge base.
+                    Reach out to our team directly via support tickets or join the community discussion.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

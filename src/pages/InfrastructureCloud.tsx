@@ -22,7 +22,10 @@ export const InfrastructureCloud = () => {
     fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
       .then(res => res.json())
       .then(data => {
-        setProducts(data.filter((p: any) => p.category === 'vps' || p.category === 'cloud'));
+        setProducts(data.filter((p: any) => {
+          const cat = (p.category || '').toLowerCase();
+          return cat.includes('vps') || cat.includes('cloud');
+        }));
         setLoadingProducts(false);
       })
       .catch(() => setLoadingProducts(false));
@@ -142,6 +145,8 @@ export const InfrastructureCloud = () => {
             ) : products.map((plan, i) => {
               const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
               const specs = plan.specs as Record<string, any>;
+              const hasTrial = (plan.trial_days && plan.trial_days > 0) || price === 0;
+              const trialBadge = plan.trial_days && plan.trial_days > 0 ? `${plan.trial_days}-Day Free Trial` : 'Free Trial';
               
               return (
                 <motion.div 
@@ -150,8 +155,13 @@ export const InfrastructureCloud = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="border border-border p-8 flex flex-col hover:border-foreground/30 transition-colors"
+                  className={`border ${hasTrial ? 'border-blue-600/50' : 'border-border'} p-8 flex flex-col hover:border-foreground/30 transition-colors relative`}
                 >
+                  {hasTrial && (
+                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                      {trialBadge}
+                    </div>
+                  )}
                   <h3 className="text-xl font-medium tracking-tight mb-2">{plan.name}</h3>
                   <p className="text-sm text-foreground/50 mb-6 font-mono">{plan.target}</p>
                   <div className="text-3xl font-medium mb-6">
@@ -168,8 +178,10 @@ export const InfrastructureCloud = () => {
                   </div>
                   
                   <LocaleLink to="/dashboard/new" className="mt-auto">
-                    <button className="w-full border border-border hover:bg-foreground hover:text-background transition-colors py-2.5 text-sm font-medium">
-                      Deploy Now
+                    <button className={`w-full border py-2.5 text-sm font-medium transition-colors ${
+                      hasTrial ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700' : 'border-border hover:bg-foreground hover:text-background'
+                    }`}>
+                      {hasTrial ? `Start ${plan.trial_days ? `${plan.trial_days}-Day ` : ''}Free Trial` : 'Deploy Now'}
                     </button>
                   </LocaleLink>
                 </motion.div>

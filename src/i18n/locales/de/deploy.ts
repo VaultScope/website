@@ -1,9 +1,9 @@
 export const deploy = {
-  title: 'Deploy — VaultScope',
-  metaDescription: 'VaultScope Deploy — vorkonfigurierte Dienste auf Managed Infrastruktur sofort starten. Eine Deployment-Plattform für Anwendungen, Datenbanken und Dienste.',
-  eyebrow: 'DEPLOY-PLATTFORM',
+  title: 'One-Click Deploy (OCD) — VaultScope',
+  metaDescription: 'VaultScope One-Click Deploy (OCD) — vorkonfigurierte Dienste auf Managed Infrastruktur sofort starten. Eine Deployment-Plattform für Anwendungen, Datenbanken und Dienste.',
+  eyebrow: 'ONE-CLICK DEPLOY (OCD)',
   heroTitle: 'Dienste, live in Sekunden.',
-  heroDescription: 'Eine Deployment-Plattform für vorkonfigurierte Dienste. Anwendungen, Datenbanken und Tools auf Managed Infrastruktur deployen — kein manuelles Setup erforderlich.',
+  heroDescription: 'Eine One-Click Deploy (OCD) Plattform für vorkonfigurierte Dienste. Anwendungen, Datenbanken und Tools auf Managed Infrastruktur deployen — kein manuelles Setup erforderlich.',
   howItWorks: {
     eyebrow: 'So funktioniert es',
     steps: [

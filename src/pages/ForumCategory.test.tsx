@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ForumCategory } from './ForumCategory';
 
@@ -14,29 +14,48 @@ function renderComponent(cat = 'infrastructure') {
 }
 
 describe('ForumCategory', () => {
-  it('renders threads for the infrastructure category', () => {
-    renderComponent('infrastructure');
-    expect(screen.getByText(/IPv6 configuration on new VPS instances/)).toBeDefined();
+  beforeEach(() => {
+    localStorage.clear();
   });
 
-  it('renders thread metadata (author, reply count)', () => {
+  it('renders category name and description', () => {
     renderComponent('infrastructure');
-    expect(screen.getAllByText(/alex_m/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Infrastructure')).toBeDefined();
+    expect(screen.getByText(/Cloud VPS, dedicated servers/i)).toBeDefined();
   });
 
-  it('renders solved status badge', () => {
+  it('renders clean empty state when no discussions exist', () => {
     renderComponent('infrastructure');
-    expect(screen.getByText(/solved/i)).toBeDefined();
+    expect(screen.getByText(/No discussions in this channel yet/i)).toBeDefined();
   });
 
   it('renders "Category not found" for unknown slug', () => {
     renderComponent('nonexistent');
-    expect(screen.getByText(/not found|No threads/i)).toBeDefined();
+    expect(screen.getByText(/Category not found/i)).toBeDefined();
   });
 
-  it('renders links to individual threads', () => {
+  it('renders threads when discussions exist in storage', () => {
+    localStorage.setItem(
+      'vs_forum_threads_infrastructure',
+      JSON.stringify([
+        {
+          id: 'bgp-peering-setup',
+          category: 'infrastructure',
+          title: 'Custom BGP peering session on Bare Metal',
+          author: 'sysadmin_tim',
+          timestamp: '2026-03-01T10:00:00Z',
+          replyCount: 3,
+          viewCount: 45,
+          lastActivity: '2026-03-01T12:00:00Z',
+          lastActivityAuthor: 'sysadmin_tim',
+          status: 'solved',
+        },
+      ])
+    );
+
     renderComponent('infrastructure');
-    const links = screen.getAllByRole('link');
-    expect(links.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Custom BGP peering session/i)).toBeDefined();
+    expect(screen.getByText(/sysadmin_tim/)).toBeDefined();
+    expect(screen.getByText(/Solved/i)).toBeDefined();
   });
 });

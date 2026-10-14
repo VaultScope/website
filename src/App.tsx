@@ -5,6 +5,7 @@ import { Navbar, Footer } from './components/Shared';
 import { LanguageProvider } from './i18n';
 import { ToastProvider } from './components/Toast';
 import { ExplainModeProvider } from './components/HelpTooltip';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // ─── Eagerly loaded (homepage + primary routes) ───────────────────────────────
 import { Home }       from './pages/Home';
@@ -104,6 +105,7 @@ const CustomerSupportGuide = lazy(() => import('./pages/docs/customer/SupportGui
 const Register = lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail').then(m => ({ default: m.VerifyEmail })));
+const PartnerLanding = lazy(() => import('./pages/PartnerLanding').then(m => ({ default: m.PartnerLanding })));
 
 // ─── Route definitions ───────────────────────────────────────────────────────
 
@@ -163,6 +165,9 @@ const PAGE_ROUTES: RouteConfig[] = [
   { path: '/resources', element: <Navigate to="/resources/blog" replace /> },
   { path: '/resources/blog', element: <BlogList /> },
   { path: '/resources/blog/:slug', element: <BlogDetail /> },
+  { path: '/blog', element: <BlogList /> },
+  { path: '/blog/:slug', element: <BlogDetail /> },
+
   { path: '/resources/forum', element: <ForumList /> },
   { path: '/resources/forum/:category', element: <ForumCategory /> },
   { path: '/resources/forum/:category/:threadId', element: <ForumThread /> },
@@ -213,6 +218,7 @@ const PAGE_ROUTES: RouteConfig[] = [
   { path: '/register', element: <Register /> },
   { path: '/login', element: <Login /> },
   { path: '/verify-email', element: <VerifyEmail /> },
+  { path: '/ps/:partner', element: <PartnerLanding /> },
   { path: '/profile', element: <Navigate to="/dashboard/profile" replace /> },
   { path: '/legal', element: <Navigate to="/legal/privacy" replace /> },
   { path: '/legal/privacy', element: <Privacy /> },
@@ -238,9 +244,11 @@ const REDIRECT_ROUTES: RouteConfig[] = [
   { path: '/terms', element: <Navigate to="/legal/terms" replace /> },
   { path: '/imprint', element: <Navigate to="/legal/imprint" replace /> },
   { path: '/hosting-terms', element: <Navigate to="/legal/hosting-terms" replace /> },
+  { path: '/blog', element: <Navigate to="/resources/blog" replace /> },
   { path: '/cancellation', element: <Navigate to="/legal/cancellation" replace /> },
   { path: '/aup', element: <Navigate to="/legal/aup" replace /> },
   { path: '/dpa', element: <Navigate to="/legal/dpa" replace /> },
+
 ];
 
 function renderRoutes(prefix: string, routes: RouteConfig[] = PAGE_ROUTES) {
@@ -270,26 +278,35 @@ function AppContent() {
       </a>
       {!isDashboard && <Navbar />}
       <main id="main-content" className="flex-1 flex flex-col">
-        <Suspense fallback={null}>
-          <Routes>
-            {/* ─── German locale routes (/de/...) ─────────────────── */}
-            {renderRoutes('/de')}
+        <ErrorBoundary>
+          <Suspense fallback={
+            <div className="flex-1 flex items-center justify-center min-h-[40vh] p-8">
+              <div className="flex flex-col items-center gap-3 text-muted-foreground animate-pulse">
+                <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+                <span className="text-[11px] font-mono tracking-wider uppercase opacity-60">Loading...</span>
+              </div>
+            </div>
+          }>
+            <Routes>
+              {/* ─── German locale routes (/de/...) ─────────────────── */}
+              {renderRoutes('/de')}
 
-            {/* ─── Default (English) routes ───────────────────────── */}
-            {renderRoutes('')}
+              {/* ─── Default (English) routes ───────────────────────── */}
+              {renderRoutes('')}
 
-            {/* ─── Redirects (old routes → new routes) ────────────── */}
-            {REDIRECT_ROUTES.map(({ path, element }) => (
-              <Route key={path} path={path} element={element} />
-            ))}
+              {/* ─── Redirects (old routes → new routes) ────────────── */}
+              {REDIRECT_ROUTES.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
 
-            {/* ─── Auth ───────────────────────────────────────────── */}
-            <Route path="/login" element={<Login />} />
+              {/* ─── Auth ───────────────────────────────────────────── */}
+              <Route path="/login" element={<Login />} />
 
-            {/* ─── 404 ────────────────────────────────────────────── */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+              {/* ─── 404 ────────────────────────────────────────────── */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
       {!isDashboard && <Footer />}
     </div>

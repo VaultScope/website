@@ -84,7 +84,7 @@ export const Odp = () => {
     <div className="flex flex-col w-full">
       {/* Hero */}
       <PageHero
-        eyebrow="DEPLOY PLATFORM"
+        eyebrow={t.deploy?.eyebrow || "ONE-CLICK DEPLOY (OCD)"}
         title={
           <>
             Services, live
@@ -92,7 +92,7 @@ export const Odp = () => {
             in seconds.
           </>
         }
-        description="A deployment platform for pre-configured services. Deploy applications, databases, and tools on managed infrastructure — zero manual setup required."
+        description={t.deploy?.heroDescription || "One-Click Deploy (OCD) platform for pre-configured services. Deploy applications, databases, and tools on managed infrastructure — zero manual setup required."}
         primaryCta="Join the waitlist"
         primaryLink="#waitlist"
         align="left"
@@ -253,7 +253,7 @@ export const Odp = () => {
               Be the first to deploy.
             </h2>
             <p className="text-foreground/50 font-light mb-10 text-lg leading-relaxed">
-              One-Click Deploy is currently in preparation. Leave your email and
+              One-Click Deploy (OCD) is currently in preparation. Leave your email and
               we&apos;ll notify you the moment the catalogue goes live.
             </p>
             <WaitlistForm />

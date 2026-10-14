@@ -103,12 +103,15 @@ export function DashboardLayout() {
     return <Onboarding />;
   }
 
-  const navigation = [
+  const primaryNavigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
     { name: 'VPS', href: '/dashboard/vps', icon: Server },
     { name: 'Dedicated Servers', href: '/dashboard/ds', icon: HardDrive },
-    { name: 'ODP', href: '/dashboard/odp', icon: Cloud },
+    { name: 'One-Click Deploy (OCD)', href: '/dashboard/odp', icon: Cloud },
     { name: 'SFTP Storage', href: '/dashboard/sftp', icon: HardDrive },
+  ];
+
+  const bottomNavigation = [
     { name: 'Order New Service', href: '/dashboard/new', icon: PlusCircle },
     { name: 'Support', href: '/dashboard/support', icon: LifeBuoy },
     { name: 'Profile', href: '/dashboard/profile', icon: UserCircle },
@@ -130,7 +133,7 @@ export function DashboardLayout() {
           </button>
         </div>
         <nav className="flex-1 py-2 overflow-y-auto">
-          {navigation.map((item) => {
+          {primaryNavigation.map((item) => {
             const isActive = location.pathname === localePath(item.href) || location.pathname === item.href;
             const Icon = item.icon;
             return (
@@ -149,6 +152,26 @@ export function DashboardLayout() {
             );
           })}
         </nav>
+        <div className="border-t border-border py-2">
+          {bottomNavigation.map((item) => {
+            const isActive = location.pathname === localePath(item.href) || location.pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                to={localePath(item.href)}
+                className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors border-l-2 ${
+                  isActive
+                    ? 'border-foreground text-foreground bg-foreground/5'
+                    : 'border-transparent text-foreground/50 hover:text-foreground hover:bg-foreground/[0.02]'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </div>
         <div className="border-t border-border p-4">
           <div className="text-xs text-foreground/40 mb-2 truncate">{claims?.email}</div>
           <button

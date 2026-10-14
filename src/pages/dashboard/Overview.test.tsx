@@ -119,4 +119,19 @@ describe('DashboardOverview', () => {
     renderComponent();
     expect(screen.getByText('View tickets')).toBeDefined();
   });
+
+  it('routes SFTP services to /dashboard/sftp and VPS to /dashboard/vps/:id', async () => {
+    mockGet.mockResolvedValue([
+      { id: 'sftp-1', name: 'SFTP Sovereign Storage', status: 'running', hostname: 'sftp.vaultscope.de', ip: '10.20.10.60', price: '12.00', next_due: null, config: {} },
+      { id: 'vps-1', name: 'Standard VPS Instance', status: 'running', hostname: 'vps.vaultscope.de', ip: '1.2.3.4', price: '20.00', next_due: null, config: {} },
+    ]);
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('SFTP Sovereign Storage')).toBeDefined();
+    });
+
+    const manageLinks = screen.getAllByText('Manage').map(el => el.closest('a')?.getAttribute('href'));
+    expect(manageLinks).toEqual(['/dashboard/sftp', '/dashboard/vps/vps-1']);
+  });
 });

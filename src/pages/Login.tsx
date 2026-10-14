@@ -78,7 +78,12 @@ export function Login() {
         } catch(e) {}
       }
 
-      if (email_verified === false) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectParam = urlParams.get('redirect') || sessionStorage.getItem('vs_redirect');
+      if (redirectParam) {
+        sessionStorage.removeItem('vs_redirect');
+        window.location.href = redirectParam;
+      } else if (email_verified === false) {
         window.location.href = localePath('/dashboard/profile');
       } else {
         window.location.href = localePath('/dashboard');

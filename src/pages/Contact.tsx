@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { PageHero, Breadcrumbs } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { LifeBuoy, GitBranch, Activity, BookOpen, FileText, Shield, CreditCard, Handshake, Info } from 'lucide-react';
+import { LifeBuoy, GitBranch, Activity, BookOpen, FileText, Shield, CreditCard, Handshake, Info, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
 export const Contact = () => {
@@ -65,8 +65,15 @@ export const Contact = () => {
           </div>
 
           {/* Secondary links */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-border border-t-0 max-w-6xl mt-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-0 border border-border border-t-0 max-w-6xl mt-8">
             {[
+              {
+                icon: MessageSquare,
+                label: 'Discord Community',
+                desc: 'Talk with developers about features & UI/UX (no customer support).',
+                href: 'https://discord.gg/84kMAY2aKm',
+                external: true,
+              },
               {
                 icon: Activity,
                 label: t.contactPage.links.serviceStatus.label,

@@ -174,4 +174,42 @@ describe('VpsDetail', () => {
       expect(mockPost).toHaveBeenCalledWith('/storefront/services/svc-123/restart');
     });
   });
+
+  it('redirects SFTP services to /dashboard/sftp and does not render VPS controls', async () => {
+    const mockSftpService = {
+      id: 'sftp-uuid-999',
+      name: 'SFTP Sovereign Storage',
+      status: 'running',
+      product_id: 'prod-sftp-1',
+      provider_resource_id: 'vs_customer1',
+    };
+    const catalogWithSftp = [
+      { id: 'prod-sftp-1', name: 'SFTP Storage', category: 'sftp', specs: {} },
+    ];
+
+    mockGet.mockImplementation((path: string) => {
+      if (path.includes('/storefront/services/')) return Promise.resolve(mockSftpService);
+      if (path.includes('/storefront/catalog')) return Promise.resolve(catalogWithSftp);
+      if (path.includes('/storefront/options')) return Promise.resolve(mockOptions);
+      return Promise.resolve(null);
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard/vps/sftp-uuid-999']}>
+        <ToastProvider>
+          <Routes>
+            <Route path="/dashboard/vps/:id" element={<VpsDetail />} />
+            <Route path="/dashboard/sftp" element={<div>SFTP Page Destination</div>} />
+          </Routes>
+        </ToastProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('SFTP Page Destination')).toBeDefined();
+    });
+
+    expect(screen.queryByText('Reinstall')).toBeNull();
+    expect(screen.queryByText('Power Control')).toBeNull();
+  });
 });

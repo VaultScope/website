@@ -18,6 +18,7 @@ const mockPosts = [
     excerpt: 'Detailed overview of IPv6 allocation.',
     content: 'Full article text',
     published_at: '2026-03-01T10:00:00Z',
+    tags: ['networking', 'ipv6'],
   },
   {
     id: '2',
@@ -26,6 +27,7 @@ const mockPosts = [
     excerpt: 'Analysis of routing failover.',
     content: 'Post-mortem details',
     published_at: '2026-02-15T10:00:00Z',
+    tags: ['sre', 'incident'],
   },
 ];
 
@@ -39,7 +41,12 @@ function renderComponent() {
 
 describe('BlogList', () => {
   beforeEach(() => {
-    vi.mocked(api.get).mockResolvedValue(mockPosts);
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url === '/storefront/blog/tags') {
+        return ['networking', 'ipv6', 'sre', 'incident'];
+      }
+      return mockPosts;
+    });
   });
 
   it('renders blog posts', async () => {
@@ -75,6 +82,26 @@ describe('BlogList', () => {
 
     expect(screen.getByText(/Incident post-mortem/)).toBeDefined();
     expect(screen.queryByText(/IPv6 deployment/)).toBeNull();
+  });
+
+  it('filters posts by tag search', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText(/IPv6 deployment/)).toBeDefined();
+    });
+
+    const input = screen.getByPlaceholderText(/Search/i);
+    fireEvent.change(input, { target: { value: 'sre' } });
+
+    expect(screen.getByText(/Incident post-mortem/)).toBeDefined();
+    expect(screen.queryByText(/IPv6 deployment/)).toBeNull();
+  });
+
+  it('renders tag filter pills', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getAllByText(/#networking/).length).toBeGreaterThan(0);
+    });
   });
 
   it('renders links to individual posts', async () => {
