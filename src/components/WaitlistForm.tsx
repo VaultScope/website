@@ -5,8 +5,8 @@ import { LocaleLink } from '../i18n/LocaleLink';
 
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'unconfigured';
 
-const LISTMONK_URL       = import.meta.env.VITE_LISTMONK_URL       as string | undefined;
-const LISTMONK_LIST_UUID = import.meta.env.VITE_LISTMONK_LIST_UUID as string | undefined;
+const LISTMONK_URL       = (import.meta.env.VITE_LISTMONK_URL       as string | undefined) || 'https://sub.vaultscope.de';
+const LISTMONK_LIST_UUID = (import.meta.env.VITE_LISTMONK_LIST_UUID as string | undefined) || '75f4bf59-4f9b-41ea-b636-7d4bdb062041';
 
 export const WaitlistForm = (_props: {
   variant?: string;
@@ -33,10 +33,7 @@ export const WaitlistForm = (_props: {
     setErrorMsg('');
 
     try {
-      const isProd = import.meta.env.PROD;
-      const endpoint = isProd && LISTMONK_URL 
-        ? `${LISTMONK_URL}/api/public/subscription` 
-        : '/api/listmonk/api/public/subscription';
+      const endpoint = '/api/listmonk/api/public/subscription';
 
       const res = await fetch(endpoint, {
         method:  'POST',

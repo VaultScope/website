@@ -20,8 +20,8 @@
 	}
 
 	handle_path /api/listmonk/* {
-		reverse_proxy https://subscribe.vaultscope.de {
-			header_up Host subscribe.vaultscope.de
+		reverse_proxy https://sub.vaultscope.de {
+			header_up Host sub.vaultscope.de
 		}
 	}
 
