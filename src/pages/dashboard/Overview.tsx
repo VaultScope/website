@@ -1,153 +1,288 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, ArrowRight } from 'lucide-react';
-import { Button } from '../../components/Shared';
-import { useApi } from '../../lib/hooks';
+import { Plus, ArrowUpRight, Server, HardDrive, Cpu, FolderLock, SlidersHorizontal } from 'lucide-react';
+import { api } from '../../lib/api';
+import { getQuickNavItems, type QuickNavItem } from '../../lib/quickNav';
 
-interface Service {
+const VAT_RATE = 0.19;
+
+interface ServiceItem {
   id: string;
-  name: string;
-  status: 'running' | 'suspended' | 'pending' | 'terminated';
-  hostname: string;
-  ip: string;
-  price: string;
-  next_due: string | null;
-  config: Record<string, unknown>;
+  name?: string;
+  hostname?: string;
+  status: string;
+  product_id?: string;
+  provider_type?: string;
+  ip?: string;
+  price?: string;
+  billing_cycle?: string;
+  next_due?: string | null;
 }
 
-const STATUS_DISPLAY: Record<string, { label: string; color: string }> = {
-  running: { label: 'Online', color: 'green' },
-  pending: { label: 'Configuring', color: 'yellow' },
-  suspended: { label: 'Suspended', color: 'red' },
-  terminated: { label: 'Terminated', color: 'neutral' },
-};
-
-function getServiceManageLink(svc: any): string {
-  const name = (svc.name || '').toLowerCase();
-  const category = (svc.category || '').toLowerCase();
-  const type = (svc.type || '').toLowerCase();
-  const targetApi = (svc.target_api || '').toLowerCase();
-  const providerId = (svc.provider_resource_id || '').toLowerCase();
-
-  if (name.includes('sftp') || category === 'sftp' || type === 'sftp' || targetApi === 'sftpgo' || providerId.startsWith('vs_')) {
-    return '/dashboard/sftp';
-  }
-  if (name.includes('dedicated') || category === 'ds' || type === 'ds') {
-    return `/dashboard/ds/${svc.id}`;
-  }
-  if (name.includes('odp') || category === 'odp' || type === 'odp') {
-    return `/dashboard/odp/${svc.id}`;
-  }
-  return `/dashboard/vps/${svc.id}`;
+interface CatalogProduct {
+  id: string;
+  name: string;
+  category?: string;
+  specs?: Record<string, unknown>;
 }
 
 export function DashboardOverview() {
-  const { data: services, loading } = useApi<Service[]>('/storefront/services');
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [catalog, setCatalog] = useState<Record<string, CatalogProduct>>({});
+  const [loading, setLoading] = useState(true);
+  const [quickNavItems, setQuickNavItems] = useState<QuickNavItem[]>(() => getQuickNavItems());
 
-  const activeServices = services?.filter(s => s.status !== 'terminated') || [];
-  const allOperational = activeServices.every(s => s.status === 'running');
-  const totalMonthly = activeServices.reduce((sum, s) => sum + parseFloat(s.price || '0'), 0);
+  useEffect(() => {
+    Promise.all([
+      api.get('/storefront/services').catch(() => []),
+      api.get('/storefront/catalog').catch(() => []),
+    ]).then(([srvData, catData]) => {
+      setServices(Array.isArray(srvData) ? srvData : []);
+      const map: Record<string, CatalogProduct> = {};
+      if (Array.isArray(catData)) {
+        for (const p of catData) {
+          map[p.id] = p;
+        }
+      }
+      setCatalog(map);
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    const syncQuickNav = () => setQuickNavItems(getQuickNavItems());
+    window.addEventListener('vs-quick-nav-updated', syncQuickNav);
+    window.addEventListener('storage', syncQuickNav);
+    return () => {
+      window.removeEventListener('vs-quick-nav-updated', syncQuickNav);
+      window.removeEventListener('storage', syncQuickNav);
+    };
+  }, []);
+
+  const activeServices = services.filter((s) => s.status !== 'terminated');
+
+  const allOperational =
+    activeServices.length === 0 ||
+    activeServices.every((s) => s.status === 'running' || s.status === 'active');
+
+  const monthlyNet = activeServices.reduce((sum, s) => {
+    const p = parseFloat(s.price || '0');
+    if (isNaN(p) || p <= 0) return sum;
+    if (s.billing_cycle === 'yearly' || s.billing_cycle === 'annual') return sum + p / 12;
+    return sum + p;
+  }, 0);
+
+  const monthlyGross = monthlyNet * (1 + VAT_RATE);
+
+  const isSftpService = (service: ServiceItem, cat: string) =>
+    service.provider_type === 'sftp' ||
+    cat === 'storage' ||
+    cat === 'sftp' ||
+    (service.name || '').toLowerCase().includes('sftp') ||
+    (service.hostname || '').toLowerCase().includes('sftp');
+
+  const getCategoryIcon = (service: ServiceItem, cat: string) => {
+    if (isSftpService(service, cat)) return FolderLock;
+    if (cat === 'ds' || cat === 'dedicated') return HardDrive;
+    if (cat === 'odp' || cat === 'ocd') return Cpu;
+    return Server;
+  };
 
   return (
-    <div className="space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-        <div>
-          <h1 className="text-2xl font-light mb-4">Welcome back.</h1>
-          <div className="space-y-1">
-            <div className="font-medium">{loading ? '...' : `${activeServices.length} Service${activeServices.length !== 1 ? 's' : ''}`}</div>
-            {!loading && activeServices.length > 0 && (
-              <div className={`text-sm flex items-center gap-1.5 ${allOperational ? 'text-green-500' : 'text-yellow-500'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${allOperational ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                {allOperational ? 'All operational' : 'Some services need attention'}
-              </div>
+    <div className="space-y-12">
+      {/* Minimal Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          {!loading && !allOperational && (
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-[var(--warn)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--warn)]" />
+              <span>Some services need attention</span>
+            </div>
+          )}
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--fg)]">
+            Overview
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link
+            to="/dashboard/support"
+            className="vs-btn-secondary px-4 py-2 text-xs font-medium"
+          >
+            View tickets
+          </Link>
+          <Link
+            to="/dashboard/new"
+            className="vs-btn-primary px-4 py-2 text-xs font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Order New
+          </Link>
+        </div>
+      </div>
+
+      {/* Whisper-quiet Metric & Quick Nav Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 space-y-1.5">
+          <div className="text-xs text-[var(--fg-faint)] font-mono uppercase tracking-[0.06em]">Instances</div>
+          <div className="text-xl font-semibold text-[var(--fg)] font-mono tabular-nums">
+            {loading
+              ? '—'
+              : `${activeServices.length} ${activeServices.length === 1 ? 'Service' : 'Services'}`}
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 space-y-1.5">
+          <div className="text-xs text-[var(--fg-faint)] font-mono uppercase tracking-[0.06em]">Run Rate</div>
+          <div className="text-xl font-semibold text-[var(--fg)] font-mono tabular-nums">
+            {loading
+              ? '—'
+              : monthlyGross > 0
+                ? `€${monthlyGross.toFixed(2)} / month incl. VAT`
+                : 'No active spend'}
+          </div>
+          <div className="text-xs text-[var(--fg-muted)]">
+            {monthlyNet > 0 ? `€${monthlyNet.toFixed(2)} net + 19% VAT` : 'Predictable monthly billing'}
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-[var(--fg-faint)] font-mono uppercase tracking-[0.06em]">Quick Navigation</span>
+            <Link
+              to="/dashboard/profile"
+              className="inline-flex items-center gap-1 text-[11px] text-[var(--fg-muted)] hover:text-[var(--accent-bright)] transition-colors"
+              title="Customize shortcuts in Profile Settings"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+              <span>Customize</span>
+            </Link>
+          </div>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {quickNavItems.length > 0 ? (
+              quickNavItems.map((item) => (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  className="px-2.5 py-1 rounded-md text-xs bg-[var(--bg-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))
+            ) : (
+              <Link
+                to="/dashboard/profile"
+                className="text-xs text-[var(--fg-faint)] hover:text-[var(--fg)] transition-colors"
+              >
+                Add shortcuts in Profile Settings →
+              </Link>
             )}
           </div>
         </div>
-
-        <div className="flex gap-10 text-sm">
-          <div>
-            <div className="text-muted-foreground mb-1">Current billing</div>
-            <div className="font-medium text-lg">{loading ? '...' : `€${(totalMonthly * 1.19).toFixed(2)} / month incl. VAT`}</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground mb-1">Support</div>
-            <Link to="/dashboard/support" className="text-xs text-foreground/50 hover:text-foreground transition-colors">
-              View tickets
-            </Link>
-          </div>
-        </div>
       </div>
 
-      <div>
-        <div className="flex justify-between items-end mb-3">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-foreground/50">Your Services</h2>
-          <Link to="/dashboard/new">
-            <Button variant="outline" className="h-8 px-4 text-xs gap-2">
-              <PlusCircle className="w-3.5 h-3.5" /> Order New
-            </Button>
-          </Link>
+      {/* Active Services Stream */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-[var(--fg-muted)]">Deployed Infrastructure</h2>
+          <span className="text-xs font-mono text-[var(--fg-faint)]">
+            {activeServices.length} total
+          </span>
         </div>
 
-        <div className="border border-border overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border">
-              <tr className="text-xs uppercase tracking-wider text-foreground/40">
-                <th className="px-5 py-3 font-medium">Name</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">IP</th>
-                <th className="px-5 py-3 font-medium">Price</th>
-                <th className="px-5 py-3 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
-                <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">Loading services...</td></tr>
-              ) : activeServices.length === 0 ? (
-                <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">
-                  No services yet. <Link to="/dashboard/new" className="text-foreground hover:underline">Order your first service</Link>
-                </td></tr>
-              ) : activeServices.map(svc => {
-                const st = STATUS_DISPLAY[svc.status] || STATUS_DISPLAY.running;
-                return (
-                  <tr key={svc.id} className="hover:bg-foreground/[0.02] transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="font-medium">{svc.name}</div>
-                      <div className="text-xs text-muted-foreground">{svc.hostname}</div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`text-xs text-${st.color}-500 flex items-center gap-1.5`}>
-                        <span className={`w-1.5 h-1.5 bg-${st.color}-500 rounded-full ${svc.status === 'pending' ? 'animate-pulse' : ''}`} />
-                        {st.label}
+        {loading ? (
+          <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
+            Loading services...
+          </div>
+        ) : activeServices.length === 0 ? (
+          <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center space-y-4">
+            <div className="space-y-1">
+              <h3 className="text-base font-medium text-[var(--fg)]">No services yet</h3>
+              <p className="text-xs text-[var(--fg-muted)] max-w-md mx-auto">
+                Deploy a Cloud VPS, Dedicated Server, One-Click application, or SFTP storage vault in seconds.
+              </p>
+            </div>
+            <div>
+              <Link
+                to="/dashboard/new"
+                className="vs-btn-primary px-4 py-2 text-xs font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Deploy First Service
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] divide-y divide-[var(--line)] overflow-hidden">
+            {activeServices.map((service) => {
+              const prod = service.product_id ? catalog[service.product_id] : undefined;
+              const cat = prod?.category || 'vps';
+              const isSftp = isSftpService(service, cat);
+              const managePath = isSftp
+                ? '/dashboard/sftp'
+                : `/dashboard/${cat === 'dedicated' ? 'ds' : cat}/${service.id}`;
+              const Icon = getCategoryIcon(service, cat);
+              const isHealthy = service.status === 'running' || service.status === 'active';
+              const isPending = service.status === 'provisioning' || service.status === 'pending';
+
+              return (
+                <div
+                  key={service.id}
+                  className="group hover:bg-[var(--bg-subtle)] px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <Icon className="w-4 h-4 text-[var(--fg-muted)] group-hover:text-[var(--accent-bright)] transition-colors shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            isHealthy
+                              ? 'bg-[var(--ok)]'
+                              : isPending
+                                ? 'bg-[var(--warn)] animate-pulse'
+                                : 'bg-[var(--err)]'
+                          }`}
+                        />
+                        <span className="text-sm font-medium text-[var(--fg)] font-mono truncate">
+                          {service.hostname || service.name || `srv-${service.id.slice(0, 8)}`}
+                        </span>
+                        <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--fg-muted)]">
+                          {service.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--fg-faint)] mt-1">
+                        <span>{prod?.name || service.name || 'Infrastructure Node'}</span>
+                        {service.ip && (
+                          <span className="font-mono text-[var(--fg-muted)]">{service.ip}</span>
+                        )}
+                        {service.next_due && (
+                          <span className="font-mono">
+                            Due {new Date(service.next_due).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 shrink-0">
+                    {service.price && parseFloat(service.price) > 0 && (
+                      <span className="text-xs font-mono text-[var(--fg-muted)] hidden md:inline">
+                        €{(parseFloat(service.price) * (1 + VAT_RATE)).toFixed(2)}/mo
                       </span>
-                    </td>
-                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs">
-                      {svc.name?.toLowerCase().includes('sftp')
-                        ? (svc.hostname || 'sftp.vaultscope.de')
-                        : (svc.ip === '10.20.10.60' ? (svc.hostname || 'sftp.vaultscope.de') : (svc.ip || svc.hostname || '—'))}
-                    </td>
-                    <td className="px-5 py-4 text-muted-foreground">€{(parseFloat(svc.price) * 1.19).toFixed(2)}/mo incl. VAT</td>
-                    <td className="px-5 py-4 text-right">
-                      <Link to={getServiceManageLink(svc)} className="text-sm text-foreground/60 hover:text-foreground transition-colors">
-                        Manage
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div>
-        <div className="flex justify-between items-end mb-3">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-foreground/50">Recent Activity</h2>
-          <Link to="/dashboard/profile/logs" className="text-xs text-foreground/40 hover:text-foreground transition-colors flex items-center gap-1">
-            View all <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        <div className="border border-border divide-y divide-border text-sm text-muted-foreground px-5 py-4">
-          Activity log will appear here once connected.
-        </div>
+                    )}
+                    <Link
+                      to={managePath}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elevated)] transition-colors"
+                    >
+                      Manage
+                      <ArrowUpRight className="w-3.5 h-3.5 text-[var(--accent-bright)]" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

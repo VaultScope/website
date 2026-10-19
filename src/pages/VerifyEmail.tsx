@@ -3,13 +3,22 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '../components/Shared';
 import { useLanguage } from '../i18n';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const { localePath } = useLanguage();
+  const { locale, localePath } = useLanguage();
+  const isDe = locale === 'de';
+
+  useDocumentMeta({
+    title: isDe ? 'E-Mail bestätigen — VaultScope' : 'Verify Email — VaultScope',
+    description: isDe
+      ? 'Bestätigen Sie Ihre E-Mail-Adresse für Ihr VaultScope-Konto.'
+      : 'Confirm your email address for your VaultScope account.',
+  });
 
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -66,7 +75,9 @@ export function VerifyEmail() {
         body: JSON.stringify({ email: resendEmail.trim() }),
       });
       const data = await res.json().catch(() => ({}));
-      setResendMessage(data.message || 'If an account exists, a new verification link was sent.');
+      setResendMessage(
+        data.message || 'If an account exists, a new verification link was sent.',
+      );
     } catch {
       setResendMessage('Failed to resend verification email.');
     } finally {
@@ -75,24 +86,29 @@ export function VerifyEmail() {
   };
 
   return (
-    <div className="flex flex-col w-full min-h-[70vh] justify-center items-center px-6 py-24">
-      <div className="max-w-md w-full border border-border p-8 bg-card rounded-xl shadow-lg text-center">
+    <div className="flex flex-col w-full min-h-[70vh] justify-center items-center px-6 pt-32 pb-24 bg-[var(--bg-primary)] text-[var(--text)]">
+      <div className="max-w-md w-full border-t-2 border-[var(--accent)] border-x border-b border-[var(--line)] p-8 bg-[var(--bg-surface)]/50 backdrop-blur-md">
         {loading ? (
-          <div className="py-12 space-y-4">
-            <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
-            <h2 className="text-xl font-medium">Verifying your email...</h2>
-            <p className="text-sm text-muted-foreground">Please wait while we confirm your email address.</p>
+          <div className="py-10 space-y-4 text-center">
+            <Loader2 className="w-8 h-8 text-[var(--accent-bright)] mx-auto animate-spin" />
+            <h2 className="text-lg font-semibold tracking-tight">Verifying your email...</h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              Please wait while we confirm your email address.
+            </p>
           </div>
         ) : success ? (
-          <div className="py-8 space-y-5">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-10 h-10" />
+          <div className="space-y-5">
+            <div className="w-10 h-10 border border-emerald-500/30 bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Email Verified!</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {message}
-            </p>
-            <div className="pt-4 flex flex-col gap-3">
+            <div>
+              <div className="text-xs font-mono text-[var(--accent-bright)] mb-1.5">Identity Confirmed</div>
+              <h2 className="text-2xl font-semibold tracking-[-0.025em] text-[var(--text)] mb-2">
+                Email Verified!
+              </h2>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">{message}</p>
+            </div>
+            <div className="pt-2 flex flex-col gap-3">
               <Link to={localePath('/dashboard')}>
                 <Button className="w-full flex items-center justify-center gap-2 py-2.5">
                   Go to Dashboard <ArrowRight className="w-4 h-4" />
@@ -106,28 +122,32 @@ export function VerifyEmail() {
             </div>
           </div>
         ) : (
-          <div className="py-8 space-y-5">
-            <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
-              <XCircle className="w-10 h-10" />
+          <div className="space-y-5">
+            <div className="w-10 h-10 border border-red-500/30 bg-red-500/10 text-red-400 flex items-center justify-center">
+              <XCircle className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Verification Failed</h2>
-            <p className="text-sm text-red-400/90 leading-relaxed">
-              {message}
-            </p>
-            <div className="border-t border-border pt-6 mt-6 text-left">
-              <h3 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider mb-2">
+            <div>
+              <div className="text-xs font-mono text-red-400 mb-1.5">Verification Error</div>
+              <h2 className="text-2xl font-semibold tracking-[-0.025em] text-[var(--text)] mb-2">
+                Verification Failed
+              </h2>
+              <p className="text-xs text-red-400 leading-relaxed">{message}</p>
+            </div>
+            <div className="border-t border-[var(--line)] pt-5 mt-5">
+              <h3 className="font-mono text-xs text-[var(--text)] mb-1.5">
                 Need a new verification link?
               </h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Enter your email address to receive a fresh verification link. Don't forget to check your Spam folder!
+              <p className="text-xs text-[var(--text-muted)] mb-3">
+                Enter your email address to receive a fresh verification link. Don't forget to check
+                your Spam folder!
               </p>
               <form onSubmit={handleResend} className="space-y-3">
                 <input
                   type="email"
                   value={resendEmail}
-                  onChange={e => setResendEmail(e.target.value)}
+                  onChange={(e) => setResendEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full border border-border bg-transparent px-3 py-2 text-sm rounded-lg focus:outline-none focus:border-foreground"
+                  className="w-full border border-[var(--line)] bg-[var(--bg-primary)] text-[var(--text)] px-3.5 py-2 text-sm focus:outline-none focus:border-[var(--accent-bright)]"
                 />
                 <Button type="submit" disabled={resending} className="w-full text-xs py-2">
                   {resending ? 'Sending...' : 'Resend Verification Email'}

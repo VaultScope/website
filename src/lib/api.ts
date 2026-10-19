@@ -15,21 +15,26 @@ class ApiClient {
       .then(data => {
         this.csrfToken = data.token;
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        this.csrfPromise = null;
+      });
     return this.csrfPromise;
   }
 
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(path: string, options: RequestInit = {}, retriedCsrf = false): Promise<T> {
     const token = this.getToken();
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...((options.headers as Record<string, string>) || {}),
     };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    if (options.method && options.method !== 'GET' && options.method !== 'HEAD') {
+    const isMutating = Boolean(options.method && options.method !== 'GET' && options.method !== 'HEAD');
+    if (isMutating) {
       if (!this.csrfToken) await this.fetchCsrfToken();
       if (this.csrfToken) {
         headers['x-csrf-token'] = this.csrfToken;
@@ -38,10 +43,25 @@ class ApiClient {
 
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
 
+    if (res.status === 403 && isMutating && !retriedCsrf) {
+      this.csrfToken = null;
+      await this.fetchCsrfToken();
+      if (this.csrfToken) {
+        return this.request<T>(path, options, true);
+      }
+    }
+
     if (res.status === 401) {
       localStorage.removeItem('vs_token');
       localStorage.removeItem('vs_claims');
-      window.location.href = '/dashboard';
+      if (typeof window !== 'undefined' && !path.startsWith('/storefront/auth/')) {
+        const isDe = window.location.pathname === '/de' || window.location.pathname.startsWith('/de/');
+        const loginBase = isDe ? '/de/login' : '/login';
+        const currentTarget = window.location.pathname + window.location.search;
+        if (!window.location.pathname.endsWith('/login')) {
+          window.location.href = `${loginBase}?redirect=${encodeURIComponent(currentTarget)}`;
+        }
+      }
       throw new Error('Unauthorized');
     }
 
@@ -58,21 +78,26 @@ class ApiClient {
   }
 
   post<T>(path: string, body?: unknown) {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
     return this.request<T>(path, {
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
     });
   }
 
   put<T>(path: string, body?: unknown) {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
     return this.request<T>(path, {
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
     });
   }
 
-  delete<T>(path: string) {
-    return this.request<T>(path, { method: 'DELETE' });
+  delete<T>(path: string, body?: unknown) {
+    return this.request<T>(path, {
+      method: 'DELETE',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
   }
 }
 

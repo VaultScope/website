@@ -1,194 +1,336 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useLanguage } from '../../i18n';
-import { getInitialDark, applyDark } from '../../hooks/useTheme';
-import { Logo } from '../../components/Shared';
-import { isAuthenticated, redirectToLogin, logout, getStoredClaims } from '../../lib/auth';
-import { api } from '../../lib/api';
-import { Onboarding } from './Onboarding';
+import { useState, useEffect, useRef } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Server,
   HardDrive,
-  Cloud,
-  PlusCircle,
+  Cpu,
+  FolderLock,
   LifeBuoy,
-  UserCircle,
+  User,
   LogOut,
+  Plus,
   Sun,
-  Moon
+  Moon,
+  Menu,
+  X,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
+import { getInitialDark, applyDark } from '../../hooks/useTheme';
+import { getStoredUsername } from '../../lib/quickNav';
 
-function useTheme() {
-  const [dark, setDarkState] = useState<boolean>(() => getInitialDark());
-  const setDark = useCallback((next: boolean) => {
-    setDarkState(next);
-    applyDark(next);
-  }, []);
-  const toggle = useCallback(() => setDark(!dark), [dark, setDark]);
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const listener = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('vs-theme')) setDark(e.matches);
-    };
-    mq.addEventListener('change', listener);
-    return () => mq.removeEventListener('change', listener);
-  }, [setDark]);
-  return { dark, toggle };
-}
+const navItems = [
+  { name: 'Overview', path: '/dashboard', icon: LayoutDashboard, exact: true },
+  { name: 'VPS', path: '/dashboard/vps', icon: Server },
+  { name: 'Dedicated', path: '/dashboard/ds', icon: HardDrive },
+  { name: 'OCD', path: '/dashboard/odp', icon: Cpu },
+  { name: 'SFTP', path: '/dashboard/sftp', icon: FolderLock },
+  { name: 'Support', path: '/dashboard/support', icon: LifeBuoy },
+  { name: 'Account', path: '/dashboard/profile', icon: User },
+];
 
 export function DashboardLayout() {
-  const { localePath } = useLanguage();
+  const [dark, setDark] = useState<boolean>(() => getInitialDark());
+  const theme = dark ? 'dark' : 'light';
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    applyDark(next);
+  };
   const location = useLocation();
-  const { dark, toggle } = useTheme();
-  const claims = getStoredClaims();
-  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('vs_token') : null;
+  const rawClaims = typeof window !== 'undefined' ? localStorage.getItem('vs_claims') : null;
+  const claims = rawClaims ? JSON.parse(rawClaims) : null;
+  const storedUsername = getStoredUsername() || claims?.username;
 
   useEffect(() => {
-    if (!isAuthenticated()) return;
-    api.get<{ name: string; address: string; city: string; country: string }>('/storefront/profile')
-      .then(profile => {
-        const complete = !!(profile.name?.trim() && profile.address?.trim() && profile.city?.trim() && profile.country?.trim());
-        setProfileComplete(complete);
-      })
-      .catch(() => setProfileComplete(true));
-  }, []);
+    setMobileMenuOpen(false);
+    setUserMenuOpen(false);
+  }, [location.pathname]);
 
-  const handleLogin = async () => {
-    try {
-      setLoginError(null);
-      await redirectToLogin();
-    } catch (err) {
-      setLoginError(err instanceof Error ? err.message : 'Failed to initialize login');
-    }
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('vs_token');
+    localStorage.removeItem('vs_claims');
+    localStorage.removeItem('vs_username');
+    localStorage.removeItem('vs_preview_mode');
+    navigate('/login');
   };
 
-  if (!isAuthenticated()) {
+  if (!token) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full border border-border p-8 text-center">
-          <h2 className="text-lg font-medium mb-4">Sign in to access your dashboard</h2>
-          {loginError && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 text-red-500 text-sm">
-              {loginError}
-            </div>
-          )}
-          <button
-            onClick={handleLogin}
-            className="w-full border border-border bg-foreground text-background font-medium py-3 px-6 hover:bg-foreground/90 transition-colors cursor-pointer"
-          >
-            Login with VaultScope
-          </button>
-          <p className="text-xs text-foreground/40 mt-4">
-            Don't have an account?{' '}
-            <Link to={localePath('/register')} className="text-foreground/60 hover:text-foreground transition-colors underline underline-offset-2">
-              Create one
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex items-center justify-center p-6">
+        <div className="max-w-md w-full rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-8 sm:p-10 text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-bright)] mx-auto">
+            <LayoutDashboard className="w-5 h-5" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-semibold tracking-tight text-[var(--fg)]">
+              VaultScope Dashboard
+            </h1>
+            <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
+              Sign in with your VaultScope credentials to manage your infrastructure services, billing, and support tickets.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2.5 pt-2">
+            <Link
+              to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+              className="vs-btn-primary w-full justify-center"
+            >
+              Sign In
             </Link>
-          </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="text-xs text-[var(--fg-faint)] hover:text-[var(--fg-muted)] transition-colors"
+            >
+              ← Return to storefront
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (profileComplete === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!profileComplete) {
-    return <Onboarding />;
-  }
-
-  const primaryNavigation = [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'VPS', href: '/dashboard/vps', icon: Server },
-    { name: 'Dedicated Servers', href: '/dashboard/ds', icon: HardDrive },
-    { name: 'One-Click Deploy (OCD)', href: '/dashboard/odp', icon: Cloud },
-    { name: 'SFTP Storage', href: '/dashboard/sftp', icon: HardDrive },
-  ];
-
-  const bottomNavigation = [
-    { name: 'Order New Service', href: '/dashboard/new', icon: PlusCircle },
-    { name: 'Support', href: '/dashboard/support', icon: LifeBuoy },
-    { name: 'Profile', href: '/dashboard/profile', icon: UserCircle },
-  ];
+  const isItemActive = (item: (typeof navItems)[number]) => {
+    if (item.exact) {
+      return location.pathname === '/dashboard' || location.pathname === '/dashboard/';
+    }
+    return location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+  };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      <aside className="w-full md:w-60 border-r border-border bg-background flex flex-col md:fixed h-full z-10">
-        <div className="h-16 flex items-center justify-between px-5 border-b border-border">
-          <Link to={localePath('/')} className="flex items-center">
-            <Logo className="h-10 w-auto" />
-          </Link>
-          <button
-            onClick={toggle}
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="w-8 h-8 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-pointer"
-          >
-            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-        </div>
-        <nav className="flex-1 py-2 overflow-y-auto">
-          {primaryNavigation.map((item) => {
-            const isActive = location.pathname === localePath(item.href) || location.pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.name}
-                to={localePath(item.href)}
-                className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors border-l-2 ${
-                  isActive
-                    ? 'border-foreground text-foreground bg-foreground/5'
-                    : 'border-transparent text-foreground/50 hover:text-foreground hover:bg-foreground/[0.02]'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="border-t border-border py-2">
-          {bottomNavigation.map((item) => {
-            const isActive = location.pathname === localePath(item.href) || location.pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.name}
-                to={localePath(item.href)}
-                className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors border-l-2 ${
-                  isActive
-                    ? 'border-foreground text-foreground bg-foreground/5'
-                    : 'border-transparent text-foreground/50 hover:text-foreground hover:bg-foreground/[0.02]'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {item.name}
-              </Link>
-            );
-          })}
-        </div>
-        <div className="border-t border-border p-4">
-          <div className="text-xs text-foreground/40 mb-2 truncate">{claims?.email}</div>
-          <button
-            onClick={() => { logout(); window.location.href = '/'; }}
-            className="flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
-        </div>
-      </aside>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col selection:bg-[var(--accent)] selection:text-white">
+      {/* Architectural Obsidian Navigation Bar */}
+      <header className="sticky top-0 left-0 right-0 h-16 z-50 bg-[var(--bg)]/88 backdrop-blur-xl border-b border-[var(--line)]">
+        <div className="vs-container-wide h-full flex items-center justify-between gap-4">
+          {/* Left: Brand Identity + Architectural Tabs */}
+          <div className="flex items-center gap-6 xl:gap-8 h-full min-w-0">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2.5 select-none group focus-visible:outline-none shrink-0"
+              title="Back to Storefront"
+            >
+              <img
+                src={theme === 'dark' ? '/logos/logo-picture.png' : '/logos/logo-picture-whitemode.png'}
+                alt="VaultScope"
+                className="h-[22px] w-auto object-contain shrink-0"
+              />
+              <span className="font-sans font-semibold text-[15px] tracking-[-0.022em] text-[var(--fg)] leading-none">
+                VaultScope
+              </span>
+            </Link>
 
-      <main className="flex-1 md:ml-60 p-6 md:p-10 min-h-screen relative">
-        <div className="max-w-6xl mx-auto">
-          <Outlet />
+            <nav
+              aria-label="Dashboard navigation"
+              className="hidden lg:flex items-center gap-1 h-full"
+            >
+              {navItems.map((item) => {
+                const active = isItemActive(item);
+                const Icon = item.icon;
+                return (
+                  <div key={item.path} className="relative h-full flex items-center">
+                    <Link
+                      to={item.path}
+                      className={`group h-8 px-2.5 xl:px-3 rounded-lg flex items-center gap-1.5 text-[12.5px] xl:text-[13px] font-sans font-medium tracking-[-0.01em] whitespace-nowrap transition-all duration-150 ${
+                        active
+                          ? 'text-[var(--fg)] bg-[var(--accent-subtle)]'
+                          : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elevated)]'
+                      }`}
+                    >
+                      <Icon
+                        className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                          active
+                            ? 'text-[var(--accent-bright)]'
+                            : 'text-[var(--fg-faint)] group-hover:text-[var(--fg-muted)]'
+                        }`}
+                      />
+                      <span>{item.name}</span>
+                    </Link>
+                    {active && (
+                      <span className="pointer-events-none absolute bottom-0 inset-x-2 h-[1.5px] rounded-full bg-gradient-to-r from-transparent via-[var(--accent-bright)] to-transparent" />
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Right: Actions, Theme & Account — Unified 32px (h-8) Control Grid */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Link
+              to="/dashboard/new"
+              className="h-8 px-3 rounded-lg inline-flex items-center gap-1.5 text-[12.5px] font-sans font-medium vs-btn-primary shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Deploy</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elevated)] border border-transparent hover:border-[var(--line)] transition-all duration-150 cursor-pointer shrink-0"
+            >
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+
+            <div className="hidden sm:block h-4 w-px bg-[var(--line)] mx-1" />
+
+            <div className="relative hidden md:block" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((v) => !v)}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                className={`flex items-center gap-2 h-8 px-2.5 rounded-lg border text-xs font-medium text-[var(--fg)] transition-all duration-150 cursor-pointer max-w-[175px] ${
+                  userMenuOpen
+                    ? 'border-[var(--line-strong)] bg-[var(--bg-subtle)]'
+                    : 'border-[var(--line)] bg-[var(--bg-elevated)] hover:border-[var(--line-strong)] hover:bg-[var(--bg-subtle)]'
+                }`}
+                title={storedUsername || claims?.email || 'Account'}
+              >
+                <User className="w-3.5 h-3.5 text-[var(--accent-bright)] shrink-0" />
+                <span className="truncate font-mono text-[11.5px]">
+                  {storedUsername ? `@${storedUsername}` : claims?.name || claims?.email || 'Account'}
+                </span>
+                <ChevronDown
+                  className={`w-3 h-3 text-[var(--fg-faint)] shrink-0 transition-transform duration-200 ${
+                    userMenuOpen ? 'rotate-180 text-[var(--accent-bright)]' : ''
+                  }`}
+                />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-60 vs-dropdown-panel animate-vs-dropdown rounded-xl p-1.5 z-50 overflow-hidden">
+                  <div className="px-3 py-2.5 mb-1 border-b border-[var(--line)] min-w-0">
+                    <p className="text-xs font-semibold text-[var(--fg)] truncate">
+                      {storedUsername ? `@${storedUsername}` : claims?.name || 'VaultScope User'}
+                    </p>
+                    <p className="text-[11px] font-mono text-[var(--fg-muted)] truncate mt-0.5">
+                      {claims?.email || 'Authenticated Session'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <Link
+                      to="/dashboard/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="group flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)] transition-colors"
+                    >
+                      <span className="inline-flex items-center gap-2.5">
+                        <User className="w-4 h-4 text-[var(--fg-muted)] group-hover:text-[var(--accent-bright)] transition-colors shrink-0" />
+                        Account & Quick Nav
+                      </span>
+                      <ChevronRight className="w-3 h-3 text-[var(--fg-faint)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                    <Link
+                      to="/"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="group flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)] transition-colors"
+                    >
+                      <span className="inline-flex items-center gap-2.5">
+                        <ArrowUpRight className="w-4 h-4 text-[var(--fg-muted)] group-hover:text-[var(--accent-bright)] transition-colors shrink-0" />
+                        Return to Storefront
+                      </span>
+                    </Link>
+                  </div>
+
+                  <div className="my-1 border-t border-[var(--line)]" />
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[var(--err)] hover:bg-rose-500/10 transition-colors cursor-pointer text-left"
+                  >
+                    <LogOut className="w-4 h-4 text-[var(--err)] shrink-0" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign out"
+              aria-label="Sign out"
+              className="md:hidden w-8 h-8 rounded-lg inline-flex items-center justify-center text-[var(--fg-muted)] hover:text-[var(--err)] hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+              className="lg:hidden w-8 h-8 rounded-lg inline-flex items-center justify-center text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer shrink-0"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
-      </main>
+
+        {/* Mobile Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden px-4 pb-4 pt-2 bg-[var(--bg)]/95 backdrop-blur-2xl border-t border-[var(--line)] space-y-1">
+            {navItems.map((item) => {
+              const active = isItemActive(item);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-xs font-medium transition-colors ${
+                    active
+                      ? 'bg-[var(--accent-subtle)] text-[var(--fg)]'
+                      : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elevated)]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 text-[var(--accent-bright)]" />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+            <div className="pt-2 flex items-center justify-between px-3.5 text-xs text-[var(--fg-faint)]">
+              <Link to="/" className="inline-flex items-center gap-1 hover:text-[var(--fg)]">
+                Storefront <ArrowUpRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Main Workspace Canvas */}
+      <div className="flex-1 w-full vs-container-wide py-8 sm:py-12">
+        <Outlet />
+      </div>
     </div>
   );
 }

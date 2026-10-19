@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { DashboardOverview } from './Overview';
+import { setQuickNavIds } from '../../lib/quickNav';
 
 vi.mock('../../lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -27,6 +28,7 @@ function renderComponent() {
 describe('DashboardOverview', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    localStorage.clear();
   });
 
   it('shows loading state initially', () => {
@@ -44,13 +46,17 @@ describe('DashboardOverview', () => {
     });
   });
 
-  it('shows "All operational" when all active services are running', async () => {
+  it('does not render "All operational", "Active Footprint", or "Frankfurt DE-FRA1 & Nuremberg"', async () => {
     mockGet.mockResolvedValue(mockServices);
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('All operational')).toBeDefined();
+      expect(screen.getByText('2 Services')).toBeDefined();
     });
+
+    expect(screen.queryByText('All operational')).toBeNull();
+    expect(screen.queryByText('Active Footprint')).toBeNull();
+    expect(screen.queryByText(/Frankfurt DE-FRA1 & Nuremberg/i)).toBeNull();
   });
 
   it('shows attention message when a service is not running', async () => {
@@ -133,5 +139,17 @@ describe('DashboardOverview', () => {
 
     const manageLinks = screen.getAllByText('Manage').map(el => el.closest('a')?.getAttribute('href'));
     expect(manageLinks).toEqual(['/dashboard/sftp', '/dashboard/vps/vps-1']);
+  });
+
+  it('renders customized quick navigation items', async () => {
+    setQuickNavIds(['sftp', 'mfa']);
+    mockGet.mockResolvedValue([]);
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('SFTP')).toBeDefined();
+      expect(screen.getByText('2FA Security')).toBeDefined();
+    });
+    expect(screen.queryByText('VPS')).toBeNull();
   });
 });

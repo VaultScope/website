@@ -129,7 +129,7 @@ describe('ApiClient', () => {
   });
 
   describe('DELETE requests', () => {
-    it('sends DELETE with CSRF token', async () => {
+    it('sends DELETE with CSRF token and optional body', async () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -140,10 +140,61 @@ describe('ApiClient', () => {
           json: () => Promise.resolve({ ok: true }),
         });
 
-      await api.delete('/storefront/services/123');
+      await api.delete('/storefront/profile', { password: 'secret' });
       const deleteCall = mockFetch.mock.calls[1];
       expect(deleteCall[1].method).toBe('DELETE');
       expect(deleteCall[1].headers['x-csrf-token']).toBe('csrf-xyz');
+      expect(JSON.parse(deleteCall[1].body)).toEqual({ password: 'secret' });
+    });
+  });
+
+  describe('FormData and CSRF retry', () => {
+    it('does not set Content-Type: application/json when body is FormData', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ token: 'csrf-form' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ id: 'att-1' }),
+        });
+
+      const fd = new FormData();
+      fd.append('file', new Blob(['test'], { type: 'image/png' }), 'test.png');
+
+      await api.post('/storefront/tickets/123/attachments', fd);
+      const postCall = mockFetch.mock.calls[1];
+      expect(postCall[1].headers['Content-Type']).toBeUndefined();
+      expect(postCall[1].headers['x-csrf-token']).toBe('csrf-form');
+      expect(postCall[1].body).toBe(fd);
+    });
+
+    it('refreshes CSRF token and retries once on 403', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ token: 'stale-csrf' }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: () => Promise.resolve({ error: 'Invalid CSRF token' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ token: 'fresh-csrf' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ ok: true }),
+        });
+
+      const res = await api.post('/storefront/services/1/start');
+      expect(res).toEqual({ ok: true });
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+      expect(mockFetch.mock.calls[3][1].headers['x-csrf-token']).toBe('fresh-csrf');
     });
   });
 

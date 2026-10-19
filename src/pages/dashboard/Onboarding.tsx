@@ -50,19 +50,20 @@ export function Onboarding() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex items-center justify-center p-4">
       <div className="max-w-lg w-full">
-        <div className="border border-border p-8">
-          <h1 className="text-xl font-medium mb-1">Complete your profile</h1>
-          <p className="text-sm text-muted-foreground mb-8">
+        <div className="border border-[var(--line)] bg-[var(--bg-card)] p-8">
+          <p className="text-xs font-mono text-[var(--accent-bright)] mb-1.5">Account Provisioning</p>
+          <h1 className="text-xl font-semibold tracking-tight text-[var(--text)] mb-1">Complete your profile</h1>
+          <p className="text-sm text-[var(--text-secondary)] mb-8 leading-relaxed">
             We need a few details before you can use VaultScope services. Required for invoicing and legal compliance.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {fields.map(({ label, key, required, placeholder, type }) => (
               <div key={key}>
-                <label className="block text-xs font-medium text-foreground/60 uppercase tracking-wider mb-1">
-                  {label} {required && <span className="text-red-400">*</span>}
+                <label className="block text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-[0.06em] mb-1.5">
+                  {label} {required && <span className="text-[var(--text)]">*</span>}
                 </label>
                 <input
                   type={type || 'text'}
@@ -70,13 +71,13 @@ export function Onboarding() {
                   onChange={e => update(key, e.target.value)}
                   placeholder={placeholder}
                   required={required}
-                  className="w-full border border-border bg-transparent px-4 py-2.5 text-sm focus:outline-none focus:border-foreground transition-colors"
+                  className="w-full border border-[var(--line)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] focus:outline-none focus:border-[var(--text)] transition-colors"
                 />
               </div>
             ))}
 
             {error && (
-              <p className="text-sm text-red-400">{error}</p>
+              <p className="text-xs font-mono text-red-500 border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2">{error}</p>
             )}
 
             <div className="pt-4">
@@ -86,7 +87,7 @@ export function Onboarding() {
             </div>
           </form>
 
-          <p className="text-xs text-muted-foreground mt-6 leading-relaxed">
+          <p className="text-xs text-[var(--text-muted)] mt-6 pt-6 border-t border-[var(--line)] leading-relaxed">
             Your data is stored in the EU and processed in accordance with our privacy policy.
             Business customers can add their VAT ID to receive reverse-charge invoices.
           </p>

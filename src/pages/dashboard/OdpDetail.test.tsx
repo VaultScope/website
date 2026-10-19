@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { OdpDetail } from './OdpDetail';
+import { ToastProvider } from '../../components/Toast';
 
 vi.mock('../../lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -27,11 +28,13 @@ const mockCatalog = [
 
 function renderComponent() {
   return render(
-    <MemoryRouter initialEntries={['/dashboard/odp/odp-789']}>
-      <Routes>
-        <Route path="/dashboard/odp/:id" element={<OdpDetail />} />
-      </Routes>
-    </MemoryRouter>
+    <ToastProvider>
+      <MemoryRouter initialEntries={['/dashboard/odp/odp-789']}>
+        <Routes>
+          <Route path="/dashboard/odp/:id" element={<OdpDetail />} />
+        </Routes>
+      </MemoryRouter>
+    </ToastProvider>
   );
 }
 

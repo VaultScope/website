@@ -1,38 +1,28 @@
-import { useEffect, useState } from 'react';
-import { ShieldCheck, ShieldAlert, KeyRound, Copy, Check, Loader2, ArrowRight } from 'lucide-react';
-import { Button } from '../../../components/Shared';
+import { useState, useEffect } from 'react';
+import { Shield, Smartphone, Key, CheckCircle2, Copy, Check } from 'lucide-react';
 import { api } from '../../../lib/api';
 
-interface MfaSetupResponse {
-  secret: string;
-  qr_base64: string;
-  url: string;
-}
-
 export function ProfileMfa() {
+  const [mfaEnabled, setMfaEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [setupStep, setSetupStep] = useState<'idle' | 'setting_up' | 'confirming'>('idle');
-  const [setupData, setSetupData] = useState<MfaSetupResponse | null>(null);
+  const [setupData, setSetupData] = useState<{ secret: string; qr_url: string } | null>(null);
   const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [disableCode, setDisableCode] = useState('');
+  const [showDisablePrompt, setShowDisablePrompt] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [copiedRecovery, setCopiedRecovery] = useState(false);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  // Disable modal state
-  const [showDisableModal, setShowDisableModal] = useState(false);
-  const [disablePassword, setDisablePassword] = useState('');
-
-  const loadProfile = async () => {
-    try {
-      const data = await api.get<{ two_factor_enabled: boolean }>('/storefront/profile');
-      setTwoFactorEnabled(data.two_factor_enabled);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load profile MFA status');
-    } finally {
-      setLoading(false);
-    }
+  const loadProfile = () => {
+    setLoading(true);
+    api
+      .get('/storefront/profile')
+      .then((p: any) => {
+        setMfaEnabled(Boolean(p?.two_factor_enabled));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -40,258 +30,230 @@ export function ProfileMfa() {
   }, []);
 
   const handleStartSetup = async () => {
-    setError(null);
-    setSuccess(null);
-    setActionLoading(true);
+    setError('');
+    setSubmitting(true);
     try {
-      const res = await api.post<MfaSetupResponse>('/storefront/profile/mfa/setup');
+      const res: any = await api.post('/storefront/profile/mfa/setup');
       setSetupData(res);
-      setSetupStep('setting_up');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to initialize MFA setup');
+    } catch (e: any) {
+      setError(e.message || 'Failed to initiate 2FA setup');
     } finally {
-      setActionLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleEnableMfa = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code || code.trim().length !== 6) {
-      setError('Please enter a valid 6-digit code');
-      return;
-    }
-    setError(null);
-    setActionLoading(true);
+  const handleEnable = async () => {
+    if (!code.trim()) return;
+    setError('');
+    setSubmitting(true);
     try {
-      await api.post('/storefront/profile/mfa/enable', { code: code.trim() });
-      setTwoFactorEnabled(true);
-      setSetupStep('idle');
+      const res: any = await api.post('/storefront/profile/mfa/enable', { code: code.trim() });
       setSetupData(null);
       setCode('');
-      setSuccess('Two-factor authentication has been successfully activated!');
-    } catch (err: any) {
-      setError(err?.message || 'Invalid verification code. Please check your authenticator app.');
+      setMfaEnabled(true);
+      if (Array.isArray(res?.recovery_codes)) {
+        setRecoveryCodes(res.recovery_codes);
+      }
+    } catch (e: any) {
+      setError(e.message || 'Invalid verification code');
     } finally {
-      setActionLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDisableMfa = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!disablePassword) {
-      setError('Please enter your account password');
+  const handleDisable = async () => {
+    if (!disableCode.trim()) {
+      setError('Please enter your 6-digit authenticator code or recovery code');
       return;
     }
-    setError(null);
-    setActionLoading(true);
+    setError('');
+    setSubmitting(true);
     try {
-      await api.post('/storefront/profile/mfa/disable', { password: disablePassword });
-      setTwoFactorEnabled(false);
-      setShowDisableModal(false);
-      setDisablePassword('');
-      setSuccess('Two-factor authentication has been disabled.');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to disable 2FA. Incorrect password.');
+      await api.post('/storefront/profile/mfa/disable', { code: disableCode.trim() });
+      setMfaEnabled(false);
+      setShowDisablePrompt(false);
+      setDisableCode('');
+      setRecoveryCodes(null);
+    } catch (e: any) {
+      setError(e.message || 'Failed to disable 2FA');
     } finally {
-      setActionLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleCopySecret = () => {
-    if (setupData?.secret) {
-      navigator.clipboard.writeText(setupData.secret);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const copyRecoveryCodes = () => {
+    if (!recoveryCodes) return;
+    navigator.clipboard.writeText(recoveryCodes.join('\n'));
+    setCopiedRecovery(true);
+    setTimeout(() => setCopiedRecovery(false), 2000);
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12 text-muted-foreground gap-2">
-        <Loader2 className="w-5 h-5 animate-spin" />
-        <span>Loading security settings...</span>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-8">
-      {success && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
-          {success}
-        </div>
-      )}
-
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-          {error}
-        </div>
-      )}
-
-      <div className="border border-border p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-card/40">
-        <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-lg ${twoFactorEnabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-            {twoFactorEnabled ? <ShieldCheck className="w-8 h-8" /> : <ShieldAlert className="w-8 h-8" />}
-          </div>
-          <div>
-            <h2 className="text-xl font-medium mb-1">
-              Two-Factor Authentication (TOTP)
-            </h2>
-            <p className="text-sm text-muted-foreground max-w-xl">
-              {twoFactorEnabled
-                ? 'Your account is actively protected with time-based one-time passwords (TOTP). Every login requires a 6-digit code from your authenticator app.'
-                : 'Protect your VaultScope account and cloud infrastructure against unauthorized access by requiring an authenticator code (Google Authenticator, 1Password, Bitwarden) during login.'}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          {twoFactorEnabled ? (
-            <Button
-              variant="outline"
-              onClick={() => setShowDisableModal(true)}
-              className="text-red-400 border-red-500/30 hover:bg-red-500/10"
-            >
-              Disable 2FA
-            </Button>
-          ) : setupStep === 'idle' ? (
-            <Button onClick={handleStartSetup} disabled={actionLoading} className="gap-2">
-              {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-              Set up 2FA
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      {setupStep === 'setting_up' && setupData && (
-        <div className="border border-border p-6 bg-card/60 space-y-6">
-          <div className="border-b border-border pb-4">
-            <h3 className="text-lg font-medium">Link Your Authenticator App</h3>
-            <p className="text-sm text-muted-foreground">
-              Scan the QR code below using Google Authenticator, 1Password, Bitwarden or your preferred 2FA app.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg w-fit mx-auto md:mx-0 shadow-sm">
-              <img
-                src={`data:image/png;base64,${setupData.qr_base64}`}
-                alt="2FA QR Code"
-                className="w-48 h-48 block"
-              />
+    <div className="space-y-6">
+      <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2.5">
+              <Smartphone className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+              <h2 className="text-base font-semibold text-[var(--fg)]">
+                Two-Factor Authentication (TOTP)
+              </h2>
+              {!loading && (
+                <span
+                  className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full ${
+                    mfaEnabled
+                      ? 'bg-emerald-500/15 text-[var(--ok)]'
+                      : 'bg-[var(--bg-subtle)] text-[var(--fg-faint)]'
+                  }`}
+                >
+                  {mfaEnabled ? 'Enabled' : 'Disabled'}
+                </span>
+              )}
             </div>
+            <p className="text-xs text-[var(--fg-muted)] max-w-xl leading-relaxed">
+              {mfaEnabled
+                ? 'Your account is actively protected with Time-based One-Time Password (TOTP) verification.'
+                : 'Protect your VaultScope account and cloud infrastructure by requiring a time-based 6-digit code at sign-in.'}
+            </p>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs uppercase text-muted-foreground font-semibold tracking-wider block mb-1">
-                  Manual Entry Key
-                </label>
-                <div className="flex items-center gap-2">
-                  <code className="bg-secondary/70 border border-border px-3 py-2 text-sm font-mono tracking-widest flex-1 select-all break-all">
-                    {setupData.secret}
-                  </code>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopySecret}
-                    className="h-9 px-3 gap-1.5"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    {copied ? 'Copied' : 'Copy'}
-                  </Button>
+          {!loading && !setupData && (
+            <div>
+              {mfaEnabled ? (
+                <button
+                  type="button"
+                  onClick={() => setShowDisablePrompt((v) => !v)}
+                  disabled={submitting}
+                  className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-500/15 border border-rose-500/25 text-[var(--err)] hover:bg-rose-500 hover:text-white transition-colors"
+                >
+                  Disable 2FA
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStartSetup}
+                  disabled={submitting}
+                  className="vs-btn-primary !px-5 !py-2 !text-xs"
+                >
+                  {submitting ? 'Preparing...' : 'Set up 2FA'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div role="alert" className="rounded-xl bg-rose-500/10 border border-rose-500/25 px-4 py-3 text-xs text-[var(--err)]">{error}</div>
+        )}
+
+        {showDisablePrompt && mfaEnabled && (
+          <div className="pt-5 border-t border-[var(--line)] space-y-4">
+            <p className="text-xs text-[var(--fg-muted)]">
+              Enter your current 6-digit TOTP code or a recovery code to disable 2FA:
+            </p>
+            <div className="flex flex-wrap gap-2 max-w-md">
+              <input
+                type="text"
+                aria-label="Current 6-digit TOTP or recovery code"
+                value={disableCode}
+                onChange={(e) => setDisableCode(e.target.value)}
+                placeholder="000000"
+                className="flex-1 rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
+              />
+              <button
+                type="button"
+                onClick={handleDisable}
+                disabled={submitting}
+                className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+              >
+                {submitting ? 'Disabling...' : 'Confirm Disable'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {setupData && (
+          <div className="pt-6 border-t border-[var(--line)] space-y-5">
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
+              {setupData.qr_url && (
+                <div className="p-3 bg-white rounded-xl shrink-0">
+                  <img src={setupData.qr_url} alt="TOTP QR Code" className="w-36 h-36" />
                 </div>
-              </div>
-
-              <form onSubmit={handleEnableMfa} className="space-y-4 pt-2">
-                <div>
-                  <label className="text-xs uppercase text-muted-foreground font-semibold tracking-wider block mb-1">
-                    Enter 6-Digit Code
-                  </label>
+              )}
+              <div className="space-y-3 flex-1">
+                <div className="text-xs text-[var(--fg-muted)]">
+                  Scan the QR code in your authenticator app or enter this manual secret key:
+                </div>
+                <div className="inline-block rounded-lg bg-[var(--bg-subtle)] px-3 py-1.5 font-mono text-xs text-[var(--accent-bright)]">
+                  {setupData.secret}
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2 max-w-sm">
                   <input
                     type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
+                    aria-label="6-digit authenticator verification code"
                     maxLength={6}
-                    placeholder="123456"
                     value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-secondary/50 border border-border px-3 py-2 text-center text-xl font-mono tracking-widest focus:outline-none focus:border-primary"
-                    required
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="6-digit code"
+                    className="flex-1 rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
                   />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="submit"
-                    disabled={actionLoading || code.length !== 6}
-                    className="flex-1 gap-2"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                    Verify & Activate
-                  </Button>
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setSetupStep('idle');
-                      setSetupData(null);
-                      setCode('');
-                    }}
+                    onClick={handleEnable}
+                    disabled={submitting}
+                    className="vs-btn-primary !px-5 !py-2 !text-xs"
                   >
-                    Cancel
-                  </Button>
+                    {submitting ? 'Verifying...' : 'Verify & Enable'}
+                  </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showDisableModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border p-6 max-w-md w-full space-y-4 shadow-xl">
-            <h3 className="text-lg font-medium text-red-400">Disable Two-Factor Authentication</h3>
-            <p className="text-sm text-muted-foreground">
-              To deactivate 2FA security on your account, please enter your current password to confirm:
-            </p>
-
-            <form onSubmit={handleDisableMfa} className="space-y-4">
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1">Account Password</label>
-                <input
-                  type="password"
-                  value={disablePassword}
-                  onChange={(e) => setDisablePassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full bg-secondary/50 border border-border px-3 py-2 text-sm focus:outline-none focus:border-red-500"
-                  required
-                />
+        {recoveryCodes && (
+          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/25 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[var(--ok)] text-xs font-semibold">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save Your Emergency Recovery Codes</span>
               </div>
+              <button
+                type="button"
+                onClick={copyRecoveryCodes}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--ok)] hover:underline"
+              >
+                {copiedRecovery ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedRecovery ? 'Copied' : 'Copy All'}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-xs text-[var(--fg)]">
+              {recoveryCodes.map((rc) => (
+                <div key={rc} className="rounded-lg bg-[var(--bg-card)] border border-[var(--line)] px-3 py-2 text-center">
+                  {rc}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowDisableModal(false);
-                    setDisablePassword('');
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={actionLoading || !disablePassword}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Disable'}
-                </Button>
-              </div>
-            </form>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-5 flex items-center gap-3.5 opacity-60">
+          <Key className="w-4 h-4 text-[var(--fg-faint)]" />
+          <div>
+            <div className="text-xs font-medium text-[var(--fg)]">WebAuthn / YubiKey</div>
+            <div className="text-[11px] text-[var(--fg-faint)]">Hardware FIDO2 keys (Planned)</div>
           </div>
         </div>
-      )}
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-5 flex items-center gap-3.5 opacity-60">
+          <Shield className="w-4 h-4 text-[var(--fg-faint)]" />
+          <div>
+            <div className="text-xs font-medium text-[var(--fg)]">Backup Recovery Key</div>
+            <div className="text-[11px] text-[var(--fg-faint)]">Generated upon TOTP enrollment</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

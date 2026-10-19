@@ -1,110 +1,133 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../../components/Shared';
+import { Plus, ArrowUpRight, HardDrive } from 'lucide-react';
 import { api } from '../../lib/api';
 
 export function DsList() {
   const [services, setServices] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      api.get<any[]>('/storefront/services'),
-      api.get<any[]>('/storefront/catalog')
-    ]).then(([svcs, catalog]) => {
-      const dsCatalogIds = new Set(
-        catalog
-          .filter(p => p.category === 'ds' || p.category === 'dedicated' || p.provider === 'reliablesite')
-          .map(p => p.id)
-      );
-      const dsServices = svcs.filter(s => dsCatalogIds.has(s.product_id) || s.name?.toLowerCase().includes('dedicated'));
-      setServices(dsServices.map(s => {
-        const prod = catalog.find(p => p.id === s.product_id);
-        return {
-          id: s.id,
-          name: s.hostname || s.name || 'Dedicated Server',
-          type: prod?.name || 'Unknown',
-          status: s.status,
-          location: prod?.specs?.location || 'Unknown',
-          ram: prod?.specs?.ram || '-',
-          cpu: prod?.specs?.server_type || '-',
-          disk: prod?.specs?.disk || '-',
-          nextBilling: s.next_due ? new Date(s.next_due).toLocaleDateString() : '-',
-        };
-      }));
-      setLoading(false);
-    }).catch(err => {
-      console.error(err);
+      api.get('/storefront/services').catch(() => []),
+      api.get('/storefront/catalog').catch(() => []),
+    ]).then(([srvData, catData]) => {
+      const catMap: Record<string, any> = {};
+      if (Array.isArray(catData)) {
+        for (const p of catData) catMap[p.id] = p;
+      }
+      setCatalog(catMap);
+
+      if (Array.isArray(srvData)) {
+        const filtered = srvData.filter((s: any) => {
+          const prod = catMap[s.product_id];
+          return prod && (prod.category === 'ds' || prod.category === 'dedicated');
+        });
+        setServices(filtered);
+      }
       setLoading(false);
     });
   }, []);
 
   return (
-    <div>
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h1 className="text-2xl font-light mb-1">Dedicated Servers</h1>
-          <p className="text-sm text-muted-foreground">Manage your bare-metal infrastructure.</p>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)]">
+            Dedicated Servers
+          </h1>
+          <p className="text-xs text-[var(--fg-muted)]">
+            Single-tenant bare-metal nodes with dedicated IPMI/KVM and hardware RAID NVMe.
+          </p>
         </div>
-        <Link to="/dashboard/new">
-          <Button className="h-9 px-5 text-sm">Order Dedicated</Button>
+        <Link
+          to="/dashboard/new?category=ds"
+          className="vs-btn-primary px-4 py-2 text-xs font-medium self-start sm:self-auto"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Order Dedicated
         </Link>
       </div>
 
-      <div className="border border-border overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border">
-            <tr className="text-xs uppercase tracking-wider text-foreground/40">
-              <th className="px-5 py-3 font-medium">Name & ID</th>
-              <th className="px-5 py-3 font-medium">Type</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Location</th>
-              <th className="px-5 py-3 font-medium">Specs</th>
-              <th className="px-5 py-3 font-medium">Next Billing</th>
-              <th className="px-5 py-3 text-right font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {loading && (
-              <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">Loading...</td>
-              </tr>
-            )}
-            {!loading && services.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">No Dedicated Servers found.</td>
-              </tr>
-            )}
-            {!loading && services.map(ds => (
-              <tr key={ds.id} className="hover:bg-foreground/[0.02] transition-colors">
-                <td className="px-5 py-4">
-                  <div className="font-medium mb-0.5">{ds.name}</div>
-                  <div className="text-xs font-mono text-muted-foreground">{ds.id}</div>
-                </td>
-                <td className="px-5 py-4 text-muted-foreground">{ds.type}</td>
-                <td className="px-5 py-4">
-                  <span className={`text-xs flex items-center gap-1.5 ${ds.status === 'running' ? 'text-green-500' : ds.status === 'pending' ? 'text-yellow-500 animate-pulse' : 'text-red-500'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${ds.status === 'running' ? 'bg-green-500' : ds.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                    {ds.status.charAt(0).toUpperCase() + ds.status.slice(1)}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-muted-foreground">{ds.location}</td>
-                <td className="px-5 py-4 text-muted-foreground text-xs space-y-0.5">
-                  <div>{ds.cpu}</div>
-                  <div>{ds.ram}</div>
-                  <div>{ds.disk}</div>
-                </td>
-                <td className="px-5 py-4 text-muted-foreground">{ds.nextBilling}</td>
-                <td className="px-5 py-4 text-right">
-                  <Link to={`/dashboard/ds/${ds.id}`}>
-                    <Button variant="outline" className="h-7 px-3 text-xs">Manage</Button>
+      {loading ? (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
+          Loading...
+        </div>
+      ) : services.length === 0 ? (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center space-y-3">
+          <p className="text-sm text-[var(--fg-muted)]">No Dedicated Servers found.</p>
+          <Link
+            to="/dashboard/new?category=ds"
+            className="vs-btn-secondary px-4 py-2 text-xs font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Order Bare-Metal Server
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] divide-y divide-[var(--line)] overflow-hidden">
+          {services.map((ds) => {
+            const prod = catalog[ds.product_id] || {};
+            const specs = prod.specs || {};
+            const isHealthy = ds.status === 'running' || ds.status === 'active';
+
+            return (
+              <div
+                key={ds.id}
+                className="hover:bg-[var(--bg-elevated)] px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <HardDrive className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          isHealthy ? 'bg-[var(--ok)]' : 'bg-[var(--warn)]'
+                        }`}
+                      />
+                      <span className="text-sm font-medium text-[var(--fg)] font-mono truncate">
+                        {ds.hostname || `ds-${ds.id.slice(0, 8)}`}
+                      </span>
+                      <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--fg-muted)]">
+                        {ds.status}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--fg-faint)] mt-1">
+                      <span className="text-[var(--fg-muted)]">
+                        {prod.name || specs.server_type || 'Dedicated Server'}
+                      </span>
+                      <span>{specs.location || 'EU-Central'}</span>
+                      <span className="font-mono">{specs.ram || '—'}</span>
+                      {specs.disk && <span className="font-mono">{specs.disk}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between lg:justify-end gap-4 shrink-0">
+                  {ds.ip && (
+                    <span className="text-xs font-mono text-[var(--fg-muted)] bg-[var(--bg-subtle)] px-2.5 py-1 rounded">
+                      {ds.ip}
+                    </span>
+                  )}
+                  {ds.next_due && (
+                    <span className="text-xs font-mono text-[var(--fg-faint)] hidden sm:inline">
+                      Due {new Date(ds.next_due).toLocaleDateString()}
+                    </span>
+                  )}
+                  <Link
+                    to={`/dashboard/ds/${ds.id}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)] transition-colors"
+                  >
+                    Manage
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

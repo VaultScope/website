@@ -1,289 +1,254 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, X, Server, Tag, AlertCircle, ChevronDown, MessageSquare, ExternalLink } from 'lucide-react';
-import { Button } from '../../components/Shared';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, ArrowUpRight, LifeBuoy } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useToast } from '../../components/Toast';
-
-interface Ticket {
-  id: string;
-  ticket_number: string;
-  subject: string;
-  status: string;
-  priority: string;
-  updated_at: string;
-  related_service_id?: string;
-}
-
-interface UserService {
-  id: string;
-  name: string;
-  hostname?: string;
-  ip?: string;
-  status: string;
-}
+import { CustomSelect } from '../../components/Shared';
 
 export function SupportList() {
-  const [searchParams] = useSearchParams();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [services, setServices] = useState<UserService[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [content, setContent] = useState('');
+  const [category, setCategory] = useState('support');
+  const [priority, setPriority] = useState('normal');
   const [submitting, setSubmitting] = useState(false);
-  const [newTicket, setNewTicket] = useState({
-    subject: '',
-    content: '',
-    category: 'support',
-    priority: 'normal',
-    related_service_id: '',
-  });
-  const { error, success } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const serviceParam = searchParams.get('service_id');
-    if (serviceParam) {
-      setNewTicket(prev => ({ ...prev, related_service_id: serviceParam }));
-      setShowNew(true);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    api.get<Ticket[]>('/storefront/tickets')
-      .then(data => {
-        setTickets(data);
+  const loadTickets = () => {
+    setLoading(true);
+    api
+      .get('/storefront/tickets')
+      .then((data) => {
+        if (Array.isArray(data)) setTickets(data);
         setLoading(false);
       })
-      .catch(err => {
-        console.error(err);
-        error('Failed to load tickets');
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
+  };
 
-    api.get<UserService[]>('/storefront/services')
-      .then(setServices)
-      .catch(() => {});
-  }, [error]);
+  useEffect(() => {
+    loadTickets();
+  }, []);
 
-  const handleCreateTicket = async () => {
-    if (!newTicket.subject.trim() || !newTicket.content.trim()) {
-      error('Subject and message are required');
-      return;
-    }
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subject.trim() || !content.trim()) return;
     setSubmitting(true);
     try {
-      const payload = {
-        subject: newTicket.subject.trim(),
-        content: newTicket.content.trim(),
-        category: newTicket.category,
-        priority: newTicket.priority,
-        related_service_id: newTicket.related_service_id || undefined,
-      };
-      const created = await api.post<Ticket>('/storefront/tickets', payload);
-      success('Ticket created');
-      navigate(`/dashboard/support/${created.id}`);
+      const res: any = await api.post('/storefront/tickets', {
+        subject,
+        content,
+        category,
+        priority,
+      });
+      setShowNew(false);
+      setSubject('');
+      setContent('');
+      if (res?.id) {
+        navigate(`/dashboard/support/${res.id}`);
+      } else {
+        loadTickets();
+      }
     } catch (err: any) {
-      error(err.message || 'Failed to create ticket');
+      toast(err.message || 'Failed to create ticket', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const openCount = tickets.filter(t => t.status !== 'closed' && t.status !== 'resolved').length;
-  const waitingCount = tickets.filter(t => t.status === 'waiting_customer').length;
+  const openTickets = tickets.filter(
+    (t) => t.status !== 'resolved' && t.status !== 'closed'
+  );
+  const waitingCustomer = tickets.filter((t) => t.status === 'waiting_customer');
 
   return (
-    <div>
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h1 className="text-2xl font-light mb-1">Support</h1>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <span>{openCount} open</span>
-            {waitingCount > 0 && <span className="text-yellow-500">{waitingCount} awaiting your reply</span>}
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)]">Support</h1>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--fg-muted)]">
+            <span>Direct access to VaultScope infrastructure engineers.</span>
+            <span className="font-mono text-[var(--fg)]">{openTickets.length} open</span>
+            <span className="font-mono text-[var(--warn)]">
+              {waitingCustomer.length} awaiting your reply
+            </span>
           </div>
         </div>
-        <Button onClick={() => setShowNew(true)} className="h-9 px-5 text-sm gap-2">
-          <Plus className="w-3.5 h-3.5" /> Open Ticket
-        </Button>
-      </div>
-
-      <div className="mb-6 p-4 border border-indigo-500/20 bg-indigo-500/5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0">
-            <MessageSquare className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-foreground">Discord Community & Developer Exchange</p>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                No Customer Support
-              </span>
-            </div>
-            <p className="text-muted-foreground mt-0.5">
-              We do not provide customer support on Discord (please open a ticket above for account & service issues). You are welcome to join our Discord to discuss new features, upcoming products, UI/UX improvements, and chat directly with the developers!
-            </p>
-          </div>
-        </div>
-        <a
-          href="https://discord.gg/84kMAY2aKm"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded font-medium transition-colors shrink-0 whitespace-nowrap"
-          title="Community & developer exchange (no customer support)"
+        <button
+          type="button"
+          onClick={() => setShowNew((v) => !v)}
+          className="vs-btn-primary text-xs py-2 px-4 self-start sm:self-auto"
         >
-          <span>Join Discord</span>
-          <ExternalLink className="w-3 h-3" />
-        </a>
+          <Plus className="w-3.5 h-3.5" />
+          Open Ticket
+        </button>
       </div>
 
       {showNew && (
-        <div className="border border-border mb-6 p-5 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-sm font-medium">New Support Ticket</h2>
-            <button onClick={() => setShowNew(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+        <form
+          onSubmit={handleCreate}
+          className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 sm:p-8 space-y-5"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[var(--fg)]">New Support Ticket</h2>
+            <button
+              type="button"
+              onClick={() => setShowNew(false)}
+              className="text-xs text-[var(--fg-faint)] hover:text-[var(--fg)]"
+            >
+              Close
+            </button>
           </div>
-          <input
-            type="text"
-            value={newTicket.subject}
-            onChange={e => setNewTicket({ ...newTicket, subject: e.target.value })}
-            placeholder="Subject"
-            className="w-full border border-border bg-transparent p-2.5 text-sm focus:outline-none focus:border-foreground"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <div>
+            <label htmlFor="support-subject" className="block text-xs text-[var(--fg-muted)] mb-1.5">
+              Subject
+            </label>
+            <input
+              id="support-subject"
+              type="text"
+              required
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Subject"
+              className="w-full rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2.5 text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] focus:ring-1 focus:ring-[var(--accent-bright)]"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-                <Tag className="w-3.5 h-3.5 text-foreground/50" />
-                <span>Category</span>
+              <label htmlFor="support-category" className="block text-xs text-[var(--fg-muted)] mb-1.5">
+                Category
               </label>
-              <div className="relative">
-                <select 
-                  value={newTicket.category} 
-                  onChange={e => setNewTicket({ ...newTicket, category: e.target.value })} 
-                  className="w-full border border-border bg-background p-2.5 pr-8 text-sm focus:outline-none focus:border-foreground appearance-none rounded cursor-pointer"
-                >
-                  <option value="support">General Support</option>
-                  <option value="abuse">Abuse Report</option>
-                  <option value="dmca">DMCA</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <CustomSelect
+                id="support-category"
+                name="category"
+                value={category}
+                onChange={setCategory}
+                options={[
+                  { value: 'support', label: 'Technical Support', hint: 'Compute, OS, or daemon issues' },
+                  { value: 'billing', label: 'Billing', hint: 'Invoices, VAT, or payments' },
+                  { value: 'network', label: 'Network / BGP', hint: 'Routing, rDNS, or DDoS' },
+                  { value: 'sales', label: 'Sales', hint: 'Custom racks & volume quotes' },
+                ]}
+              />
             </div>
             <div>
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-foreground/50" />
-                <span>Priority</span>
+              <label htmlFor="support-priority" className="block text-xs text-[var(--fg-muted)] mb-1.5">
+                Priority
               </label>
-              <div className="relative">
-                <select 
-                  value={newTicket.priority} 
-                  onChange={e => setNewTicket({ ...newTicket, priority: e.target.value })} 
-                  className="w-full border border-border bg-background p-2.5 pr-8 text-sm focus:outline-none focus:border-foreground appearance-none rounded cursor-pointer"
-                >
-                  <option value="low">Low</option>
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div>
-            <div>
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-                <Server className="w-3.5 h-3.5 text-foreground/50" />
-                <span>Related Service (Optional)</span>
-              </label>
-              <div className="relative">
-                <select 
-                  value={newTicket.related_service_id} 
-                  onChange={e => setNewTicket({ ...newTicket, related_service_id: e.target.value })} 
-                  className="w-full border border-border bg-background p-2.5 pr-8 text-sm focus:outline-none focus:border-foreground appearance-none rounded cursor-pointer"
-                >
-                  <option value="">None / General Inquiry</option>
-                  {services.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.hostname || s.ip || s.id.slice(0, 8)})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <CustomSelect
+                id="support-priority"
+                name="priority"
+                value={priority}
+                onChange={setPriority}
+                options={[
+                  { value: 'low', label: 'Low', hint: 'General inquiry' },
+                  { value: 'normal', label: 'Normal', hint: 'Standard engineering SLA' },
+                  { value: 'high', label: 'High', hint: 'Degraded workload' },
+                  { value: 'urgent', label: 'Urgent', hint: 'Production outage' },
+                ]}
+              />
             </div>
           </div>
-          <textarea
-            value={newTicket.content}
-            onChange={e => setNewTicket({ ...newTicket, content: e.target.value })}
-            placeholder="Describe your issue..."
-            rows={4}
-            className="w-full border border-border bg-transparent p-2.5 text-sm focus:outline-none focus:border-foreground resize-none"
-          />
-          <div className="flex justify-end">
-            <Button onClick={handleCreateTicket} disabled={submitting} className="h-9 px-5 text-sm">
+
+          <div>
+            <label htmlFor="support-message" className="block text-xs text-[var(--fg-muted)] mb-1.5">
+              Message
+            </label>
+            <textarea
+              id="support-message"
+              required
+              rows={4}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Describe your issue..."
+              className="w-full rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2.5 text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] focus:ring-1 focus:ring-[var(--accent-bright)]"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowNew(false)}
+              className="px-4 py-2 rounded-lg text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="vs-btn-primary text-xs py-2 px-5 disabled:opacity-50"
+            >
               {submitting ? 'Submitting...' : 'Submit Ticket'}
-            </Button>
+            </button>
           </div>
-        </div>
+        </form>
       )}
 
-      <div className="border border-border overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border">
-            <tr className="text-xs uppercase tracking-wider text-foreground/40">
-              <th className="px-5 py-3 font-medium">Subject</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Priority</th>
-              <th className="px-5 py-3 font-medium">Updated</th>
-              <th className="px-5 py-3 text-right font-medium">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {loading ? (
-              <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : tickets.length === 0 ? (
-              <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No tickets found</td></tr>
-            ) : (
-              tickets.map(tkt => (
-                <tr key={tkt.id} className="hover:bg-foreground/[0.02] transition-colors">
-                  <td className="px-5 py-4">
-                    <div className="font-medium mb-0.5">{tkt.subject}</div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-muted-foreground">{tkt.ticket_number}</span>
-                      {tkt.related_service_id && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-mono bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/50">
-                          <Server className="w-3 h-3 text-blue-400" />
-                          {services.find(s => s.id === tkt.related_service_id)?.name || 'Linked Service'}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`text-xs ${
-                      tkt.status === 'open' || tkt.status === 'in_progress' ? 'text-blue-400' :
-                      tkt.status === 'waiting_customer' ? 'text-yellow-500' :
-                      'text-green-500'
-                    }`}>
-                      {tkt.status.replace('_', ' ').toUpperCase()}
+      {loading ? (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
+          Loading...
+        </div>
+      ) : tickets.length === 0 ? (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center space-y-2">
+          <LifeBuoy className="w-7 h-7 text-[var(--fg-faint)] mx-auto" />
+          <p className="text-sm text-[var(--fg-muted)]">No tickets found</p>
+        </div>
+      ) : (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] divide-y divide-[var(--line)] overflow-hidden">
+          {tickets.map((tkt) => {
+            const isOpen = tkt.status === 'open' || tkt.status === 'in_progress';
+            const isWaiting = tkt.status === 'waiting_customer';
+            return (
+              <div
+                key={tkt.id}
+                className="hover:bg-[var(--bg-subtle)] px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        isWaiting
+                          ? 'bg-[var(--warn)]'
+                          : isOpen
+                            ? 'bg-[var(--ok)]'
+                            : 'bg-[var(--fg-faint)]'
+                      }`}
+                    />
+                    <span className="text-xs font-mono text-[var(--accent-bright)]">
+                      {tkt.ticket_number}
                     </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`text-xs ${
-                      tkt.priority === 'high' || tkt.priority === 'critical' ? 'text-red-500' :
-                      tkt.priority === 'normal' ? 'text-foreground/70' : 'text-muted-foreground'
-                    }`}>
-                      {tkt.priority.toUpperCase()}
+                    <span className="text-sm font-medium text-[var(--fg)] truncate">
+                      {tkt.subject}
                     </span>
-                  </td>
-                  <td className="px-5 py-4 text-muted-foreground text-sm">{new Date(tkt.updated_at).toLocaleDateString()}</td>
-                  <td className="px-5 py-4 text-right">
-                    <Link to={`/dashboard/support/${tkt.id}`}>
-                      <Button variant="outline" className="h-7 px-3 text-xs">View</Button>
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--fg-faint)] font-mono">
+                    <span className="uppercase">{tkt.status}</span>
+                    <span>·</span>
+                    <span className="uppercase">{tkt.priority || 'normal'}</span>
+                    <span>·</span>
+                    <span>
+                      Updated{' '}
+                      {tkt.updated_at ? new Date(tkt.updated_at).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  to={`/dashboard/support/${tkt.id}`}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elevated)] self-start sm:self-auto shrink-0 transition-colors"
+                >
+                  View
+                  <ArrowUpRight className="w-3.5 h-3.5 text-[var(--accent-bright)]" />
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

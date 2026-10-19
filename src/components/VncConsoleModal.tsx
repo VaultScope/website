@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { 
   Terminal, X, Copy, Check, Maximize2, Minimize2, RefreshCw, KeyRound, 
-  AlertCircle, ShieldCheck, Clipboard, Send, Activity 
+  AlertCircle, ShieldCheck, Clipboard, Send 
 } from 'lucide-react';
 import { Button } from './Shared';
 import { api } from '../lib/api';
@@ -37,30 +37,40 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
   const [consoleInput, setConsoleInput] = useState('');
   const [consoleHistory, setConsoleHistory] = useState<string[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
+  const serviceId = service?.id;
 
-  const fetchConsole = async () => {
-    if (!service) return;
+  const fetchConsole = useCallback(async () => {
+    if (!serviceId) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post<ConsoleSession>(`/storefront/services/${service.id}/console`);
+      const res = await api.post<ConsoleSession>(`/storefront/services/${serviceId}/console`);
       setSession(res);
     } catch (err: any) {
       setError(err?.message || 'Failed to initialize KVM console session with provider.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [serviceId]);
 
   useEffect(() => {
-    if (isOpen && service) {
+    if (isOpen && serviceId) {
       fetchConsole();
     } else {
       setSession(null);
       setError(null);
       setIsFullscreen(false);
     }
-  }, [isOpen, service?.id]);
+  }, [isOpen, serviceId, fetchConsole]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !service) return null;
 
@@ -103,7 +113,12 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-background/85 backdrop-blur-md">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="vnc-console-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-background/85 backdrop-blur-md"
+    >
       <div
         ref={modalRef}
         className={`bg-card border border-border w-full flex flex-col shadow-2xl overflow-hidden transition-all duration-200 rounded-lg ${
@@ -118,12 +133,11 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 id="vnc-console-modal-title" className="text-sm font-semibold text-foreground">
                   KVM Out-of-Band Console
                 </h3>
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {session?.is_simulated ? 'SIMULATED KVM' : 'HETZNER VNC'}
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  · {session?.is_simulated ? 'SIMULATED KVM' : 'HETZNER VNC'}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground font-mono">
@@ -164,6 +178,7 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
               disabled={loading}
               className="h-8 px-2.5 text-xs gap-1.5"
               title="Refresh connection"
+              aria-label="Refresh connection"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -172,12 +187,15 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
               size="sm"
               onClick={toggleFullscreen}
               className="h-8 px-2.5 text-xs gap-1.5"
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
             >
               {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </Button>
             <button
+              type="button"
+              aria-label="Close console"
               onClick={onClose}
-              className="text-muted-foreground hover:text-foreground p-1.5 rounded transition-colors"
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -199,7 +217,7 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
                   onClick={() => handleCopy(session.wss_url, 'url')}
                   className="h-7 px-2 text-[11px] gap-1 shrink-0"
                 >
-                  {copiedUrl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  {copiedUrl ? <Check className="w-3 h-3 text-[var(--ok)]" /> : <Copy className="w-3 h-3" />}
                   {copiedUrl ? 'Copied' : 'Copy'}
                 </Button>
               </div>
@@ -216,7 +234,7 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
                   onClick={() => handleCopy(session.password, 'pass')}
                   className="h-7 px-2 text-[11px] gap-1 shrink-0"
                 >
-                  {copiedPass ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  {copiedPass ? <Check className="w-3 h-3 text-[var(--ok)]" /> : <Copy className="w-3 h-3" />}
                   {copiedPass ? 'Copied' : 'Copy'}
                 </Button>
               </div>
@@ -236,6 +254,7 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
                 value={clipboardText}
                 onChange={e => setClipboardText(e.target.value)}
                 placeholder="Paste text, scripts, or credentials to transmit to VM console..."
+                aria-label="Clipboard text to transmit to VM console"
                 rows={2}
                 className="flex-1 bg-background border border-border px-3 py-2 text-xs font-mono focus:outline-none focus:border-foreground"
               />
@@ -254,8 +273,8 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
               <span className="text-xs">Negotiating RFB session with Hetzner hypervisor...</span>
             </div>
           ) : error ? (
-            <div className="m-auto max-w-md p-6 bg-red-950/40 border border-red-500/30 rounded-lg text-center space-y-3">
-              <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
+            <div className="m-auto max-w-md w-full p-6 bg-red-950/40 border border-red-500/30 rounded-lg text-left space-y-3">
+              <AlertCircle className="w-6 h-6 text-red-400" />
               <h4 className="text-red-400 font-medium">Failed to Open Console</h4>
               <p className="text-xs text-red-200/70">{error}</p>
               <Button onClick={fetchConsole} variant="outline" size="sm" className="h-8 text-xs mt-2">
@@ -273,9 +292,6 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
                       {statusMessage}
                     </span>
                   )}
-                  <span className="text-zinc-500 font-mono text-[10px] flex items-center gap-1">
-                    <Activity className="w-2.5 h-2.5 text-emerald-400" /> 18ms
-                  </span>
                   <span className="text-emerald-500 flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> TLS Secured Stream
                   </span>
@@ -285,8 +301,8 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
               {/* Terminal Screen Content */}
               <div className="py-4 space-y-2 text-zinc-300 text-xs leading-relaxed flex-1 overflow-auto">
                 <p className="text-zinc-500">Connecting to hypervisor console socket: {session.wss_url.split('?')[0]}</p>
-                <p className="text-emerald-400">✓ VNC Handshake established (RFB Protocol 003.008)</p>
-                <p className="text-emerald-400">✓ Authenticated with server action token</p>
+                <p className="text-emerald-400 flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" /> VNC Handshake established (RFB Protocol 003.008)</p>
+                <p className="text-emerald-400 flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" /> Authenticated with server action token</p>
                 <div className="border border-zinc-800 bg-zinc-950 p-4 my-3 rounded text-zinc-200 space-y-1">
                   <p className="text-zinc-400">VaultScope OS Bootstrap -- {service.hostname || service.name}</p>
                   <p className="text-zinc-400">IPv4 Address: {service.ip || 'DHCP Assigned'}</p>
@@ -382,7 +398,8 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
                     value={consoleInput}
                     onChange={e => setConsoleInput(e.target.value)}
                     placeholder="Type command directly into console..."
-                    className="flex-1 bg-transparent text-xs text-zinc-200 font-mono outline-none placeholder:text-zinc-700"
+                    aria-label="Console command input"
+                    className="flex-1 bg-transparent text-xs text-zinc-200 font-mono outline-none placeholder:text-zinc-500"
                   />
                   <Button type="submit" variant="outline" size="sm" className="h-6 px-2 text-[10px] border-zinc-800 text-zinc-400">
                     Send

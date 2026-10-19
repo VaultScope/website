@@ -7,8 +7,6 @@ export interface AuthClaims {
   iat: number;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
 export function getStoredClaims(): AuthClaims | null {
   const raw = localStorage.getItem('vs_claims');
   if (!raw) return null;
@@ -33,30 +31,18 @@ export function getToken(): string | null {
   return localStorage.getItem('vs_token');
 }
 
-export async function redirectToLogin() {
-  window.location.href = '/login';
-}
-
-export async function devLoginCustomer(persona: string = 'customer1'): Promise<AuthClaims> {
-  const res = await fetch(`${API_BASE}/auth/dev-login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ persona }),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || 'Customer dev login failed');
-  }
-
-  const { token, claims } = await res.json();
-  localStorage.setItem('vs_token', token);
-  localStorage.setItem('vs_claims', JSON.stringify(claims));
-  return claims;
+export async function redirectToLogin(customRedirect?: string) {
+  const isDe = window.location.pathname.startsWith('/de');
+  const loginBase = isDe ? '/de/login' : '/login';
+  const redirectTarget =
+    customRedirect ?? `${window.location.pathname}${window.location.search}`;
+  sessionStorage.setItem('vs_redirect', redirectTarget);
+  window.location.href = `${loginBase}?redirect=${encodeURIComponent(redirectTarget)}`;
 }
 
 export function logout() {
   localStorage.removeItem('vs_token');
   localStorage.removeItem('vs_claims');
   localStorage.removeItem('vs_user_name');
+  localStorage.removeItem('vs_preview_mode');
 }

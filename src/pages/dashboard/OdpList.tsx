@@ -1,98 +1,125 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../../components/Shared';
+import { Plus, ArrowUpRight, Cpu } from 'lucide-react';
 import { api } from '../../lib/api';
 
 export function OdpList() {
   const [services, setServices] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      api.get<any[]>('/storefront/services'),
-      api.get<any[]>('/storefront/catalog')
-    ]).then(([svcs, catalog]) => {
-      const odpCatalogIds = new Set(catalog.filter(p => p.category === 'odp').map(p => p.id));
-      const odpServices = svcs.filter(s => odpCatalogIds.has(s.product_id));
-      setServices(odpServices.map(s => {
-        const prod = catalog.find(p => p.id === s.product_id);
-        return {
-          id: s.id,
-          name: s.hostname || s.name || 'ODP Instance',
-          type: prod?.name || 'Unknown',
-          status: s.status,
-          location: prod?.specs?.location || 'Unknown',
-          endpoint: s.hostname || s.ip || 'Pending',
-          nextBilling: s.next_due ? new Date(s.next_due).toLocaleDateString() : '-',
-        };
-      }));
-      setLoading(false);
-    }).catch(err => {
-      console.error(err);
+      api.get('/storefront/services').catch(() => []),
+      api.get('/storefront/catalog').catch(() => []),
+    ]).then(([srvData, catData]) => {
+      const catMap: Record<string, any> = {};
+      if (Array.isArray(catData)) {
+        for (const p of catData) catMap[p.id] = p;
+      }
+      setCatalog(catMap);
+
+      if (Array.isArray(srvData)) {
+        const filtered = srvData.filter((s: any) => {
+          const prod = catMap[s.product_id];
+          return prod && (prod.category === 'odp' || prod.category === 'ocd');
+        });
+        setServices(filtered);
+      }
       setLoading(false);
     });
   }, []);
 
   return (
-    <div>
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h1 className="text-2xl font-light mb-1">One-Click Deploy (OCD)</h1>
-          <p className="text-sm text-muted-foreground">Manage your containerized One-Click Deploy (OCD) services.</p>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)]">
+            One-Click Deploy (OCD)
+          </h1>
+          <p className="text-xs text-[var(--fg-muted)]">
+            Containerized self-hosted applications managed by the Pegasus control plane.
+          </p>
         </div>
-        <Link to="/dashboard/new">
-          <Button className="h-9 px-5 text-sm">Deploy OCD</Button>
+        <Link
+          to="/dashboard/new?category=odp"
+          className="vs-btn-primary px-4 py-2 text-xs font-medium self-start sm:self-auto"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Deploy OCD
         </Link>
       </div>
 
-      <div className="border border-border overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border">
-            <tr className="text-xs uppercase tracking-wider text-foreground/40">
-              <th className="px-5 py-3 font-medium">Name & ID</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Endpoint</th>
-              <th className="px-5 py-3 font-medium">Location</th>
-              <th className="px-5 py-3 font-medium">Next Billing</th>
-              <th className="px-5 py-3 text-right font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {loading && (
-              <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">Loading...</td>
-              </tr>
-            )}
-            {!loading && services.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No OCD instances found.</td>
-              </tr>
-            )}
-            {!loading && services.map(odp => (
-              <tr key={odp.id} className="hover:bg-foreground/[0.02] transition-colors">
-                <td className="px-5 py-4">
-                  <div className="font-medium mb-0.5">{odp.name}</div>
-                  <div className="text-xs font-mono text-muted-foreground">{odp.id}</div>
-                </td>
-                <td className="px-5 py-4">
-                  <span className={`text-xs flex items-center gap-1.5 ${odp.status === 'running' ? 'text-green-500' : odp.status === 'pending' ? 'text-yellow-500 animate-pulse' : 'text-red-500'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${odp.status === 'running' ? 'bg-green-500' : odp.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                    {odp.status.charAt(0).toUpperCase() + odp.status.slice(1)}
-                  </span>
-                </td>
-                <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{odp.endpoint}</td>
-                <td className="px-5 py-4 text-muted-foreground">{odp.location}</td>
-                <td className="px-5 py-4 text-muted-foreground">{odp.nextBilling}</td>
-                <td className="px-5 py-4 text-right">
-                  <Link to={`/dashboard/odp/${odp.id}`}>
-                    <Button variant="outline" className="h-7 px-3 text-xs">Manage</Button>
+      {loading ? (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
+          Loading...
+        </div>
+      ) : services.length === 0 ? (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center space-y-3">
+          <p className="text-sm text-[var(--fg-muted)]">No OCD instances found.</p>
+          <Link
+            to="/dashboard/new?category=odp"
+            className="vs-btn-secondary px-4 py-2 text-xs font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Deploy First Application
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] divide-y divide-[var(--line)] overflow-hidden">
+          {services.map((odp) => {
+            const prod = catalog[odp.product_id] || {};
+            const specs = prod.specs || {};
+            const isHealthy = odp.status === 'running' || odp.status === 'active';
+
+            return (
+              <div
+                key={odp.id}
+                className="hover:bg-[var(--bg-elevated)] px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <Cpu className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          isHealthy ? 'bg-[var(--ok)]' : 'bg-[var(--warn)]'
+                        }`}
+                      />
+                      <span className="text-sm font-medium text-[var(--fg)] font-mono truncate">
+                        {odp.hostname || `ocd-${odp.id.slice(0, 8)}`}
+                      </span>
+                      <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--fg-muted)]">
+                        {odp.status}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--fg-faint)] mt-1">
+                      <span className="text-[var(--fg-muted)]">{prod.name || odp.name || 'OCD'}</span>
+                      <span>{specs.location || 'EU-Central'}</span>
+                      <span className="font-mono">{odp.hostname || odp.ip || 'Pending'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between lg:justify-end gap-4 shrink-0">
+                  {odp.next_due && (
+                    <span className="text-xs font-mono text-[var(--fg-faint)] hidden sm:inline">
+                      Due {new Date(odp.next_due).toLocaleDateString()}
+                    </span>
+                  )}
+                  <Link
+                    to={`/dashboard/odp/${odp.id}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)] transition-colors"
+                  >
+                    Manage
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
