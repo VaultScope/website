@@ -77,11 +77,6 @@ const ROUTES = [
     description: 'Next-generation autonomous infrastructure orchestrator bridging bare-metal hardware and modern microservices.',
   },
   {
-    path: '/pricing',
-    title: 'Transparent Pricing — Cloud VPS, Dedicated & Storage',
-    description: 'Predictable pricing with no hidden fees or egress charges. Pay only for what you use with European data privacy and 19% VAT clarity.',
-  },
-  {
     path: '/company/about',
     title: 'About VaultScope — Independent Cloud & Software Engineering',
     description: 'Learn about VaultScope\'s mission: delivering transparent, high-performance infrastructure and open-source software engineered in Germany.',
@@ -100,6 +95,11 @@ const ROUTES = [
     path: '/company/contact',
     title: 'Contact & Enterprise Support',
     description: 'Get in touch with the VaultScope engineering team for enterprise deployments, custom setups, or technical support.',
+  },
+  {
+    path: '/company/roadmap',
+    title: 'Roadmap — VaultScope Infrastructure & Software Milestones',
+    description: 'Explore the VaultScope engineering roadmap from Q4 2026 through Q3 2027 across SFTP storage, Cloud VPS, Dedicated Servers, iOS app, and platform automation.',
   },
   {
     path: '/resources/blog',
@@ -199,11 +199,6 @@ const ROUTES = [
     description: 'Der autonome Infrastruktur-Orchestrator der nächsten Generation, der Bare-Metal-Hardware mit modernen Microservices verbindet.',
   },
   {
-    path: '/de/pricing',
-    title: 'Transparente Preise — Cloud VPS, Dedicated & Storage',
-    description: 'Vorhersehbare Preise ohne versteckte Gebühren oder Egress-Kosten. DSGVO-konforme Infrastruktur mit fairen Tarifen inkl. 19% MwSt.',
-  },
-  {
     path: '/de/company/about',
     title: 'Über VaultScope — Unabhängiges Cloud- & Software-Engineering',
     description: 'Erfahren Sie mehr über unsere Mission: Transparente Hochleistungs-Infrastruktur und Open-Source-Software aus Deutschland.',
@@ -222,6 +217,11 @@ const ROUTES = [
     path: '/de/company/contact',
     title: 'Kontakt & Enterprise-Support',
     description: 'Kontaktieren Sie das VaultScope-Team für Enterprise-Deployments, individuelle Setups oder technischen Support.',
+  },
+  {
+    path: '/de/company/roadmap',
+    title: 'Roadmap — VaultScope Infrastruktur- & Software-Meilensteine',
+    description: 'Entdecken Sie die VaultScope Engineering-Roadmap von Q4 2026 bis Q3 2027 für SFTP-Storage, Cloud VPS, Dedicated Server, iOS-App und Plattform-Automatisierung.',
   },
   {
     path: '/de/resources/blog',

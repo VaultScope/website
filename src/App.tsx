@@ -26,7 +26,6 @@ const Team         = lazy(() => import('./pages/Team').then(m => ({ default: m.T
 const Pegasus      = lazy(() => import('./pages/Pegasus').then(m => ({ default: m.Pegasus })));
 const Vamos        = lazy(() => import('./pages/Vamos').then(m => ({ default: m.Vamos })));
 const Camos        = lazy(() => import('./pages/Camos').then(m => ({ default: m.Camos })));
-const Pricing      = lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
 const Privacy      = lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
 const Terms        = lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
 const Imprint      = lazy(() => import('./pages/Imprint').then(m => ({ default: m.Imprint })));
@@ -34,6 +33,8 @@ const HostingTerms = lazy(() => import('./pages/HostingTerms').then(m => ({ defa
 const Cancellation = lazy(() => import('./pages/Cancellation').then(m => ({ default: m.Cancellation })));
 const Aup          = lazy(() => import('./pages/Aup').then(m => ({ default: m.Aup })));
 const Dpa          = lazy(() => import('./pages/Dpa').then(m => ({ default: m.Dpa })));
+const Partners     = lazy(() => import('./pages/Partners').then(m => ({ default: m.Partners })));
+const Roadmap      = lazy(() => import('./pages/Roadmap').then(m => ({ default: m.Roadmap })));
 
 // ─── Dashboard Routes ────────────────────────────────────────────────────────
 const DashboardLayout = lazy(() => import('./pages/dashboard/Layout').then(m => ({ default: m.DashboardLayout })));
@@ -156,12 +157,16 @@ const PAGE_ROUTES: RouteConfig[] = [
   { path: '/software/pegasus', element: <Pegasus /> },
   { path: '/software/vamos', element: <Vamos /> },
   { path: '/software/camos', element: <Camos /> },
-  { path: '/pricing', element: <Pricing /> },
   { path: '/company', element: <Navigate to="/company/about" replace /> },
   { path: '/company/about', element: <About /> },
   { path: '/company/team', element: <Team /> },
   { path: '/company/open-source', element: <OpenSource /> },
   { path: '/company/contact', element: <Contact /> },
+  { path: '/company/roadmap', element: <Roadmap /> },
+  { path: '/roadmap', element: <Roadmap /> },
+  { path: '/company/partners', element: <Partners /> },
+  { path: '/company/partners/:partner', element: <PartnerLanding /> },
+  { path: '/partners/:partner', element: <PartnerLanding /> },
   { path: '/resources', element: <Navigate to="/resources/blog" replace /> },
   { path: '/resources/blog', element: <BlogList /> },
   { path: '/resources/blog/:slug', element: <BlogDetail /> },
@@ -238,6 +243,7 @@ const REDIRECT_ROUTES: RouteConfig[] = [
   { path: '/team', element: <Navigate to="/company/team" replace /> },
   { path: '/open-source', element: <Navigate to="/company/open-source" replace /> },
   { path: '/contact', element: <Navigate to="/company/contact" replace /> },
+  { path: '/partners', element: <Navigate to="/company/partners" replace /> },
   { path: '/principles', element: <Navigate to="/company/about" replace /> },
   { path: '/projects', element: <Navigate to="/company/open-source" replace /> },
   { path: '/privacy', element: <Navigate to="/legal/privacy" replace /> },
@@ -281,9 +287,9 @@ function AppContent() {
         <ErrorBoundary>
           <Suspense fallback={
             <div className="flex-1 flex items-center justify-center min-h-[40vh] p-8">
-              <div className="flex flex-col items-center gap-3 text-muted-foreground animate-pulse">
-                <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
-                <span className="text-[11px] font-mono tracking-wider uppercase opacity-60">Loading...</span>
+              <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">
+                <div className="w-5 h-5 border border-white/20 border-t-white rounded-full animate-spin" />
+                <span className="text-[11px] font-mono text-[var(--text-faint)]">Loading...</span>
               </div>
             </div>
           }>
