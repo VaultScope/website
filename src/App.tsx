@@ -237,7 +237,19 @@ const PAGE_ROUTES: RouteConfig[] = [
 
 const REDIRECT_ROUTES: RouteConfig[] = [
   { path: '/hosting', element: <Navigate to="/infrastructure" replace /> },
+  { path: '/de/hosting', element: <Navigate to="/de/infrastructure" replace /> },
+  { path: '/storage', element: <Navigate to="/infrastructure/storage" replace /> },
+  { path: '/de/storage', element: <Navigate to="/de/infrastructure/storage" replace /> },
+  { path: '/sftp', element: <Navigate to="/infrastructure/storage" replace /> },
+  { path: '/de/sftp', element: <Navigate to="/de/infrastructure/storage" replace /> },
+  { path: '/cloud', element: <Navigate to="/infrastructure/cloud" replace /> },
+  { path: '/de/cloud', element: <Navigate to="/de/infrastructure/cloud" replace /> },
+  { path: '/dedicated', element: <Navigate to="/infrastructure/dedicated" replace /> },
+  { path: '/de/dedicated', element: <Navigate to="/de/infrastructure/dedicated" replace /> },
+  { path: '/managed', element: <Navigate to="/infrastructure/managed" replace /> },
+  { path: '/de/managed', element: <Navigate to="/de/infrastructure/managed" replace /> },
   { path: '/odp', element: <Navigate to="/deploy" replace /> },
+  { path: '/de/odp', element: <Navigate to="/de/deploy" replace /> },
   { path: '/pegasus', element: <Navigate to="/software/pegasus" replace /> },
   { path: '/about', element: <Navigate to="/company/about" replace /> },
   { path: '/team', element: <Navigate to="/company/team" replace /> },
@@ -254,7 +266,6 @@ const REDIRECT_ROUTES: RouteConfig[] = [
   { path: '/cancellation', element: <Navigate to="/legal/cancellation" replace /> },
   { path: '/aup', element: <Navigate to="/legal/aup" replace /> },
   { path: '/dpa', element: <Navigate to="/legal/dpa" replace /> },
-
 ];
 
 function renderRoutes(prefix: string, routes: RouteConfig[] = PAGE_ROUTES) {

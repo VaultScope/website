@@ -1,3 +1,9 @@
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
 :{$PORT:3000} {
 	root * /srv
 	encode gzip zstd
@@ -5,6 +11,7 @@
 
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Alt-Svc "clear"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
