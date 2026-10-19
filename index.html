@@ -1,11 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VaultScope — Infrastructure and Software, Engineered Together</title>
     <meta name="description" content="VaultScope builds Cloud VPS, Dedicated Servers, and software on transparent, open-source infrastructure. German engineering. EU infrastructure." />
+
+    <!-- Fonts: Silkscreen (Typewriter Pixel), Pixelify Sans (Readable Pixel Sans), JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@400&family=Silkscreen:wght@400&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -26,19 +34,21 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://vaultscope.de/" />
 
-    <!-- Theme color for Discord and mobile browsers -->
-    <meta name="theme-color" content="#2563eb" />
-    <meta name="msapplication-TileColor" content="#2563eb" />
+    <!-- Theme color: VaultScope designer black -->
+    <meta name="theme-color" content="#030304" />
+    <meta name="msapplication-TileColor" content="#030304" />
 
     <!-- Robots -->
     <meta name="robots" content="index, follow" />
 
-    <!-- Theme: apply before first paint to prevent flash -->
+    <!-- Theme: respect saved theme, defaulting to dark -->
     <script>
       try {
-        var stored = localStorage.getItem('vs-theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (stored === 'dark' || (!stored && prefersDark)) {
+        var storedTheme = localStorage.getItem('vs-theme');
+        if (storedTheme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
           document.documentElement.classList.add('dark');
         }
       } catch (_) {}

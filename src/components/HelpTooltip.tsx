@@ -142,9 +142,12 @@ export function HelpTooltip({
         ref={triggerRef}
         type="button"
         onClick={handleClick}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
+        aria-expanded={isOpen || isPinned}
         aria-label={title || "Information"}
-        className={`inline-flex items-center justify-center transition-all cursor-pointer rounded-full select-none ${
-          size === 'sm' ? 'w-4 h-4 text-[10px]' : 'w-5 h-5 text-xs'
+        className={`inline-flex items-center justify-center transition-all cursor-pointer rounded-full select-none min-w-[24px] min-h-[24px] ${
+          size === 'sm' ? 'w-6 h-6 text-[11px]' : 'w-6 h-6 text-xs'
         } ${
           isPinned || isOpen
             ? 'bg-foreground text-background shadow-md'
@@ -170,7 +173,7 @@ export function HelpTooltip({
               <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               {title && <h4 className="text-xs font-semibold tracking-tight text-foreground">{title}</h4>}
               {badge && (
-                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-foreground/10 text-muted-foreground">
+                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-foreground/10 text-muted-foreground">
                   {badge}
                 </span>
               )}
@@ -179,10 +182,10 @@ export function HelpTooltip({
               <button
                 type="button"
                 onClick={handleClose}
-                className="text-muted-foreground hover:text-foreground p-0.5 rounded hover:bg-foreground/10 cursor-pointer"
+                className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-foreground/10 cursor-pointer min-w-[24px] min-h-[24px] inline-flex items-center justify-center"
                 aria-label="Close tooltip"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>

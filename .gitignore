@@ -32,3 +32,4 @@ infrastructure/*token*
 authentik-config/*token*
 *.secret
 qa-state.json
+ANTIGRAVITY.md

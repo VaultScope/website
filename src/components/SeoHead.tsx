@@ -51,9 +51,9 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
         <meta name="robots" content="index, follow" />
       )}
 
-      {/* Theme Color (Accent color for Discord embed border: primary VaultScope blue) */}
-      <meta name="theme-color" content="#2563eb" />
-      <meta name="msapplication-TileColor" content="#2563eb" />
+      {/* Theme Color */}
+      <meta name="theme-color" content="#0A0B0D" />
+      <meta name="msapplication-TileColor" content="#0A0B0D" />
 
       {/* Open Graph (Facebook, Discord, Telegram, WhatsApp, LinkedIn) */}
       <meta property="og:site_name" content="VaultScope" />
