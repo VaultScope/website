@@ -1,5 +1,5 @@
 export const common = {
-  joinWaitlist: 'Auf die Warteliste',
+  joinWaitlist: 'Newsletter abonnieren',
   getInTouch: 'Kontakt aufnehmen',
   learnMore: 'Mehr erfahren',
   contact: 'Kontakt',
@@ -10,7 +10,7 @@ export const common = {
   support: 'Support-Tickets',
   signOut: 'Abmelden',
   comingSoon: 'Demnächst',
-  questionsBeforeLaunch: 'Fragen vor dem Launch?',
+  questionsBeforeLaunch: 'Fragen?',
   questions: 'Fragen?',
   skipToContent: 'Zum Inhalt springen',
   openMenu: 'Menü öffnen',

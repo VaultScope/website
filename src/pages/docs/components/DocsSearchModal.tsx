@@ -10,14 +10,14 @@ interface DocsSearchModalProps {
 }
 
 const POPULAR_QUERIES = [
-  'Docker',
-  'Authentik OIDC',
-  'Postgres backup',
-  'API Reference',
-  'SQLx Migrations',
-  'Hetzner Cloud',
-  'Caddyfile',
-  'AES-256-GCM',
+  'SFTP Port 2022',
+  'Web File Manager',
+  'FTHR JSON',
+  'FileZilla',
+  'WinSCP',
+  'Sign In',
+  'Two-Factor Authentication',
+  'Verify Email',
 ];
 
 export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
@@ -88,11 +88,11 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
         aria-modal="true"
         aria-label="Search documentation"
         onKeyDown={handleKeyDown}
-        className="relative w-full max-w-2xl bg-background border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] z-10"
+        className="relative w-full max-w-2xl bg-[var(--bg)] border border-[var(--line-strong)] shadow-2xl overflow-hidden flex flex-col max-h-[80vh] z-10"
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border bg-foreground/[0.02]">
-          <Search className="w-5 h-5 text-foreground/40 shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--line)] bg-[var(--bg-card)]">
+          <Search className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -102,7 +102,7 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
               setSelectedIndex(0);
             }}
             placeholder="Search documentation, guides, and APIs..."
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-foreground/40 focus:outline-none"
+            className="w-full bg-transparent text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] focus:outline-none"
             aria-label="Search documentation input"
           />
           {query ? (
@@ -112,23 +112,23 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
                 setQuery('');
                 inputRef.current?.focus();
               }}
-              className="p-1 text-foreground/40 hover:text-foreground transition-colors cursor-pointer"
+              className="p-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors cursor-pointer"
               aria-label="Clear search query"
             >
               <X className="w-4 h-4" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-foreground/40 bg-foreground/5 border border-border rounded">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-faint)] bg-[var(--bg-elevated)] border border-[var(--line)]">
               ESC
             </kbd>
           )}
         </div>
 
         {/* Results / Empty View */}
-        <div ref={resultsRef} className="overflow-y-auto p-3 space-y-1 divide-y divide-border/40">
+        <div ref={resultsRef} className="overflow-y-auto divide-y divide-[var(--line)]">
           {query.trim() === '' ? (
-            <div className="py-6 px-3 space-y-4">
-              <p className="text-xs font-mono uppercase tracking-wider text-foreground/40 font-semibold">
+            <div className="py-6 px-4 space-y-4">
+              <p className="text-[11px] font-mono uppercase tracking-[0.06em] text-[var(--text-muted)] font-semibold">
                 Popular Searches
               </p>
               <div className="flex flex-wrap gap-2">
@@ -140,7 +140,7 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
                       setQuery(q);
                       inputRef.current?.focus();
                     }}
-                    className="px-2.5 py-1 text-xs font-mono rounded-md border border-border bg-foreground/[0.02] hover:bg-foreground/5 text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                    className="px-2.5 py-1 text-xs font-mono border border-[var(--line)] bg-[var(--bg-card)] hover:border-[var(--line-strong)] text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors cursor-pointer"
                   >
                     {q}
                   </button>
@@ -148,9 +148,9 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
               </div>
             </div>
           ) : results.length === 0 ? (
-            <div className="py-12 text-center text-xs text-foreground/50 space-y-2">
-              <p className="text-sm font-medium text-foreground">No matches found</p>
-              <p>No documentation pages matched <span className="font-mono text-foreground">"{query}"</span></p>
+            <div className="py-12 text-center text-xs text-[var(--text-muted)] space-y-2">
+              <p className="text-sm font-medium text-[var(--text)]">No matches found</p>
+              <p>No documentation pages matched <span className="font-mono text-[var(--text)]">"{query}"</span></p>
             </div>
           ) : (
             results.map((match, idx) => {
@@ -160,34 +160,34 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
                   key={`${match.article.id}-${match.matchedSection?.id || idx}`}
                   onClick={() => handleSelect(match)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors pt-3 ${
+                  className={`p-3.5 cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-foreground/5 border-l-2 border-foreground pl-2.5'
-                      : 'hover:bg-foreground/[0.02]'
+                      ? 'bg-[var(--bg-elevated)] border-l-2 border-[var(--text)] pl-3'
+                      : 'hover:bg-[var(--bg-card)]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2 min-w-0">
                       {match.matchedSection ? (
-                        <Hash className="w-3.5 h-3.5 text-foreground/40 shrink-0" />
+                        <Hash className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
                       ) : (
-                        <FileText className="w-3.5 h-3.5 text-foreground/40 shrink-0" />
+                        <FileText className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
                       )}
-                      <h4 className="text-sm font-medium text-foreground truncate">
+                      <h4 className="text-sm font-medium text-[var(--text)] truncate">
                         <HighlightText text={match.article.title} query={query} />
                       </h4>
                       {match.matchedSection && (
-                        <span className="text-xs font-mono text-foreground/50 truncate">
+                        <span className="text-xs font-mono text-[var(--text-muted)] truncate">
                           &gt; <HighlightText text={match.matchedSection.title} query={query} />
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-border bg-foreground/[0.03] text-foreground/50 shrink-0">
+                    <span className="text-[10px] font-mono px-2 py-0.5 border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--text-muted)] shrink-0">
                       {match.article.category}
                     </span>
                   </div>
 
-                  <p className="text-xs text-foreground/60 line-clamp-2 leading-relaxed pl-5.5">
+                  <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed pl-5.5">
                     <HighlightText text={match.matchSnippet} query={query} />
                   </p>
                 </div>
@@ -197,10 +197,10 @@ export const DocsSearchModal = ({ isOpen, onClose }: DocsSearchModalProps) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-foreground/[0.02] text-[11px] font-mono text-foreground/40">
+        <div className="flex items-center justify-between px-4 py-2.5 border-t border-[var(--line)] bg-[var(--bg-card)] text-[11px] font-mono text-[var(--text-muted)]">
           <div className="flex items-center gap-3">
-            <span><kbd className="px-1 py-0.2 bg-foreground/5 border border-border rounded">↑</kbd> <kbd className="px-1 py-0.2 bg-foreground/5 border border-border rounded">↓</kbd> to navigate</span>
-            <span><kbd className="px-1 py-0.2 bg-foreground/5 border border-border rounded">↵</kbd> to select</span>
+            <span><kbd className="px-1 py-0.2 bg-[var(--bg-elevated)] border border-[var(--line)]">↑</kbd> <kbd className="px-1 py-0.2 bg-[var(--bg-elevated)] border border-[var(--line)]">↓</kbd> to navigate</span>
+            <span><kbd className="px-1 py-0.2 bg-[var(--bg-elevated)] border border-[var(--line)]">↵</kbd> to select</span>
           </div>
           <span>VaultScope Docs Search</span>
         </div>

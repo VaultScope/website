@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, type LinkProps, useLocation, useNavigate } from 'react-router-dom';
 import { en } from './locales/en/index';
 import { de } from './locales/de/index';
 
 export type Locale = 'en' | 'de';
 
-interface LanguageContextValue {
+export interface LanguageContextValue {
   locale: Locale;
   t: typeof en;
   localePath: (path: string) => string;
@@ -28,6 +28,17 @@ function stripLocalePath(pathname: string): string {
   return pathname;
 }
 
+const fallbackContextValue: LanguageContextValue = {
+  locale: 'en',
+  t: en,
+  localePath: (path: string) => {
+    if (path.startsWith('http') || path.startsWith('#') || path.startsWith('mailto:')) return path;
+    return stripLocalePath(path);
+  },
+  switchLocale: () => {},
+  stripLocale: stripLocalePath,
+};
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,9 +54,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     locale,
     t,
     localePath: (path: string) => {
-      if (path.startsWith('http') || path.startsWith('#')) return path;
-      if (locale === 'en') return path;
-      return `/de${path === '/' ? '' : path}`;
+      if (path.startsWith('http') || path.startsWith('#') || path.startsWith('mailto:')) return path;
+      const clean = stripLocalePath(path);
+      if (locale === 'en') return clean;
+      return `/de${clean === '/' ? '' : clean}`;
     },
     switchLocale: (newLocale: Locale) => {
       const stripped = stripLocalePath(location.pathname);
@@ -67,8 +79,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useLanguage() {
+export function useLanguage(): LanguageContextValue {
   const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error('useLanguage must be used within LanguageProvider');
-  return ctx;
+  return ctx ?? fallbackContextValue;
 }
+
+export const useTranslation = useLanguage;
+
+export function useLocalePath() {
+  const { localePath } = useLanguage();
+  return localePath;
+}
+
+export function LocaleLink({ to, ...props }: LinkProps) {
+  const { localePath } = useLanguage();
+  const resolved = typeof to === 'string' ? localePath(to) : to;
+  return <Link to={resolved} {...props} />;
+}
+

@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { LocaleLink } from '../i18n';
 import { Helmet } from 'react-helmet-async';
-import { 
-  ArrowLeft, 
-  MessageSquare, 
-  Plus, 
-  Search, 
-  X, 
-  Clock, 
-  User, 
-  CheckCircle2, 
-  Lock, 
+import {
+  ArrowLeft,
+  MessageSquare,
+  Plus,
+  Search,
+  X,
+  Clock,
+  User,
+  CheckCircle2,
+  Lock,
   Send,
-  FileQuestion
+  FileQuestion,
 } from 'lucide-react';
+import { getStoredUsername, setStoredUsername } from '../lib/quickNav';
 
 export interface Thread {
   id: string;
@@ -52,7 +54,7 @@ export const CATEGORY_INFO: Record<string, { name: string; description: string; 
   },
   security: {
     name: 'Security & Compliance',
-    description: 'GoBD audit trails, GDPR data protection, ISO 27001 readiness, and zero-trust access.',
+    description: 'GoBD audit trails, GDPR data protection, EU infrastructure sovereignty, and zero-trust access.',
     topics: ['GoBD', 'GDPR', 'Audit Logging', 'SSH Keys'],
   },
   automation: {
@@ -94,31 +96,37 @@ export function ForumCategory() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newAuthor, setNewAuthor] = useState('');
+  const [newAuthor, setNewAuthor] = useState(() => getStoredUsername());
   const [newContent, setNewContent] = useState('');
 
   useEffect(() => {
     if (category) {
       setThreads(getStoredThreads(category));
     }
+    const storedUname = getStoredUsername();
+    if (storedUname) {
+      setNewAuthor((prev) => prev || storedUname);
+    }
   }, [category]);
 
   if (!category || !CATEGORY_INFO[category]) {
     return (
-      <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
-        <div className="max-w-4xl mx-auto px-6 py-20 text-center border border-border rounded-xl bg-foreground/[0.01] space-y-4">
-          <FileQuestion className="w-8 h-8 text-foreground/30 mx-auto" />
-          <h1 className="text-xl font-semibold text-foreground">Category not found</h1>
-          <p className="text-xs text-foreground/50 font-mono">
-            The requested forum category does not exist or has been relocated.
-          </p>
-          <Link
-            to="/resources/forum"
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-border text-xs font-mono rounded hover:bg-foreground/5 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to forum overview</span>
-          </Link>
+      <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text)] pt-28 lg:pt-32 pb-24">
+        <div className="vs-container">
+          <div className="py-20 text-center border-t border-b border-[var(--line)] space-y-4">
+            <FileQuestion className="w-6 h-6 text-[var(--text-faint)] mx-auto" />
+            <h1 className="text-xl font-semibold text-[var(--text)]">Category not found</h1>
+            <p className="text-xs text-[var(--text-muted)] font-mono">
+              The requested forum category does not exist or has been relocated.
+            </p>
+            <LocaleLink
+              to="/resources/forum"
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-[var(--line)] text-xs font-mono hover:border-[var(--accent-bright)] transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to forum overview</span>
+            </LocaleLink>
+          </div>
         </div>
       </div>
     );
@@ -128,24 +136,31 @@ export function ForumCategory() {
 
   const handleCreateThread = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newAuthor.trim() || !newContent.trim()) return;
+    const authorUsername = newAuthor.trim() || getStoredUsername();
+    if (!newTitle.trim() || !authorUsername || !newContent.trim()) return;
+    if (!getStoredUsername() && authorUsername) {
+      setStoredUsername(authorUsername);
+    }
 
-    const threadId = newTitle
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') + '-' + Date.now().toString().slice(-4);
+    const threadId =
+      newTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') +
+      '-' +
+      Date.now().toString().slice(-4);
 
     const now = new Date().toISOString();
     const createdThread: Thread = {
       id: threadId,
       category,
       title: newTitle.trim(),
-      author: newAuthor.trim(),
+      author: authorUsername,
       timestamp: now,
       replyCount: 0,
       viewCount: 1,
       lastActivity: now,
-      lastActivityAuthor: newAuthor.trim(),
+      lastActivityAuthor: authorUsername,
       content: newContent.trim(),
     };
 
@@ -153,33 +168,35 @@ export function ForumCategory() {
     setThreads(updated);
     saveStoredThreads(category, updated);
 
-    // Also persist initial post in thread storage for ForumThread viewer
     try {
-      localStorage.setItem(`vs_thread_${threadId}`, JSON.stringify({
-        id: threadId,
-        title: createdThread.title,
-        category,
-        posts: [
-          {
-            id: '1',
-            author: createdThread.author,
-            timestamp: now,
-            isOriginalPost: true,
-            content: newContent.trim(),
-          }
-        ]
-      }));
+      localStorage.setItem(
+        `vs_thread_${threadId}`,
+        JSON.stringify({
+          id: threadId,
+          title: createdThread.title,
+          category,
+          posts: [
+            {
+              id: '1',
+              author: createdThread.author,
+              timestamp: now,
+              isOriginalPost: true,
+              content: newContent.trim(),
+            },
+          ],
+        })
+      );
     } catch (err) {
       console.error(err);
     }
 
     setNewTitle('');
-    setNewAuthor('');
+    setNewAuthor(getStoredUsername());
     setNewContent('');
     setShowNewThreadModal(false);
   };
 
-  const filteredThreads = threads.filter(thread => {
+  const filteredThreads = threads.filter((thread) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -196,56 +213,48 @@ export function ForumCategory() {
         <meta name="description" content={categoryInfo.description} />
       </Helmet>
 
-      <div className="min-h-screen bg-background text-foreground pt-28 lg:pt-32 pb-24">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          {/* Back link */}
-          <Link
+      <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text)] pt-28 lg:pt-32 pb-24">
+        <div className="vs-container">
+          <LocaleLink
             to="/resources/forum"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-foreground/60 hover:text-foreground mb-8 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text)] mb-8 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to All Categories</span>
-          </Link>
+          </LocaleLink>
 
-          {/* Header Banner */}
-          <div className="border-b border-border pb-8 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">
-                  Channel
-                </span>
-                <span className="text-[11px] font-mono text-foreground/40">
-                  {threads.length} {threads.length === 1 ? 'thread' : 'threads'}
-                </span>
-              </div>
-              <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
+          <header className="border-b border-[var(--line)] pb-8 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <p className="text-xs font-mono text-[var(--accent-bright)] tabular-nums">
+                Channel · {threads.length} {threads.length === 1 ? 'thread' : 'threads'}
+              </p>
+              <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight text-[var(--text)]">
                 {categoryInfo.name}
               </h1>
-              <p className="text-sm text-foreground/70 leading-relaxed font-light">
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                 {categoryInfo.description}
               </p>
             </div>
 
             <button
               onClick={() => setShowNewThreadModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-foreground text-background font-mono text-xs font-medium hover:bg-foreground/90 transition-all shrink-0 cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-white font-mono text-xs font-medium hover:bg-[var(--accent-bright)] transition-colors shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Start Discussion</span>
             </button>
-          </div>
+          </header>
 
-          {/* New Discussion Modal */}
           {showNewThreadModal && (
-            <div className="mb-10 p-6 rounded-xl border border-blue-500/30 bg-blue-500/[0.02] space-y-4">
+            <div className="mb-10 py-6 border-t-2 border-[var(--accent)] border-b border-[var(--line)] space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-blue-400" />
+                <h3 className="text-base font-semibold text-[var(--text)] flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-[var(--accent-bright)]" />
                   <span>Start New Technical Discussion</span>
                 </h3>
                 <button
                   onClick={() => setShowNewThreadModal(false)}
-                  className="text-foreground/40 hover:text-foreground p-1 cursor-pointer"
+                  className="text-[var(--text-faint)] hover:text-[var(--text)] p-1 cursor-pointer"
                   aria-label="Close dialog"
                 >
                   <X className="w-4 h-4" />
@@ -255,7 +264,7 @@ export function ForumCategory() {
               <form onSubmit={handleCreateThread} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-mono text-foreground/70 block">
+                    <label className="text-xs font-mono text-[var(--text-muted)] block">
                       Discussion Title
                     </label>
                     <input
@@ -264,13 +273,13 @@ export function ForumCategory() {
                       placeholder="e.g. Dual-stack BGP announce with BIRD2 on Debian"
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs font-mono focus:outline-none focus:border-foreground/40"
+                      className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--line)] text-xs font-mono text-[var(--text)] focus:outline-none focus:border-[var(--accent-bright)]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-mono text-foreground/70 block">
-                      Author / Handle
+                    <label className="text-xs font-mono text-[var(--text-muted)] block">
+                      Username
                     </label>
                     <input
                       type="text"
@@ -278,13 +287,13 @@ export function ForumCategory() {
                       placeholder="e.g. sysadmin_mark"
                       value={newAuthor}
                       onChange={(e) => setNewAuthor(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs font-mono focus:outline-none focus:border-foreground/40"
+                      className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--line)] text-xs font-mono text-[var(--text)] focus:outline-none focus:border-[var(--accent-bright)]"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-mono text-foreground/70 block">
+                  <label className="text-xs font-mono text-[var(--text-muted)] block">
                     Message Body (Technical details, logs, config snippets)
                   </label>
                   <textarea
@@ -293,7 +302,7 @@ export function ForumCategory() {
                     placeholder="Describe your architecture question or operational workflow..."
                     value={newContent}
                     onChange={(e) => setNewContent(e.target.value)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs font-mono focus:outline-none focus:border-foreground/40"
+                    className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--line)] text-xs font-mono text-[var(--text)] focus:outline-none focus:border-[var(--accent-bright)]"
                   />
                 </div>
 
@@ -301,13 +310,13 @@ export function ForumCategory() {
                   <button
                     type="button"
                     onClick={() => setShowNewThreadModal(false)}
-                    className="px-3.5 py-1.5 border border-border text-xs font-mono rounded hover:bg-foreground/5 transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 border border-[var(--line)] text-xs font-mono hover:border-[var(--accent-bright)] transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded bg-foreground text-background font-mono text-xs font-medium hover:bg-foreground/90 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[var(--accent)] text-white font-mono text-xs font-medium hover:bg-[var(--accent-bright)] transition-colors cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Publish Discussion</span>
@@ -320,19 +329,19 @@ export function ForumCategory() {
           {/* Search Bar */}
           <div className="mb-8">
             <div className="relative max-w-md">
-              <Search className="w-4 h-4 text-foreground/40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-[var(--text-faint)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 id="thread-search"
                 type="text"
                 placeholder="Search threads in this channel..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-9 py-2 bg-foreground/[0.02] border border-border rounded-lg text-xs font-mono focus:outline-none focus:border-foreground/40 transition-colors"
+                className="w-full pl-9 pr-9 py-2 bg-[var(--bg-surface)] border border-[var(--line)] text-xs font-mono text-[var(--text)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] hover:text-[var(--text)] cursor-pointer"
                   aria-label="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -343,75 +352,75 @@ export function ForumCategory() {
 
           {/* Threads Listing / Empty State */}
           {threads.length === 0 ? (
-            <div className="text-center py-20 border border-border rounded-xl bg-foreground/[0.01] space-y-5">
-              <div className="w-12 h-12 rounded-full border border-border bg-foreground/[0.02] flex items-center justify-center mx-auto text-foreground/40">
-                <MessageSquare className="w-5 h-5" />
+            <div className="text-center py-20 border-y border-[var(--line)] space-y-5">
+              <div className="w-10 h-10 border border-[var(--accent)]/30 bg-[var(--accent)]/10 flex items-center justify-center mx-auto text-[var(--accent-bright)]">
+                <MessageSquare className="w-4 h-4" />
               </div>
               <div className="space-y-1.5 max-w-md mx-auto">
-                <h3 className="text-base font-semibold text-foreground">
+                <h3 className="text-base font-semibold text-[var(--text)]">
                   No discussions in this channel yet
                 </h3>
-                <p className="text-xs text-foreground/50 font-mono leading-relaxed">
+                <p className="text-xs text-[var(--text-muted)] font-mono leading-relaxed">
                   Be the first operator to initiate a discussion, ask a question, or share an architecture setup in {categoryInfo.name}.
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   onClick={() => setShowNewThreadModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-foreground text-background font-mono text-xs font-medium hover:bg-foreground/90 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--accent)] text-white font-mono text-xs font-medium hover:bg-[var(--accent-bright)] transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Start First Discussion</span>
                 </button>
-                <Link
-                  to="/resources/docs"
-                  className="px-4 py-2 rounded-lg border border-border font-mono text-xs text-foreground/70 hover:bg-foreground/5 transition-colors"
+                <LocaleLink
+                  to="/docs"
+                  className="px-4 py-2 border border-[var(--line)] font-mono text-xs text-[var(--text-muted)] hover:border-[var(--accent-bright)] transition-colors"
                 >
                   View Documentation
-                </Link>
+                </LocaleLink>
               </div>
             </div>
           ) : filteredThreads.length === 0 ? (
-            <div className="text-center py-16 border border-border rounded-xl bg-foreground/[0.01] space-y-3">
-              <p className="text-sm font-semibold text-foreground">No threads match your search</p>
-              <p className="text-xs text-foreground/50 font-mono">
-                No discussions matching "{searchQuery}".
+            <div className="text-center py-16 border-y border-[var(--line)] space-y-3">
+              <p className="text-sm font-semibold text-[var(--text)]">No threads match your search</p>
+              <p className="text-xs text-[var(--text-muted)] font-mono">
+                No discussions matching &ldquo;{searchQuery}&rdquo;.
               </p>
               <button
                 onClick={() => setSearchQuery('')}
-                className="px-3.5 py-1.5 border border-border text-xs font-mono rounded hover:bg-foreground/5 transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 border border-[var(--line)] text-xs font-mono hover:border-[var(--accent-bright)] transition-colors cursor-pointer"
               >
                 Clear search
               </button>
             </div>
           ) : (
-            <div className="border border-border rounded-xl divide-y divide-border overflow-hidden bg-foreground/[0.01]">
+            <div className="border-t border-b border-[var(--line)] divide-y divide-[var(--line)]">
               {filteredThreads.map((thread) => (
-                <Link
+                <LocaleLink
                   key={thread.id}
                   to={`/resources/forum/${category}/${thread.id}`}
-                  className="p-5 hover:bg-foreground/[0.02] transition-colors flex items-center justify-between gap-6 group block"
+                  className="py-5 transition-colors flex items-center justify-between gap-6 group block"
                 >
                   <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5">
-                      <h3 className="text-sm font-semibold text-foreground group-hover:underline truncate">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent-bright)] transition-colors truncate">
                         {thread.title}
                       </h3>
                       {thread.status === 'solved' && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-500 uppercase tracking-wider shrink-0">
                           <CheckCircle2 className="w-3 h-3" />
                           Solved
                         </span>
                       )}
                       {thread.status === 'locked' && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-foreground/5 text-foreground/40 border border-foreground/10 shrink-0">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[var(--text-faint)] uppercase tracking-wider shrink-0">
                           <Lock className="w-3 h-3" />
                           Locked
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-foreground/40">
-                      <span className="flex items-center gap-1 text-foreground/60">
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-[var(--text-faint)]">
+                      <span className="flex items-center gap-1 text-[var(--text-muted)]">
                         <User className="w-3 h-3" />
                         {thread.author}
                       </span>
@@ -428,11 +437,13 @@ export function ForumCategory() {
                     </div>
                   </div>
 
-                  <div className="text-right text-xs font-mono text-foreground/40 shrink-0">
-                    <div>{thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}</div>
-                    <div className="text-[11px] text-foreground/30">{thread.viewCount} views</div>
+                  <div className="text-right text-xs font-mono text-[var(--text-muted)] shrink-0 tabular-nums">
+                    <div>
+                      {thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}
+                    </div>
+                    <div className="text-[11px] text-[var(--text-faint)]">{thread.viewCount} views</div>
                   </div>
-                </Link>
+                </LocaleLink>
               ))}
             </div>
           )}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PageHero } from '../components/Shared';
+import { PageHero, LegalDocumentLayout } from '../components/Shared';
 import { LocaleLink as Link } from '../i18n/LocaleLink';
 
 export const HostingTerms = () => {
@@ -15,9 +15,8 @@ export const HostingTerms = () => {
         align="left"
       />
 
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-4xl">
-          <div className="flex flex-col gap-16 text-foreground/70 font-light leading-relaxed">
+      <LegalDocumentLayout>
+          <div className="flex flex-col gap-16 text-[var(--text-muted)] leading-relaxed">
 
             <div>
               <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">Version</div>
@@ -390,8 +389,7 @@ export const HostingTerms = () => {
             </div>
 
           </div>
-        </div>
-      </section>
+      </LegalDocumentLayout>
     </div>
   );
 };

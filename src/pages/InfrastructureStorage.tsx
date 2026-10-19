@@ -1,164 +1,293 @@
-import { useEffect, useState } from 'react';
-import { PageHero, Breadcrumbs } from '../components/Shared';
-import { motion } from 'framer-motion';
-import { useLanguage } from '../i18n';
-import { LocaleLink } from '../i18n/LocaleLink';
-import { SeoHead } from '../components/SeoHead';
+import { PageHero, SectionHeader, CTABlock, CatalogErrorState } from '../components/Shared';
+import { WaitlistForm } from '../components/WaitlistForm';
+import { HardDrive, Lock, Terminal, Shield, Check, ArrowRight } from 'lucide-react';
+import { LocaleLink, useTranslation } from '../i18n/context';
+import { useCatalogProducts } from '../lib/catalog';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
-export const InfrastructureStorage = () => {
-  const { t } = useLanguage();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+export function InfrastructureStorage() {
+  const { locale } = useTranslation();
+  const isDe = locale === 'de';
+  const { products: storagePlans, loading, error, reload } = useCatalogProducts('storage');
 
-  useEffect(() => {
-    fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/storefront/catalog')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data.filter((p: any) => {
-          const cat = (p.category || '').toLowerCase();
-          return cat.includes('storage') || cat.includes('sftp');
-        }));
-        setLoadingProducts(false);
-      })
-      .catch(() => setLoadingProducts(false));
-  }, []);
+  useDocumentMeta({
+    title: isDe
+      ? 'SFTP-Speicher — Verschlüsselter Offsite-Backup-Speicher | VaultScope'
+      : 'SFTP Storage — Encrypted Offsite Backup Storage | VaultScope',
+    description: isDe
+      ? 'Chroot-isolierter, ZFS-gestützter SFTP-, SCP-, rsync-, BorgBackup- und Restic-Speicher in Europa.'
+      : 'Chroot-isolated, ZFS-backed SFTP, SCP, rsync, BorgBackup, and Restic storage in Europe.',
+  });
+
+  const features = isDe
+    ? [
+        {
+          icon: <Terminal className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'Volle Tool-Kompatibilität',
+          desc: 'Funktioniert direkt mit rsync, BorgBackup, Restic, Duplicacy, rclone, FileZilla, WinSCP und jedem OpenSSH-kompatiblen Client.',
+        },
+        {
+          icon: <Lock className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'Isolierte Chroot-Umgebung',
+          desc: 'Jedes Konto wird auf Systemebene strikt in einem eigenen Verzeichnisbaum isoliert. Keine geteilten Dateisystempfade zwischen Mandanten.',
+        },
+        {
+          icon: <HardDrive className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'Redundante ZFS-Speicherpools',
+          desc: 'Daten werden auf Enterprise-Festplatten im ZFS-Verbund mit kontinuierlicher Prüfsummenvalidierung gegen Bit-Rot gespeichert.',
+        },
+        {
+          icon: <Shield className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'SSH-Key-Authentifizierung',
+          desc: 'Hinterlegen Sie Ed25519- oder RSA-Schlüssel für passwortlose, automatisierte Cron-Backups und verschlüsselte Offsite-Archive.',
+        },
+      ]
+    : [
+        {
+          icon: <Terminal className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'Broad Tool Compatibility',
+          desc: 'Works out of the box with rsync, BorgBackup, Restic, Duplicacy, rclone, FileZilla, WinSCP, and any OpenSSH-compatible client.',
+        },
+        {
+          icon: <Lock className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'Isolated Chroot Environment',
+          desc: 'Each storage account is strictly isolated to its own directory tree at the OS level. Zero shared filesystem paths across tenants.',
+        },
+        {
+          icon: <HardDrive className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'Redundant ZFS Storage Pools',
+          desc: 'Backed by enterprise drives in redundant ZFS pools with continuous end-to-end checksum verification against silent bit-rot.',
+        },
+        {
+          icon: <Shield className="w-4 h-4 text-[var(--accent-bright)]" />,
+          title: 'SSH Key Authentication',
+          desc: 'Deploy Ed25519 or RSA public keys for passwordless, automated cron backups and client-side encrypted offsite archives.',
+        },
+      ];
+
+  const useCases = isDe
+    ? [
+        {
+          title: 'Automatisierte Server-Backups',
+          desc: 'Sichern Sie Proxmox-VMs, Datenbank-Dumps und Konfigurationsverzeichnisse automatisiert per Cron-Job und BorgBackup oder Restic.',
+        },
+        {
+          title: 'Verschlüsselte Offsite-Archive',
+          desc: 'Nutzen Sie clientseitige Verschlüsselung vor dem Transfer, um geschäftskritische Daten DSGVO-konform außerhalb Ihrer Primärinfrastruktur vorzuhalten.',
+        },
+        {
+          title: 'Medien- & Artefakt-Repository',
+          desc: 'Zentraler Speicherort für Build-Artefakte, Container-Tarballs, große Datensätze und statische Assets mit direktem SFTP/rsync-Zugriff.',
+        },
+      ]
+    : [
+        {
+          title: 'Automated Server Backups',
+          desc: 'Stream Proxmox VM snapshots, database dumps, and configuration directories on scheduled cron jobs via BorgBackup or Restic.',
+        },
+        {
+          title: 'Encrypted Offsite Archives',
+          desc: 'Combine client-side encryption with isolated European storage to maintain GDPR-compliant offsite disaster recovery copies.',
+        },
+        {
+          title: 'Artifact & Media Repository',
+          desc: 'Centralized vault for build artifacts, release archives, large datasets, and static assets accessible via standard SFTP and rsync.',
+        },
+      ];
 
   return (
-    <div className="flex flex-col w-full">
-      <SeoHead
-        title="SFTP & NVMe Cloud Storage"
-        description="High-performance SFTP storage for your backup, clipping software, and automated file workflows. European data sovereignty, unmetered bandwidth, and zero egress fees."
-        path="/infrastructure/storage"
-      />
-      <div className="container mx-auto px-6 lg:px-12 pt-32">
-        <Breadcrumbs items={[{ label: t.nav.infrastructure, href: '/infrastructure/' }, { label: 'SFTP Storage' }]} />
-      </div>
-
+    <div className="bg-[var(--bg)] text-[var(--fg)]">
       <PageHero
-        eyebrow="HIGH-AVAILABILITY FILE TRANSFER"
-        title="SFTP Storage"
-        description="Scalable, secure SFTP storage for seamless file sharing and software integrations."
-        primaryCta="Get Started"
-        primaryLink="/dashboard/sftp"
-        align="left"
+        title={
+          isDe
+            ? 'Verschlüsselter *SFTP-* & Backup-Speicher.'
+            : 'Encrypted *SFTP* & Backup Storage.'
+        }
+        subtitle={
+          isDe
+            ? 'Dedizierter, chroot-isolierter Netzwerkspeicher auf ZFS-Basis. Entwickelt für automatisierte Offsite-Backups mit BorgBackup, Restic, rsync und rclone.'
+            : 'Dedicated, chroot-isolated network storage backed by redundant ZFS pools. Built for automated offsite backups with BorgBackup, Restic, rsync, and rclone.'
+        }
+        primaryCta={{
+          label: isDe ? 'Speicher-Tarife ansehen' : 'View Storage Tiers',
+          href: '#plans',
+        }}
+        secondaryCta={{
+          label: isDe ? 'Anfrage stellen' : 'Contact Engineering',
+          href: '/company/contact/',
+        }}
       />
 
-      {/* Use cases */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-16"
-          >
-            <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-6">Use Cases</p>
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground">
-              Designed for modern workflows
-            </h2>
-          </motion.div>
+      {/* Plans Section */}
+      <section id="plans" className="py-12 lg:py-16">
+        <div className="vs-container">
+          <SectionHeader
+            title={isDe ? 'SFTP-Speicherpakete' : 'SFTP Storage Plans'}
+            subtitle={
+              isDe
+                ? 'Transparente monatliche Preise inklusive Traffic für Ihre Backups.'
+                : 'Transparent monthly pricing with generous transfer allowances for automated backups.'
+            }
+          />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-border">
-            {[
-              { title: "Clipping Software", desc: "Perfect for external clipping software integrations requiring fast, secure uploads." },
-              { title: "Automated Backups", desc: "Use our SFTP service as a target for your automated server backups." },
-              { title: "Secure File Sharing", desc: "Manage and share files using our built-in web file manager." },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className={`p-8 ${i < 2 ? 'border-b lg:border-b-0 lg:border-r border-border' : ''}`}
-              >
-                <h3 className="text-base font-medium text-foreground uppercase tracking-tight mb-3">{item.title}</h3>
-                <p className="text-sm text-foreground/40 font-light leading-relaxed">{item.desc}</p>
-              </motion.div>
+          {loading ? (
+            <div className="py-6 border-t border-b border-[var(--line)]">
+              <p className="text-sm text-[var(--fg-muted)] font-mono">
+                {isDe ? 'Speicher-Katalog wird geladen...' : 'Loading storage catalog...'}
+              </p>
+            </div>
+          ) : error ? (
+            <CatalogErrorState
+              locale={locale}
+              productLabel={isDe ? 'SFTP-Speicherpakete' : 'SFTP Storage Plans'}
+              error={error}
+              onRetry={reload}
+              fallbackHref="/company/contact/"
+              fallbackLabel={isDe ? 'Anfrage stellen' : 'Contact Engineering'}
+            />
+          ) : storagePlans.length > 0 ? (
+            <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+              {storagePlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="py-6 grid lg:grid-cols-12 gap-8 items-center"
+                >
+                  <div className="lg:col-span-4">
+                    <h3 className="text-lg font-semibold text-[var(--fg)] tracking-[-0.02em]">
+                      {plan.name}
+                    </h3>
+                    <p className="font-mono text-xs text-[var(--accent-bright)] mt-1">
+                      {plan.storage && plan.storage !== '—' ? plan.storage : 'ZFS SFTP Vault'}
+                    </p>
+                    {plan.description && (
+                      <p className="text-sm text-[var(--fg-muted)] leading-relaxed mt-2">
+                        {plan.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="lg:col-span-5">
+                    <div className="grid sm:grid-cols-2 gap-2.5">
+                      {[
+                        plan.storage && plan.storage !== '—' && `${isDe ? 'Kapazität' : 'Capacity'}: ${plan.storage}`,
+                        plan.bandwidth && plan.bandwidth !== '—' && `${isDe ? 'Transfer' : 'Bandwidth'}: ${plan.bandwidth}`,
+                        isDe ? 'SFTP / SCP / rsync über SSH' : 'SFTP / SCP / rsync over SSH',
+                        isDe ? 'Chroot-Verzeichnisisolation' : 'Chroot directory isolation',
+                        ...plan.features,
+                      ]
+                        .filter((item): item is string => Boolean(item))
+                        .slice(0, 6)
+                        .map((feat, idx) => (
+                          <div key={idx} className="flex items-start gap-2 text-xs text-[var(--fg-muted)]">
+                            <Check className="w-3.5 h-3.5 text-[var(--accent-bright)] shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-3 flex sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4">
+                    <div className="lg:text-right">
+                      <div className="font-mono text-2xl font-semibold text-[var(--fg)] tabular-nums">
+                        €{plan.grossMonthly.toFixed(2)}
+                      </div>
+                      <div className="font-mono text-[11px] text-[var(--fg-muted)] tabular-nums">
+                        €{plan.netMonthly.toFixed(2)} {isDe ? 'netto / Mo.' : 'net / mo'}
+                      </div>
+                    </div>
+
+                    <LocaleLink
+                      to={`/dashboard/new?product=${encodeURIComponent(plan.id)}`}
+                      className="btn-primary text-xs h-9 px-4"
+                    >
+                      {isDe ? 'Speicher bereitstellen' : 'Deploy Storage'}
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </LocaleLink>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-12 gap-10 items-start pt-2">
+              <div className="lg:col-span-5">
+                <h3 className="text-lg font-semibold text-[var(--fg)] tracking-[-0.02em] mb-2">
+                  {isDe
+                    ? 'SFTP-Speicher-Cluster wird für den öffentlichen Verkauf vorbereitet'
+                    : 'SFTP Storage Cluster Preparing for Public Allocation'}
+                </h3>
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
+                  {isDe
+                    ? 'Tragen Sie sich in die Warteliste ein, um sofort benachrichtigt zu werden, sobald neue ZFS-SFTP-Speicher-Kontingente freigeschaltet werden.'
+                    : 'Join the waitlist to be notified immediately when new ZFS SFTP storage allocations open.'}
+                </p>
+              </div>
+              <div className="lg:col-span-7">
+                <WaitlistForm productSlug="sftp-storage" />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Architecture & Protocol Compatibility */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <SectionHeader
+            title={
+              isDe
+                ? 'Entwickelt für zuverlässige Offsite-Datensicherung'
+                : 'Engineered for Dependable Offsite Data Protection'
+            }
+            subtitle={
+              isDe
+                ? 'Keine proprietären Agenten erforderlich. Nutzen Sie bewährte Open-Source-Backup-Werkzeuge über Standard-SSH-Protokolle.'
+                : 'No proprietary agents required. Use proven open-source backup tools over standard SSH protocols.'
+            }
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
+            {features.map((f) => (
+              <div key={f.title} className="space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="shrink-0">{f.icon}</span>
+                  <h3 className="text-base font-semibold text-[var(--fg)]">{f.title}</h3>
+                </div>
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">{f.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Tiers */}
-      <section className="py-24 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">Pricing</p>
-              <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
-                Transparent Storage Plans
-              </h2>
-              <p className="text-foreground/50 font-light text-lg">
-                Start with a free month, upgrade automatically when you need more space.
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {loadingProducts ? (
-              <div className="col-span-2 text-center text-foreground/50 py-12">Loading storage plans...</div>
-            ) : products.length === 0 ? (
-              <div className="col-span-2 text-center text-foreground/50 py-12">No storage plans available at the moment.</div>
-            ) : products.map((plan, i) => {
-              const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
-              const specs = plan.specs as Record<string, any>;
-              const hasTrial = (plan.trial_days && plan.trial_days > 0) || price === 0;
-              const trialBadge = plan.trial_days && plan.trial_days > 0 ? `${plan.trial_days}-Day FREE Trial` : '1st Month FREE';
-              
-              return (
-                <motion.div 
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className={`border ${hasTrial ? 'border-blue-600/50' : 'border-border'} p-8 flex flex-col hover:border-foreground/30 transition-colors relative`}
-                >
-                  {hasTrial && (
-                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      {trialBadge}
-                    </div>
-                  )}
-                  <h3 className="text-xl font-medium tracking-tight mb-2">{plan.name}</h3>
-                  <div className="text-3xl font-medium mb-6">
-                    €{(price * 1.19).toFixed(2)}<span className="text-sm text-foreground/40 font-light"> / {plan.billing_cycle === 'hourly' ? 'hr' : 'mo'} incl. VAT</span>
-                  </div>
-                  
-                  <div className="text-sm text-foreground/60 mb-8 border-t border-border pt-6 flex-1 space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-foreground/50">Storage Capacity</span>
-                      <span className="text-foreground text-right">{specs?.storage_gb || 'Scalable'} GB</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-foreground/50">File Manager</span>
-                      <span className="text-foreground text-right">Included</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-foreground/50">Connection</span>
-                      <span className="text-foreground text-right">SFTP / HTTPS</span>
-                    </div>
-                  </div>
-                  
-                  <LocaleLink to="/dashboard/sftp" className="mt-auto">
-                    <button className={`w-full border py-2.5 text-sm font-medium transition-colors ${
-                      hasTrial ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700' : 'border-border hover:bg-foreground hover:text-background'
-                    }`}>
-                      {hasTrial ? 'Start Free Trial' : 'Subscribe Now'}
-                    </button>
-                  </LocaleLink>
-                </motion.div>
-              );
-            })}
+      {/* Use Cases */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <SectionHeader
+            title={isDe ? 'Typische Einsatzszenarien' : 'Common Deployment Scenarios'}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {useCases.map((u) => (
+              <div key={u.title}>
+                <h3 className="text-base font-semibold text-[var(--fg)] mb-2">{u.title}</h3>
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">{u.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
+
+      <CTABlock
+        title={isDe ? 'Benötigen Sie größere Speicherkapazitäten?' : 'Need Larger Storage Allocations?'}
+        subtitle={
+          isDe
+            ? 'Für dedizierte ZFS-Storage-Server oder individuelle Multi-Terabyte-Archive beraten wir Sie gerne direkt.'
+            : 'For dedicated ZFS storage servers or custom multi-terabyte archive allocations, talk directly with our engineering team.'
+        }
+        primaryLabel={isDe ? 'Kontakt aufnehmen' : 'Contact Engineering'}
+        primaryHref="/company/contact/"
+        secondaryLabel={isDe ? 'Alle Infrastruktur-Produkte' : 'All Infrastructure Products'}
+        secondaryHref="/infrastructure/"
+      />
     </div>
   );
-};
+}
+export default InfrastructureStorage;

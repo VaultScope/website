@@ -1,15 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Download, 
-  Settings, 
-  RefreshCw, 
-  ArrowRight, 
-  Layers, 
-  Users, 
-  Activity, 
-  Key 
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { DocHeader } from './components/DocHeader';
 import { DocPagination } from './components/DocPagination';
 import { Callout } from './components/Callout';
@@ -39,7 +30,6 @@ export const DocsCamos = () => {
           { label: 'CAMOS' },
         ]}
         title="CAMOS (Admin Panel)"
-        badge={{ label: 'Operations Suite' }}
         description="The internal management portal empowering engineering and support teams to control infrastructure connectors, monitor job queues, and govern billing operations."
         projectKey="camos"
         tocItems={TOC}
@@ -48,69 +38,63 @@ export const DocsCamos = () => {
         <div className="space-y-12 text-sm leading-relaxed">
           {/* Ecosystem Role */}
           <section id="overview" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Ecosystem Role</h2>
-            <p className="text-foreground/80">
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">Ecosystem Role</h2>
+            <p className="text-[var(--text-secondary)]">
               CAMOS serves as the dedicated internal control plane for VaultScope operators, staff, and system administrators. It interfaces directly with administrative endpoints in VAMOS to oversee customer accounts, cloud provider connectors, and automated billing.
             </p>
-            <p className="text-foreground/80">
+            <p className="text-[var(--text-secondary)]">
               Unlike the public storefront, CAMOS requires elevated Authentik credentials belonging to the administrator group and communicates over mutual TLS or isolated management networks.
             </p>
           </section>
 
           {/* Documentation Guides */}
           <section id="subpages" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Documentation Guides</h2>
-            <div className="grid sm:grid-cols-3 gap-4 not-prose">
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">Documentation Guides</h2>
+            <div className="grid sm:grid-cols-3 border border-[var(--line)] divide-y sm:divide-y-0 sm:divide-x divide-[var(--line)] bg-[var(--bg-card)] not-prose">
               <Link
                 to={getPath('/docs/projects/camos/install')}
-                className="p-4 rounded-lg border border-border bg-foreground/[0.01] hover:border-foreground/30 hover:bg-foreground/[0.03] transition-all flex flex-col justify-between group"
+                className="p-5 hover:bg-[var(--bg-elevated)] transition-colors flex flex-col justify-between group"
               >
                 <div>
-                  <div className="w-8 h-8 rounded-md bg-foreground/5 flex items-center justify-center mb-3">
-                    <Download className="w-4 h-4 text-foreground" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1 group-hover:underline">Installation</h3>
-                  <p className="text-xs text-foreground/60 leading-relaxed">
+                  <span className="text-[11px] font-mono uppercase tracking-[0.06em] text-[var(--text-muted)] block mb-2">01 / Setup</span>
+                  <h3 className="text-sm font-semibold text-[var(--text)] mb-1 group-hover:underline">Installation</h3>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     Automated script, Docker with Nginx, or local development server.
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1 text-xs font-mono text-foreground/50 group-hover:text-foreground mt-4">
+                <span className="inline-flex items-center gap-1 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--text)] mt-4">
                   View guide <ArrowRight className="w-3 h-3" />
                 </span>
               </Link>
 
               <Link
                 to={getPath('/docs/projects/camos/config')}
-                className="p-4 rounded-lg border border-border bg-foreground/[0.01] hover:border-foreground/30 hover:bg-foreground/[0.03] transition-all flex flex-col justify-between group"
+                className="p-5 hover:bg-[var(--bg-elevated)] transition-colors flex flex-col justify-between group"
               >
                 <div>
-                  <div className="w-8 h-8 rounded-md bg-foreground/5 flex items-center justify-center mb-3">
-                    <Settings className="w-4 h-4 text-foreground" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1 group-hover:underline">Configuration</h3>
-                  <p className="text-xs text-foreground/60 leading-relaxed">
+                  <span className="text-[11px] font-mono uppercase tracking-[0.06em] text-[var(--text-muted)] block mb-2">02 / Parameters</span>
+                  <h3 className="text-sm font-semibold text-[var(--text)] mb-1 group-hover:underline">Configuration</h3>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     Authentik OIDC client configuration and RBAC permissions.
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1 text-xs font-mono text-foreground/50 group-hover:text-foreground mt-4">
+                <span className="inline-flex items-center gap-1 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--text)] mt-4">
                   View guide <ArrowRight className="w-3 h-3" />
                 </span>
               </Link>
 
               <Link
                 to={getPath('/docs/projects/camos/lifecycle')}
-                className="p-4 rounded-lg border border-border bg-foreground/[0.01] hover:border-foreground/30 hover:bg-foreground/[0.03] transition-all flex flex-col justify-between group"
+                className="p-5 hover:bg-[var(--bg-elevated)] transition-colors flex flex-col justify-between group"
               >
                 <div>
-                  <div className="w-8 h-8 rounded-md bg-foreground/5 flex items-center justify-center mb-3">
-                    <RefreshCw className="w-4 h-4 text-foreground" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1 group-hover:underline">Lifecycle & Upgrades</h3>
-                  <p className="text-xs text-foreground/60 leading-relaxed">
+                  <span className="text-[11px] font-mono uppercase tracking-[0.06em] text-[var(--text-muted)] block mb-2">03 / Operations</span>
+                  <h3 className="text-sm font-semibold text-[var(--text)] mb-1 group-hover:underline">Lifecycle & Upgrades</h3>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     Zero-downtime bundle deployments and uninstallation steps.
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1 text-xs font-mono text-foreground/50 group-hover:text-foreground mt-4">
+                <span className="inline-flex items-center gap-1 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--text)] mt-4">
                   View guide <ArrowRight className="w-3 h-3" />
                 </span>
               </Link>
@@ -119,44 +103,40 @@ export const DocsCamos = () => {
 
           {/* Core Capabilities */}
           <section id="capabilities" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Core Capabilities</h2>
-            <div className="grid sm:grid-cols-2 gap-4 not-prose">
-              <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-1.5">
-                <div className="flex items-center gap-2 text-foreground font-medium text-sm">
-                  <Layers className="w-4 h-4 text-foreground/60" />
-                  <span>Product & Catalog Management</span>
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">Core Capabilities</h2>
+            <div className="grid sm:grid-cols-2 border border-[var(--line)] divide-y divide-[var(--line)] bg-[var(--bg-card)] not-prose">
+              <div className="p-5 space-y-1.5 sm:border-r sm:border-[var(--line)]">
+                <div className="text-[var(--text)] font-medium text-sm">
+                  Product & Catalog Management
                 </div>
-                <p className="text-xs text-foreground/60 leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   Configure compute plans, RAM, vCPU limits, bandwidth quotas, pricing tiers, and custom order form fields with live preview.
                 </p>
               </div>
 
-              <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-1.5">
-                <div className="flex items-center gap-2 text-foreground font-medium text-sm">
-                  <Activity className="w-4 h-4 text-foreground/60" />
-                  <span>Job Queue Inspection & Retry</span>
+              <div className="p-5 space-y-1.5">
+                <div className="text-[var(--text)] font-medium text-sm">
+                  Job Queue Inspection & Retry
                 </div>
-                <p className="text-xs text-foreground/60 leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   Real-time visibility into asynchronous provisioning tasks, error logs, and one-click manual retry for failed cloud connector operations.
                 </p>
               </div>
 
-              <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-1.5">
-                <div className="flex items-center gap-2 text-foreground font-medium text-sm">
-                  <Users className="w-4 h-4 text-foreground/60" />
-                  <span>Customer 360 & Service Provisioning</span>
+              <div className="p-5 space-y-1.5 sm:border-r sm:border-[var(--line)]">
+                <div className="text-[var(--text)] font-medium text-sm">
+                  Customer 360 & Service Provisioning
                 </div>
-                <p className="text-xs text-foreground/60 leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   Deep customer management including invoice histories, active services, manual suspension/termination, and IP address allocation audits.
                 </p>
               </div>
 
-              <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-1.5">
-                <div className="flex items-center gap-2 text-foreground font-medium text-sm">
-                  <Key className="w-4 h-4 text-foreground/60" />
-                  <span>Cloud Connectors Dashboard</span>
+              <div className="p-5 space-y-1.5">
+                <div className="text-[var(--text)] font-medium text-sm">
+                  Cloud Connectors Dashboard
                 </div>
-                <p className="text-xs text-foreground/60 leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   Configure upstream API tokens for Hetzner Cloud, OVH, and Proxmox VE with automatic AES-256-GCM encryption verification.
                 </p>
               </div>
@@ -165,36 +145,36 @@ export const DocsCamos = () => {
 
           {/* Technology Stack */}
           <section id="tech-stack" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Technology Stack</h2>
-            <div className="border border-border rounded-lg overflow-hidden not-prose">
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">Technology Stack</h2>
+            <div className="border border-[var(--line)] overflow-x-auto not-prose">
               <table className="w-full text-xs text-left">
-                <thead className="bg-foreground/[0.03] border-b border-border text-foreground/60 font-mono">
+                <thead className="bg-[var(--bg-elevated)] border-b border-[var(--line)] text-[var(--text-muted)] font-mono uppercase tracking-[0.06em]">
                   <tr>
                     <th className="px-4 py-2.5">Component</th>
                     <th className="px-4 py-2.5">Technology</th>
                     <th className="px-4 py-2.5">Role</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border text-foreground/80">
+                <tbody className="divide-y divide-[var(--line)] text-[var(--text-secondary)] bg-[var(--bg-card)]">
                   <tr>
-                    <td className="px-4 py-2.5 font-medium">Framework</td>
-                    <td className="px-4 py-2.5 font-mono text-foreground/60">React 19</td>
-                    <td className="px-4 py-2.5 text-foreground/60">Modern component architecture with Vite bundler.</td>
+                    <td className="px-4 py-2.5 font-medium text-[var(--text)]">Framework</td>
+                    <td className="px-4 py-2.5 font-mono">React 19</td>
+                    <td className="px-4 py-2.5">Modern component architecture with Vite bundler.</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2.5 font-medium">Charts & Telemetry</td>
-                    <td className="px-4 py-2.5 font-mono text-foreground/60">Recharts</td>
-                    <td className="px-4 py-2.5 text-foreground/60">Real-time revenue, job throughput, and active instance charts.</td>
+                    <td className="px-4 py-2.5 font-medium text-[var(--text)]">Charts & Telemetry</td>
+                    <td className="px-4 py-2.5 font-mono">Recharts</td>
+                    <td className="px-4 py-2.5">Real-time revenue, job throughput, and active instance charts.</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2.5 font-medium">Rich Editor</td>
-                    <td className="px-4 py-2.5 font-mono text-foreground/60">TipTap</td>
-                    <td className="px-4 py-2.5 text-foreground/60">WYSIWYG editor for email templates, notifications, and runbooks.</td>
+                    <td className="px-4 py-2.5 font-medium text-[var(--text)]">Rich Editor</td>
+                    <td className="px-4 py-2.5 font-mono">TipTap</td>
+                    <td className="px-4 py-2.5">WYSIWYG editor for email templates, notifications, and runbooks.</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2.5 font-medium">Web Server</td>
-                    <td className="px-4 py-2.5 font-mono text-foreground/60">Nginx Alpine</td>
-                    <td className="px-4 py-2.5 text-foreground/60">High-concurrency static delivery with IP allowlisting rules.</td>
+                    <td className="px-4 py-2.5 font-medium text-[var(--text)]">Web Server</td>
+                    <td className="px-4 py-2.5 font-mono">Nginx Alpine</td>
+                    <td className="px-4 py-2.5">High-concurrency static delivery with IP allowlisting rules.</td>
                   </tr>
                 </tbody>
               </table>
@@ -203,12 +183,12 @@ export const DocsCamos = () => {
 
           {/* Security */}
           <section id="security" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Security & Access Control</h2>
-            <p className="text-foreground/80">
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">Security & Access Control</h2>
+            <p className="text-[var(--text-secondary)]">
               Access to CAMOS should be restricted at the network layer using IP allowlisting, VPN access, or Cloudflare Zero Trust. Authentik enforces required group membership before granting access tokens.
             </p>
             <Callout type="tip" title="Network Isolation">
-              We advise running CAMOS behind an internal management domain (e.g. <code className="font-mono text-foreground">admin.internal.vaultscope.de</code>) accessible only over Tailscale or WireGuard VPN.
+              We advise running CAMOS behind an internal management domain (e.g. <code className="font-mono text-[var(--text)]">admin.internal.vaultscope.de</code>) accessible only over Tailscale or WireGuard VPN.
             </Callout>
           </section>
 

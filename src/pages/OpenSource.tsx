@@ -1,18 +1,13 @@
-import { PageHero, Button, Breadcrumbs } from '../components/Shared';
+import { PageHero, Button } from '../components/Shared';
 import { ExternalLink, GitBranch } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n';
 import { SeoHead } from '../components/SeoHead';
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-// Technologies VaultScope uses — not software VaultScope develops.
 
 const INFRA_STACK = [
   {
     name: 'Authentik',
     category: 'Identity & Security',
-    desc: "Enterprise-grade identity provider used to secure both customer and staff access via Passkeys (WebAuthn), SSO, and granular authorization policies.",
+    desc: 'Enterprise-grade identity provider used to secure both customer and staff access via Passkeys (WebAuthn), SSO, and granular authorization policies.',
     url: 'https://goauthentik.io',
   },
   {
@@ -42,7 +37,7 @@ const INFRA_STACK = [
   {
     name: 'Listmonk',
     category: 'Mailing & Newsletters',
-    desc: "Self-hosted newsletter and mailing list manager. Handles waitlist subscriptions, product announcements, and transactional email campaigns.",
+    desc: 'Self-hosted newsletter and mailing list manager. Handles waitlist subscriptions, product announcements, and transactional email campaigns.',
     url: 'https://listmonk.app',
   },
   {
@@ -54,7 +49,7 @@ const INFRA_STACK = [
   {
     name: 'Proxmox',
     category: 'Virtualization',
-    desc: 'Open-source virtualization platform used for VaultScope\'s internal infrastructure and service management.',
+    desc: "Open-source virtualization platform used for VaultScope's internal infrastructure and service management.",
     url: 'https://www.proxmox.com',
   },
   {
@@ -80,161 +75,146 @@ const DEV_STACK = [
   },
 ];
 
-// Software VaultScope develops — distinct from the technologies above.
-
 const VS_PROJECTS = [
   {
-    tag: 'Discord Platform',
+    role: 'Discord Platform',
     title: 'Pegasus',
     desc: 'A full-featured Discord community management platform. Moderation, economy, XP leveling, ticket system, giveaways, and a complete web dashboard. Source-available under the PolyForm Noncommercial license.',
-    tags: ['PolyForm Noncommercial', 'TypeScript', 'discord.js v14'],
+    stack: 'PolyForm Noncommercial · TypeScript · discord.js v14',
     repoUrl: 'https://github.com/semi-constructor/pegasus',
   },
   {
-    tag: 'Web Dashboard',
+    role: 'Web Dashboard',
     title: 'Pegasus Dashboard',
-    desc: 'The web management interface for Pegasus. Guild management, module configuration, real-time analytics, and public leaderboards. Built with Next.js. Source-available under the PolyForm Noncommercial license.',
-    tags: ['PolyForm Noncommercial', 'TypeScript', 'Next.js'],
+    desc: 'The web management interface for Pegasus. Guild management, module configuration, real-time analytics, and public leaderboards. Built with Next.js.',
+    stack: 'PolyForm Noncommercial · TypeScript · Next.js',
     repoUrl: 'https://github.com/semi-constructor/pegasus-dashboard',
   },
   {
-    tag: 'API Gateway',
-    title: 'Vamos',
-    desc: 'VaultScope API Management & Operations System. The robust API Layer written in Rust that handles communication between CAMOS, the VaultScope Website, and external APIs.',
-    tags: ['AGPL 3.0', 'Rust', 'OpenSource'],
+    role: 'API Gateway',
+    title: 'VAMOS',
+    desc: 'VaultScope API Management & Operations System. The Rust API layer that handles communication between CAMOS, the VaultScope Storefront, and upstream infrastructure providers.',
+    stack: 'AGPL-3.0 · Rust · Axum · PostgreSQL',
     repoUrl: 'https://github.com/VaultScope/vamos',
   },
   {
-    tag: 'Internal Dashboard',
-    title: 'Camos',
-    desc: 'Client Administration & Management Operations System. The primary control plane for billing, customer support, infrastructure API integrations, and staff RBAC.',
-    tags: ['OpenSource', 'React 18', 'Vite', 'Tailwind CSS'],
+    role: 'Control Plane',
+    title: 'CAMOS',
+    desc: 'Client Administration & Management Operations System. The operator control plane for billing, customer support, infrastructure API integrations, and staff RBAC.',
+    stack: 'Open Source · React · TypeScript · Vite',
     repoUrl: 'https://github.com/VaultScope/camos',
   },
 ];
-
-// ─── Page ────────────────────────────────────────────────────────────────────
 
 export const OpenSource = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full bg-[var(--bg-primary)] text-[var(--text)]">
       <SeoHead
         title="Open Source Commitment"
         description="Explore our open-source repositories, architectural standards, and public code contributions."
         path="/company/open-source"
       />
-      <div className="container mx-auto px-6 lg:px-12 pt-32">
-        <Breadcrumbs items={[{ label: t.nav.company }, { label: t.openSource.breadcrumb }]} />
-      </div>
 
-      {/* ─── HERO ──────────────────────────────────────────────────── */}
       <PageHero
-        eyebrow="OPEN SOURCE & INFRASTRUCTURE"
-        title={<>Built on open source.</>}
-        description="VaultScope's hosting infrastructure is operated using a curated stack of open-source and self-hosted technologies. Here is what powers the stack."
+        breadcrumbs={[{ label: t.nav.company, href: '/company/about/' }, { label: t.openSource.breadcrumb }]}
+        title="Built on open source."
+        description="VaultScope's hosting infrastructure is operated using a curated stack of open-source and self-hosted technologies, alongside our own in-house open-source software."
         align="left"
       />
 
-      {/* ─── TECHNOLOGIES VAULTSCOPE USES ──────────────────────────── */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-
-          <div className="mb-16">
-            <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">01 // Infrastructure</div>
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
+      {/* Technologies VaultScope Uses */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-eyebrow mb-2">Operational Foundation</p>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-[-0.025em] text-[var(--text)] mb-2.5">
               Technologies VaultScope uses.
             </h2>
-            <p className="text-foreground/50 font-light text-lg max-w-3xl">
-              The following tools and platforms make up the operational infrastructure behind VaultScope's hosting environment.
-              These are technologies VaultScope relies on — not software VaultScope develops.
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+              The following tools and platforms make up the operational foundation behind VaultScope's hosting environment.
             </p>
           </div>
 
-          {/* Infrastructure Stack */}
-          <div className="mb-16">
-            <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-8">Infrastructure Stack</div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 border-l border-t border-border">
-              {INFRA_STACK.map((item) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="border-r border-b border-border px-6 py-7 bg-background hover:bg-foreground/[0.01] transition-colors group"
-                >
-                  <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">{item.category}</div>
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-medium text-foreground">{item.name}</h3>
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`${item.name} website`}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-foreground/30 mt-0.5" />
-                      </a>
-                    )}
-                  </div>
-                  <p className="text-sm text-foreground/50 font-light leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
-            </div>
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)] mb-12">
+            {INFRA_STACK.map((item) => (
+              <div
+                key={item.name}
+                className="py-4 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center"
+              >
+                <div className="md:col-span-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-[var(--text)]">{item.name}</h3>
+                  {item.url && (
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`${item.name} website`}
+                      className="text-[var(--text-faint)] hover:text-[var(--accent-bright)] transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent-bright)]">
+                    {item.category}
+                  </span>
+                </div>
+                <p className="md:col-span-7 text-xs text-[var(--text-muted)] leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
           </div>
 
-          {/* Development Stack */}
-          <div>
-            <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-8">Development Stack</div>
-            <div className="grid md:grid-cols-2 border-l border-t border-border max-w-4xl">
-              {DEV_STACK.map((item) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="border-r border-b border-border px-6 py-7 bg-background hover:bg-foreground/[0.01] transition-colors group"
-                >
-                  <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">{item.category}</div>
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-medium text-foreground">{item.name}</h3>
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`${item.name} website`}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-foreground/30 mt-0.5" />
-                      </a>
-                    )}
-                  </div>
-                  <p className="text-sm text-foreground/50 font-light leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
-            </div>
+          <h3 className="text-base font-semibold text-[var(--text)] mb-3">Development Tooling</h3>
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+            {DEV_STACK.map((item) => (
+              <div
+                key={item.name}
+                className="py-4 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center"
+              >
+                <div className="md:col-span-3 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--text)]">{item.name}</h4>
+                  {item.url && (
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`${item.name} website`}
+                      className="text-[var(--text-faint)] hover:text-[var(--accent-bright)] transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent-bright)]">
+                    {item.category}
+                  </span>
+                </div>
+                <p className="md:col-span-7 text-xs text-[var(--text-muted)] leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
           </div>
-
         </div>
       </section>
 
-      {/* ─── WHY OPEN SOURCE ───────────────────────────────────────── */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-
-          <div className="mb-12">
-            <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">02 // Philosophy</div>
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
+      {/* Why Open Source */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-eyebrow mb-2">Philosophy</p>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-[-0.025em] text-[var(--text)]">
               Why open source matters to us.
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-0 border border-border">
+          <div className="grid md:grid-cols-3 gap-10 lg:gap-12">
             {[
               {
                 title: 'Transparency',
@@ -242,69 +222,71 @@ export const OpenSource = () => {
               },
               {
                 title: 'Control',
-                desc: "Self-hosted tooling keeps operational control within the infrastructure team. No vendor lock-in, no hidden dependencies.",
+                desc: 'Self-hosted tooling keeps operational control within the infrastructure team. No vendor lock-in, no hidden dependencies.',
               },
               {
                 title: 'Community',
-                desc: 'The tools we use are built and maintained by active open-source communities. We benefit from that work and intend to give back.',
+                desc: 'The tools we use are built and maintained by active open-source communities. We benefit from that work and contribute our own software.',
               },
-            ].map((item, i) => (
-              <div key={item.title} className={`p-8 ${i < 2 ? 'border-b md:border-b-0 md:border-r border-border' : ''}`}>
-                <h3 className="text-base font-medium text-foreground tracking-normal uppercase mb-3">{item.title}</h3>
-                <p className="text-sm text-foreground/50 font-light leading-relaxed">{item.desc}</p>
+            ].map((item, idx) => (
+              <div key={item.title}>
+                <span className="block font-mono text-xs font-semibold text-[var(--accent-bright)] mb-2">
+                  0{idx + 1}
+                </span>
+                <h3 className="text-base font-semibold text-[var(--text)] mb-2">{item.title}</h3>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* ─── SOFTWARE VAULTSCOPE DEVELOPS ──────────────────────────── */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-
-          <div className="mb-12">
-            <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">03 // Software</div>
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
+      {/* Software VaultScope Develops */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-eyebrow mb-2">First-Party Repositories</p>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-[-0.025em] text-[var(--text)] mb-2.5">
               Software VaultScope develops.
             </h2>
-            <p className="text-foreground/50 font-light text-lg max-w-3xl">
-              Distinct from the technologies listed above, VaultScope also develops its own software.
-              These are projects built and maintained by the VaultScope team.
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+              Distinct from the third-party stack above, these projects are engineered and maintained directly by the VaultScope team.
             </p>
           </div>
 
-          <div className="grid gap-0 border border-border">
-            {VS_PROJECTS.map((project, i) => (
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+            {VS_PROJECTS.map((project) => (
               <div
                 key={project.title}
-                className={`p-8 flex flex-col md:flex-row md:items-center gap-8 bg-background hover:bg-foreground/[0.01] transition-colors ${i < VS_PROJECTS.length - 1 ? 'border-b border-border' : ''}`}
+                className="py-6 flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
-                <div className="w-16 h-16 bg-background border border-border flex items-center justify-center shrink-0">
-                  <GitBranch className="w-7 h-7 text-foreground/40" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-2">{project.tag}</div>
-                  <h3 className="text-xl font-medium text-foreground tracking-tight mb-2">{project.title}</h3>
-                  <p className="text-foreground/50 font-light mb-4">{project.desc}</p>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-widest text-foreground/40">
-                    {project.tags.map((tag) => (
-                      <span key={tag} className="bg-foreground/5 px-2.5 py-1 border border-border">{tag}</span>
-                    ))}
+                <div className="max-w-3xl">
+                  <div className="flex flex-wrap items-center gap-2.5 mb-2">
+                    <GitBranch className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                    <h3 className="text-base font-semibold text-[var(--text)] tracking-tight">
+                      {project.title}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded font-mono text-[11px] uppercase tracking-wider bg-[var(--bg-subtle)] text-[var(--text-muted)]">
+                      {project.role}
+                    </span>
+                    <span className="font-mono text-[11px] text-[var(--accent-bright)]">
+                      {project.stack}
+                    </span>
                   </div>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">{project.desc}</p>
                 </div>
                 <div className="shrink-0">
                   <a href={project.repoUrl} target="_blank" rel="noreferrer">
-                    <Button variant="outline" className="h-10 px-6 text-xs whitespace-nowrap">View Repository</Button>
+                    <Button variant="outline" size="sm">
+                      View Repository
+                    </Button>
                   </a>
                 </div>
               </div>
             ))}
           </div>
-
         </div>
       </section>
-
     </div>
   );
 };

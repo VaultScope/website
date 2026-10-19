@@ -41,7 +41,7 @@ export const DocsArchitecture = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-6">
               <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
                 <div className="flex items-center gap-2 mb-2 text-foreground font-medium text-sm">
-                  <Layers className="w-4 h-4 text-blue-400" />
+                  <Layers className="w-4 h-4 text-[var(--text-muted)]" />
                   <span>Client Tier (Storefront & CAMOS)</span>
                 </div>
                 <p className="text-xs text-foreground/60 leading-relaxed">
@@ -71,7 +71,7 @@ export const DocsArchitecture = () => {
 
               <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
                 <div className="flex items-center gap-2 mb-2 text-foreground font-medium text-sm">
-                  <Cpu className="w-4 h-4 text-purple-400" />
+                  <Cpu className="w-4 h-4 text-[var(--text)]" />
                   <span>Orchestration Tier (JobRunner & Connectors)</span>
                 </div>
                 <p className="text-xs text-foreground/60 leading-relaxed">

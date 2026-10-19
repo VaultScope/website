@@ -1,425 +1,222 @@
 import { useState } from 'react';
-import { PageHero } from '../components/Shared';
-import { 
-  Shield, 
-  Layout, 
-  Server, 
-  Database, 
-  Users, 
-  HeadphonesIcon, 
-  Activity, 
-  Terminal, 
-  Cpu, 
-  DollarSign, 
-  CheckCircle2, 
-  RefreshCw, 
-  Eye, 
-  ExternalLink, 
-  FileText,
-  ChevronRight,
-  Sparkles
+import { PageHero, Button } from '../components/Shared';
+import {
+  Shield,
+  Layout,
+  Server,
+  Database,
+  Users,
+  HeadphonesIcon,
+  Activity,
+  DollarSign,
+  ArrowRight,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { HelpTooltip, useExplainMode } from '../components/HelpTooltip';
 import { SeoHead } from '../components/SeoHead';
+import { LocaleLink } from '../i18n/LocaleLink';
+import { useLanguage } from '../i18n';
 
 const FEATURES = [
   {
     icon: Layout,
-    title: 'Dashboard & Telemetry',
-    description: 'Visualize MRR, active servers, open tickets, and infrastructure node capacity in real time.'
+    title: 'Operational Overview & Telemetry',
+    description: 'Centralized operator view for active customer services, pending provisioning tasks, support queues, and upstream provider connectivity.',
   },
   {
     icon: Users,
-    title: 'Customers & Billing',
-    description: 'View client profiles, manage Stripe subscriptions/invoices, handle tax rates, and generate promotional coupons.'
+    title: 'Customers & GoBD Billing',
+    description: 'Customer profile management, Stripe PaymentIntent integration, EU VIES VAT ID verification, and sequential invoice generation.',
   },
   {
     icon: Database,
-    title: 'Service & Product Management',
-    description: 'Map retail plans to underlying upstream infrastructure. Support for custom configuration options.'
+    title: 'Catalog & Plan Management',
+    description: 'Map storefront product plans to underlying infrastructure configurations with stock controls and category metadata.',
   },
   {
     icon: Server,
-    title: 'Automated Job Orchestration',
-    description: 'Asynchronous workers asynchronously provision Hetzner VPS, SftpGo storage, and Dedicated Server power/IPMI.'
+    title: 'Asynchronous Job Orchestration',
+    description: 'Background workers execute idempotent provisioning, power management, OS reinstallation, and SFTP quota tasks.',
   },
   {
     icon: HeadphonesIcon,
-    title: 'Support Desk & Real-time Chat',
-    description: 'Fully-featured ticketing system with live updates, file attachments, and internal staff notes.'
+    title: 'Support Desk & Ticketing',
+    description: 'Integrated ticketing workflow connecting customer dashboard inquiries with staff responses and status tracking.',
   },
   {
     icon: Shield,
-    title: 'Sovereign RBAC & Audit Trails',
-    description: 'Fine-grained role-based permissions, Argon2 password verification, and tamper-evident event logs.'
-  }
+    title: 'Role-Based Access & Security',
+    description: 'Fine-grained staff permissions, Argon2id password verification, TOTP 2FA enforcement, and immutable audit logs.',
+  },
 ];
 
+type ArchitectureTab = 'overview' | 'jobs' | 'services' | 'billing';
+
 export const Camos = () => {
-  const { explainMode, toggleExplainMode } = useExplainMode();
-  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'services' | 'billing'>('overview');
+  const { locale } = useLanguage();
+  const isDe = locale === 'de';
+  const [activeTab, setActiveTab] = useState<ArchitectureTab>('overview');
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full bg-[var(--bg-primary)] text-[var(--text)]">
       <SeoHead
         title="CAMOS — Cloud Administration & Management Operating System"
-        description="The sovereign cloud control plane powering automated server provisioning, multi-tenant billing, job queues, and telemetry."
+        description="The internal VaultScope operations control plane powering server provisioning, GoBD-compliant EU billing, asynchronous job queues, and customer support."
         path="/software/camos"
       />
+
       <PageHero
-        eyebrow="OPERATIONS SUITE"
+        breadcrumbs={[
+          { label: 'Software', href: '/projects/' },
+          { label: 'CAMOS' },
+        ]}
         title="CAMOS Control Plane"
-        description="Client Administration & Management Operations System. The sovereign internal platform powering billing workflows, asynchronous job pipelines, upstream cloud integrations, and staff RBAC."
-        primaryCta="Read Documentation"
+        description={
+          isDe
+            ? 'Client Administration & Management Operations System. Die interne Steuerungsplattform hinter VaultScope für Abrechnungsprozesse, asynchrone Job-Pipelines, Upstream-Integrationen und Support.'
+            : 'Client Administration & Management Operations System. The internal platform powering VaultScope billing workflows, asynchronous job pipelines, upstream provider integrations, and staff RBAC.'
+        }
+        primaryCta={isDe ? 'Dokumentation lesen' : 'Read Documentation'}
         primaryLink="/docs/projects/camos"
-        secondaryCta="View GitHub"
-        secondaryLink="https://github.com/VaultScope"
+        secondaryCta="VAMOS API Gateway"
+        secondaryLink="/software/vamos"
         align="left"
       />
 
-      {/* Interactive CAMOS Operations Preview Section */}
-      <section className="py-20 relative bg-background border-t border-border/[0.08]">
-        <div className="container mx-auto px-6 lg:px-12">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      {/* Section 1: Truthful CAMOS Subsystem Architecture Inspector */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-primary/10 border border-primary/20 text-xs font-mono text-primary mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Interactive Architecture Sandbox</span>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-                Explore the CAMOS Console
-              </h2>
-              <p className="text-sm text-foreground/60 mt-1 max-w-2xl">
-                Hover or click any <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-foreground/10 text-[10px] font-bold mx-1 align-baseline">?</span> icon to inspect backend data schemas, API contracts, and security rules.
+              <p className="text-eyebrow mb-2">
+                {isDe ? 'Systemarchitektur' : 'System Architecture'}
               </p>
+              <h2 className="text-display-m tracking-tight text-[var(--text)]">
+                {isDe ? 'CAMOS Architektur & Datenmodelle' : 'CAMOS Architecture & Data Models'}
+              </h2>
             </div>
-
-            {/* Explain Mode Toggle Button */}
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={toggleExplainMode}
-                className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
-                  explainMode
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20 ring-2 ring-primary/40'
-                    : 'bg-card text-muted-foreground border-border hover:text-foreground hover:bg-foreground/5'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>{explainMode ? 'Inspection Mode Active' : 'Enable Inspection Mode'}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${explainMode ? 'bg-black/20 text-white' : 'bg-foreground/10 text-foreground/70'}`}>
-                  {explainMode ? 'ON' : 'OFF'}
-                </span>
-              </button>
-            </div>
+            <p className="text-sm text-[var(--text-secondary)] max-w-md">
+              {isDe
+                ? 'Wählen Sie ein Subsystem, um die Datenmodelle, Zustandsautomaten und Schnittstellen zwischen CAMOS und VAMOS zu prüfen.'
+                : 'Select a subsystem below to inspect the domain models, state transitions, and contracts between CAMOS and the VAMOS API.'}
+            </p>
           </div>
 
-          {/* Simulated CAMOS Browser Frame */}
-          <div className="rounded-xl border border-border bg-card shadow-2xl overflow-hidden">
-            {/* Top Bar / Breadcrumb Navigation */}
-            <div className="border-b border-border bg-foreground/[0.02] px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 font-mono text-foreground/70">
-                <span className="font-semibold text-foreground flex items-center gap-1.5">
-                  <Terminal className="w-3.5 h-3.5 text-primary" />
-                  camos.vaultscope.internal
-                </span>
-                <ChevronRight className="w-3.5 h-3.5 text-foreground/30" />
-                <span className="capitalize">{activeTab}</span>
-                <HelpTooltip
-                  title="Internal Mutual TLS Gateway"
-                  badge="Network Isolation"
-                  content="CAMOS is hosted on an isolated management VLAN behind strict mTLS and Cloudflare Zero Trust tunnels. It is inaccessible from the public internet."
-                  example="mtls://admin-camos.vaultscope.internal"
-                />
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[11px] font-mono text-emerald-500 font-medium">API v1.4.0 Online</span>
-                  <HelpTooltip
-                    title="VaultScope-API Health"
-                    badge="Heartbeat"
-                    content="Continuous 10-second polling against GET /api/health validating PostgreSQL pool status, Redis job queues, and upstream connectivity."
-                  />
-                </div>
-
-                <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono bg-foreground/5 px-2 py-1 rounded border border-border/50 text-foreground/60">
-                  <kbd className="font-bold">Ctrl</kbd> + <kbd className="font-bold">K</kbd> Command Palette
-                  <HelpTooltip
-                    title="Quick-Jump Navigation"
-                    badge="UX"
-                    content="Omnibar search allowing operators to jump instantly to any customer, service, job ID, or system settings."
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div className="border-b border-border bg-foreground/[0.01] px-4 flex gap-1 overflow-x-auto text-xs">
+          <div>
+            {/* Subsystem Tabs */}
+            <div className="border-b border-[var(--line)] flex gap-6 overflow-x-auto text-xs" role="tablist">
               {[
-                { id: 'overview', label: 'Overview & Telemetry', icon: Layout },
-                { id: 'jobs', label: 'Job Orchestration', icon: Activity },
-                { id: 'services', label: 'Upstream Services', icon: Server },
-                { id: 'billing', label: 'Billing & Ledger', icon: DollarSign },
-              ].map(tab => {
+                { id: 'overview', label: isDe ? 'Architektur & RBAC' : 'Architecture & RBAC', icon: Layout },
+                { id: 'jobs', label: isDe ? 'Job-Orchestrierung' : 'Job Orchestration', icon: Activity },
+                { id: 'services', label: isDe ? 'Provider-Treiber' : 'Provider Drivers', icon: Server },
+                { id: 'billing', label: isDe ? 'GoBD-Abrechnung & MwSt.' : 'GoBD Billing & EU VAT', icon: DollarSign },
+              ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveTab(tab.id as ArchitectureTab)}
+                    className={`flex items-center gap-2 py-3.5 border-b-2 font-medium transition-colors whitespace-nowrap cursor-pointer ${
                       isActive
-                        ? 'border-foreground text-foreground'
-                        : 'border-transparent text-foreground/50 hover:text-foreground hover:border-foreground/30'
+                        ? 'border-[var(--accent-bright)] text-[var(--text)]'
+                        : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text)]'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--accent-bright)]' : ''}`} />
                     <span>{tab.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Mock Dashboard Body */}
-            <div className="p-6 md:p-8 space-y-6">
+            {/* Tab Content */}
+            <div className="pt-8">
               {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  {/* Top Metric Cards */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-                      <div className="flex items-center justify-between text-xs text-foreground/50 mb-1">
-                        <span>Monthly Recurring Revenue</span>
-                        <HelpTooltip
-                          title="Monthly Recurring Revenue (MRR)"
-                          badge="Financial Metric"
-                          content="Normalized recurring subscription revenue across active VPS instances, SFTP buckets, and Dedicated Servers excluding one-time setup fees."
-                          example="EUR 14,850.00"
-                        />
-                      </div>
-                      <div className="text-xl md:text-2xl font-bold font-mono text-foreground">€14,850.00</div>
-                      <div className="text-[11px] text-emerald-500 font-medium mt-1 flex items-center gap-1">
-                        +18.4% from last month
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-                      <div className="flex items-center justify-between text-xs text-foreground/50 mb-1">
-                        <span>Active Infrastructure Nodes</span>
-                        <HelpTooltip
-                          title="Active Managed Nodes"
-                          badge="Infrastructure"
-                          content="Count of provisioned compute instances across Hetzner Cloud, Dedicated bare metal servers, and sovereign SFTP clusters."
-                          example="Hetzner: 142 | Dedicated: 28 | SFTP: 42"
-                        />
-                      </div>
-                      <div className="text-xl md:text-2xl font-bold font-mono text-foreground">212</div>
-                      <div className="text-[11px] text-foreground/50 font-medium mt-1">
-                        99.98% overall uptime
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-                      <div className="flex items-center justify-between text-xs text-foreground/50 mb-1">
-                        <span>Queued Background Jobs</span>
-                        <HelpTooltip
-                          title="Asynchronous Job Queue"
-                          badge="Task Pipeline"
-                          content="Pending or processing idempotent asynchronous tasks handled by background workers with exponential backoff retry."
-                          example="Status: 0 pending, 2 active"
-                        />
-                      </div>
-                      <div className="text-xl md:text-2xl font-bold font-mono text-foreground">2 Active</div>
-                      <div className="text-[11px] text-emerald-500 font-medium mt-1">
-                        0 failures in 24h
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-                      <div className="flex items-center justify-between text-xs text-foreground/50 mb-1">
-                        <span>Open Support Tickets</span>
-                        <HelpTooltip
-                          title="Support Desk SLA"
-                          badge="Customer Operations"
-                          content="Real-time ticket queue with live WebSocket updates, Mailcow SMTP outbound notifications, and attachment security scanning."
-                        />
-                      </div>
-                      <div className="text-xl md:text-2xl font-bold font-mono text-foreground">3 Open</div>
-                      <div className="text-[11px] text-foreground/50 font-medium mt-1">
-                        Avg response: 11 mins
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+                  <div>
+                    <p className="font-mono text-xs text-[var(--accent-bright)] mb-2">
+                      Isolation & Access
+                    </p>
+                    <h3 className="text-sm font-semibold text-[var(--text)] mb-2">
+                      Zero-Direct-DB Storefront Separation
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      The public storefront has no direct link to CAMOS. All changes made by operators in CAMOS are persisted through VAMOS in PostgreSQL and reflected via `/api/storefront/*` endpoints.
+                    </p>
                   </div>
 
-                  {/* Systems Status Grid */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-lg border border-border bg-foreground/[0.01] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                          <Cpu className="w-4 h-4 text-primary" />
-                          <span>Infrastructure Fleet Telemetry</span>
-                        </div>
-                        <HelpTooltip
-                          title="Hardware & Virtualization"
-                          badge="Telemetry"
-                          content="Real-time metrics polled via node exporters and provider APIs reporting CPU load, memory commit, and NVMe disk wear."
-                        />
-                      </div>
-                      <div className="space-y-2 pt-2 text-xs font-mono">
-                        <div>
-                          <div className="flex justify-between text-foreground/60 mb-1">
-                            <span>Falkenstein DC (FSN1) Load</span>
-                            <span>42% (Normal)</span>
-                          </div>
-                          <div className="w-full bg-foreground/10 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-primary h-full w-[42%]" />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-foreground/60 mb-1">
-                            <span>Helsinki DC (HEL1) Load</span>
-                            <span>68% (Optimal)</span>
-                          </div>
-                          <div className="w-full bg-foreground/10 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-primary h-full w-[68%]" />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-foreground/60 mb-1">
-                            <span>Sovereign Storage Cluster IOPS</span>
-                            <span>12,400 IOPS</span>
-                          </div>
-                          <div className="w-full bg-foreground/10 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-emerald-500 h-full w-[31%]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="font-mono text-xs text-[var(--accent-bright)] mb-2">
+                      Authentication & Cryptography
+                    </p>
+                    <h3 className="text-sm font-semibold text-[var(--text)] mb-2">
+                      Argon2id + JWT + TOTP 2FA
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      Operator and customer credentials are hashed with Argon2id. Sessions use signed JWT tokens with optional RFC 6238 TOTP multi-factor authentication and backup recovery codes.
+                    </p>
+                  </div>
 
-                    <div className="p-5 rounded-lg border border-border bg-foreground/[0.01] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                          <Shield className="w-4 h-4 text-emerald-500" />
-                          <span>Security & Audit State</span>
-                        </div>
-                        <HelpTooltip
-                          title="Security Posture"
-                          badge="Compliance"
-                          content="Continuous automated vulnerability scanning, zero CVEs, strict Argon2id password hashing, and encrypted JWT tokens."
-                        />
-                      </div>
-                      <div className="space-y-2 pt-1 text-xs">
-                        <div className="flex items-center justify-between p-2 rounded bg-foreground/5 border border-border/50">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                            <span>Vulnerability Audit (Storefront, Admin, API)</span>
-                          </div>
-                          <span className="font-mono text-emerald-500 text-[11px] font-bold">0 CVEs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded bg-foreground/5 border border-border/50">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                            <span>Staff Authentication Protocol</span>
-                          </div>
-                          <span className="font-mono text-foreground/70 text-[11px]">Argon2id + JWT</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded bg-foreground/5 border border-border/50">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                            <span>GoBD Audit Trail Logging</span>
-                          </div>
-                          <span className="font-mono text-emerald-500 text-[11px] font-bold">Immutable</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="font-mono text-xs text-[var(--accent-bright)] mb-2">
+                      Auditability
+                    </p>
+                    <h3 className="text-sm font-semibold text-[var(--text)] mb-2">
+                      Structured Activity & Event Log
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      Provisioning actions, power state changes, ticket updates, and billing events are recorded in the PostgreSQL activity log with timestamps and actor identifiers.
+                    </p>
                   </div>
                 </div>
               )}
 
               {activeTab === 'jobs' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground">Asynchronous Provisioning Queue</h3>
-                      <p className="text-xs text-foreground/50">Idempotent background execution engine executing multi-step server setups.</p>
+                      <h3 className="text-sm font-semibold text-[var(--text)]">
+                        Asynchronous Provisioning Pipeline
+                      </h3>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        Long-running infrastructure mutations are queued in PostgreSQL and processed asynchronously by Tokio background workers.
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-foreground/50 font-mono">Poll Interval: 2000ms</span>
-                      <HelpTooltip
-                        title="Background Worker Engine"
-                        badge="Tokio Cron / Queue"
-                        content="Pulls jobs from PostgreSQL jobs table using row-level locking (FOR UPDATE SKIP LOCKED). Guarantees zero double-execution."
-                      />
-                    </div>
+                    <span className="font-mono text-xs text-[var(--accent-bright)]">
+                      State Machine: pending → processing → completed | failed
+                    </span>
                   </div>
 
-                  <div className="border border-border rounded-lg overflow-x-auto">
-                    <table className="w-full text-left text-xs font-mono">
-                      <thead className="bg-foreground/5 border-b border-border text-foreground/70">
+                  <div className="overflow-x-auto border-t border-b border-[var(--line)]">
+                    <table className="w-full min-w-[540px] sm:min-w-full text-left text-xs font-mono">
+                      <thead className="border-b border-[var(--line)] text-[var(--text-muted)]">
                         <tr>
-                          <th className="p-3">
-                            <span className="inline-flex items-center gap-1">
-                              Job ID
-                              <HelpTooltip title="Job ID" content="UUIDv4 identifier linking the provisioning pipeline." />
-                            </span>
-                          </th>
-                          <th className="p-3">
-                            <span className="inline-flex items-center gap-1">
-                              Task Type
-                              <HelpTooltip title="Task Type" content="Provision, resize, power cycle, or destroy service." />
-                            </span>
-                          </th>
-                          <th className="p-3">
-                            <span className="inline-flex items-center gap-1">
-                              Target Provider
-                              <HelpTooltip title="Target Provider" content="Provider driver: hetzner_cloud, sftpgo, reliablesite, or proxmox." />
-                            </span>
-                          </th>
-                          <th className="p-3">
-                            <span className="inline-flex items-center gap-1">
-                              Execution Status
-                              <HelpTooltip title="Status State Machine" content="Transitions: pending -> processing -> completed / failed." />
-                            </span>
-                          </th>
-                          <th className="p-3 text-right">Duration</th>
+                          <th className="py-3 pr-4">Job Type</th>
+                          <th className="py-3 px-4">Trigger Endpoint</th>
+                          <th className="py-3 px-4">Upstream Driver</th>
+                          <th className="py-3 pl-4">Execution Behavior</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border/60">
-                        <tr className="hover:bg-foreground/[0.02]">
-                          <td className="p-3 text-foreground/80 font-bold">#job-4892</td>
-                          <td className="p-3 text-foreground">Provision Cloud VPS (cx32)</td>
-                          <td className="p-3 text-foreground/70">hetzner_cloud</td>
-                          <td className="p-3">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[11px] font-semibold">
-                              <CheckCircle2 className="w-3 h-3" /> completed
-                            </span>
-                          </td>
-                          <td className="p-3 text-right text-foreground/50">4.2s</td>
+                      <tbody className="divide-y divide-[var(--line)]">
+                        <tr>
+                          <td className="py-3.5 pr-4 text-[var(--accent-bright)] font-medium">provision_vps</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">POST /storefront/orders/confirm</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">Hetzner Cloud / Proxmox</td>
+                          <td className="py-3.5 pl-4 text-[var(--text-secondary)]">Allocates KVM instance, attaches IPv4/IPv6, records credentials</td>
                         </tr>
-                        <tr className="hover:bg-foreground/[0.02]">
-                          <td className="p-3 text-foreground/80 font-bold">#job-4893</td>
-                          <td className="p-3 text-foreground">Create SFTPGo Quota (1TB)</td>
-                          <td className="p-3 text-foreground/70">sftpgo</td>
-                          <td className="p-3">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[11px] font-semibold">
-                              <RefreshCw className="w-3 h-3 animate-spin" /> running
-                            </span>
-                          </td>
-                          <td className="p-3 text-right text-foreground/50">1.8s</td>
+                        <tr>
+                          <td className="py-3.5 pr-4 text-[var(--accent-bright)] font-medium">provision_sftp</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">POST /storefront/orders/confirm</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">SFTPGo REST API</td>
+                          <td className="py-3.5 pl-4 text-[var(--text-secondary)]">Creates isolated storage user, enforces byte quota, sets SSH keys</td>
                         </tr>
-                        <tr className="hover:bg-foreground/[0.02]">
-                          <td className="p-3 text-foreground/80 font-bold">#job-4894</td>
-                          <td className="p-3 text-foreground">Dedicated PXE Reinstall (Debian 12)</td>
-                          <td className="p-3 text-foreground/70">reliablesite</td>
-                          <td className="p-3">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[11px] font-semibold">
-                              pending
-                            </span>
-                          </td>
-                          <td className="p-3 text-right text-foreground/50">0.0s</td>
+                        <tr>
+                          <td className="py-3.5 pr-4 text-[var(--accent-bright)] font-medium">reinstall_service</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">POST /storefront/services/:id/reinstall</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">Hetzner Cloud / ReliableSite</td>
+                          <td className="py-3.5 pl-4 text-[var(--text-secondary)]">Triggers automated OS image rebuild or PXE installation</td>
                         </tr>
                       </tbody>
                     </table>
@@ -428,224 +225,131 @@ export const Camos = () => {
               )}
 
               {activeTab === 'services' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">Managed Services & Bare Metal Fleet</h3>
-                      <p className="text-xs text-foreground/50">Direct orchestration of virtual servers, storage pools, and out-of-band IPMI KVM.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs font-semibold text-[var(--accent-bright)]">
+                      Cloud VPS Driver
                     </div>
-                    <HelpTooltip
-                      title="Direct Hardware Control"
-                      badge="Zero Middleman"
-                      content="CAMOS communicates directly with upstream hardware controllers using secure API tokens without 3rd party reselling bottlenecks."
-                    />
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      Supports power actions (`start`, `stop`, `reboot`, `reset`), automated OS rebuilds, live CPU/RAM/network telemetry, and WebSocket VNC console sessions.
+                    </p>
+                    <div className="pt-2 font-mono text-[11px] text-[var(--text-muted)]">
+                      Termination Guard: Instance must be stopped before deletion.
+                    </div>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-foreground">VPS-FSN1-0812</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-mono">running</span>
-                      </div>
-                      <div className="text-xs text-foreground/60 space-y-1">
-                        <div>Plan: Cloud VPS Standard (4 vCPU / 8 GB)</div>
-                        <div>IP: 195.201.88.14</div>
-                        <div>Upstream ID: #hcloud-849201</div>
-                      </div>
-                      <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs">
-                        <span className="text-foreground/50 font-mono">Hetzner Cloud</span>
-                        <HelpTooltip
-                          title="Interactive VNC Console"
-                          content="Launches a live HTML5 canvas RFB console session with full keyboard shortcut forwarding (Ctrl+Alt+Del, Esc, Tab)."
-                        />
-                      </div>
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs font-semibold text-[var(--accent-bright)]">
+                      Dedicated Bare-Metal Driver
                     </div>
-
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-foreground">DS-EPYC-3291</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-mono">running</span>
-                      </div>
-                      <div className="text-xs text-foreground/60 space-y-1">
-                        <div>Hardware: AMD EPYC 7502P (32c/64t)</div>
-                        <div>RAM: 128 GB ECC DDR4</div>
-                        <div>Management: Out-of-band IPMI / KVM</div>
-                      </div>
-                      <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs">
-                        <span className="text-foreground/50 font-mono">Dedicated Server</span>
-                        <HelpTooltip
-                          title="IPMI / KVM Session Request"
-                          badge="Out-of-band"
-                          content="Generates temporary single-sign-on credentials and a Java/HTML5 KVM viewer url directly linked to the BMC controller."
-                        />
-                      </div>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      Integrates hardware power control, automated PXE operating system installation, hardware inventory inspection, and out-of-band IPMI / KVM access requests.
+                    </p>
+                    <div className="pt-2 font-mono text-[11px] text-[var(--text-muted)]">
+                      Hardware Control: Direct BMC / IPMI session provisioning.
                     </div>
+                  </div>
 
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-foreground">SFTP-BUCKET-902</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-mono">active</span>
-                      </div>
-                      <div className="text-xs text-foreground/60 space-y-1">
-                        <div>Quota: 2,048 GB NVMe</div>
-                        <div>Protocols: SFTP, FTPS, WebDAV</div>
-                        <div>Bandwidth: Unlimited 1Gbps</div>
-                      </div>
-                      <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs">
-                        <span className="text-foreground/50 font-mono">SFTPGo Cluster</span>
-                        <HelpTooltip
-                          title="Sovereign Storage Quota"
-                          content="Managed via SFTPGo REST API with auto-generated public keys and per-folder ACL restrictions."
-                        />
-                      </div>
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs font-semibold text-[var(--accent-bright)]">
+                      SFTP Storage Driver
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      Manages SFTPGo storage accounts, storage quota enforcement, password resets, and SSH public key authorization via `/storefront/services/:id/ssh-keys`.
+                    </p>
+                    <div className="pt-2 font-mono text-[11px] text-[var(--text-muted)]">
+                      Protocols: SFTP / SCP / SSH Key Auth.
                     </div>
                   </div>
                 </div>
               )}
 
               {activeTab === 'billing' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">GoBD-Compliant Billing & Ledger</h3>
-                      <p className="text-xs text-foreground/50">Native automated tax calculation, Stripe webhook idempotency, and tamper-proof PDF generation.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-[var(--text)]">
+                      19% German VAT & EU VIES Verification
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      CAMOS and VAMOS calculate statutory 19% German VAT (`price * 1.19`) on retail orders and expose real-time European Commission VIES VAT number verification via `POST /api/storefront/tax/validate-vat` for B2B reverse-charge eligibility.
+                    </p>
+                    <div className="pt-2 font-mono text-xs flex flex-wrap justify-between gap-2 text-[var(--text-secondary)]">
+                      <span>Tax Endpoint</span>
+                      <span className="text-[var(--accent-bright)] break-all">POST /api/storefront/tax/validate-vat</span>
                     </div>
-                    <HelpTooltip
-                      title="GoBD Compliance"
-                      badge="German Tax Law"
-                      content="Sequential invoice numbering without gaps (INV-YYYY-XXXXX), immutable audit trails, and strict calculation of 19% German VAT."
-                    />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4 text-xs font-mono">
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-2">
-                      <div className="flex items-center justify-between text-foreground/70">
-                        <span>Invoice #INV-2026-0042</span>
-                        <span className="text-emerald-500 font-bold">PAID</span>
-                      </div>
-                      <div className="text-foreground/50">Client: ACME Technologies GmbH (DE312984920)</div>
-                      <div className="pt-2 border-t border-border/50 space-y-1 text-foreground/80">
-                        <div className="flex justify-between">
-                          <span>Subtotal (Net)</span>
-                          <span>€100.00</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>19% German VAT (USt.)</span>
-                          <span>€19.00</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-foreground pt-1 border-t border-border/30">
-                          <span>Total Gross</span>
-                          <span>€119.00</span>
-                        </div>
-                      </div>
-                      <div className="pt-2 flex items-center justify-between text-[11px]">
-                        <span className="text-foreground/40 font-mono">Stripe pi_3Nz92K...</span>
-                        <div className="flex items-center gap-1 text-primary">
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>PDF Available</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg border border-border bg-foreground/[0.01] space-y-2">
-                      <div className="flex items-center justify-between text-foreground/70">
-                        <span>Webhook Dispatcher</span>
-                        <span className="text-emerald-500 font-bold">HEALTHY</span>
-                      </div>
-                      <div className="text-foreground/50">Listener: POST /api/storefront/billing/webhook</div>
-                      <div className="pt-2 border-t border-border/50 space-y-1 text-foreground/80">
-                        <div className="flex justify-between">
-                          <span>HMAC-SHA256 Verification</span>
-                          <span className="text-emerald-500 font-bold">Constant-Time</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Idempotency Table</span>
-                          <span>processed_events</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Auto-Provision Trigger</span>
-                          <span>invoice.paid</span>
-                        </div>
-                      </div>
-                      <div className="pt-2 text-[11px] text-foreground/40">
-                        Processed 481 events with 0 duplicate allocations.
-                      </div>
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-[var(--text)]">
+                      Stripe PaymentIntents & Printable Invoices
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      Checkout flows create verified Stripe PaymentIntents (`POST /api/storefront/orders/create-payment-intent`), validate promotional coupons, and generate HTML/printable invoices accessible at `/api/storefront/invoices/:id/pdf`.
+                    </p>
+                    <div className="pt-2 font-mono text-xs flex flex-wrap justify-between gap-2 text-[var(--text-secondary)]">
+                      <span>Invoice Export</span>
+                      <span className="text-[var(--accent-bright)] break-all">GET /api/storefront/invoices/:id/pdf</span>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Simulated CAMOS Footer */}
-            <div className="border-t border-border bg-foreground/[0.02] px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs text-foreground/50">
-              <div className="flex items-center gap-3">
-                <span>VaultScope CAMOS v2.4</span>
-                <span>•</span>
-                <span>Role: Super Administrator</span>
-                <HelpTooltip
-                  title="Role-Based Access Control (RBAC)"
-                  badge="Security"
-                  content="Admins hold granular scopes: billing:write, services:manage, support:reply, system:diagnostics."
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <a 
-                  href="/docs/projects/camos" 
-                  className="hover:text-foreground transition-colors flex items-center gap-1 font-medium"
-                >
-                  Operator Manual <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Breakdown Grid */}
-      <section className="py-24 relative bg-background border-t border-border/[0.08]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="text-xs font-mono font-medium text-foreground/40 uppercase tracking-widest mb-12">
-            Control Plane Capabilities
+      {/* Section 2: Control Plane Capabilities — Open 3-Column Grid */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="mb-10">
+            <p className="text-eyebrow mb-2">
+              {isDe ? 'Funktionsumfang' : 'Capabilities'}
+            </p>
+            <h2 className="text-display-m tracking-tight text-[var(--text)]">
+              {isDe ? 'Kernmodule der Steuerungsebene' : 'Core Control Plane Modules'}
+            </h2>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-border">
-            {FEATURES.map((item, i) => {
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
+            {FEATURES.map((item) => {
               const Icon = item.icon;
               return (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className={`p-10 flex flex-col gap-6 border-border ${i % 3 !== 2 ? 'lg:border-r' : ''} ${i < 3 ? 'lg:border-b' : ''} ${i % 2 !== 1 ? 'md:border-r' : ''} ${i < 4 ? 'md:border-b' : ''} border-b`}
-                >
-                  <div className="w-10 h-10 border border-border flex items-center justify-center shrink-0 rounded-lg bg-foreground/5">
-                    <Icon className="w-4 h-4 text-foreground/70" />
+                <div key={item.title} className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                    <h3 className="text-base font-semibold text-[var(--text)] tracking-tight">
+                      {item.title}
+                    </h3>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-foreground tracking-tight mb-3">{item.title}</h3>
-                    <p className="text-sm text-foreground/50 font-light leading-relaxed">{item.description}</p>
-                  </div>
-                </motion.div>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
               );
             })}
           </div>
 
-          <div className="mt-20 pt-12 border-t border-border/[0.08]">
-            <h3 className="text-lg font-medium tracking-tight mb-6">Engineered for Sovereign Operations</h3>
-            <div className="flex flex-wrap items-center gap-3 text-xs font-mono font-medium uppercase tracking-wider text-foreground/60">
-              <span className="bg-foreground/5 px-3 py-1.5 border border-border rounded">Rust (Tokio / Axum)</span>
-              <span className="bg-foreground/5 px-3 py-1.5 border border-border rounded">React 19 + TypeScript</span>
-              <span className="bg-foreground/5 px-3 py-1.5 border border-border rounded">Tailwind CSS 4</span>
-              <span className="bg-foreground/5 px-3 py-1.5 border border-border rounded">Argon2id Hashing</span>
-              <span className="bg-foreground/5 px-3 py-1.5 border border-border rounded">PostgreSQL + SQLx</span>
-              <span className="bg-foreground/5 px-3 py-1.5 border border-border rounded">Stripe REST + Webhooks</span>
+          <div className="mt-14 pt-8 border-t border-[var(--line)] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div>
+              <h3 className="text-base font-semibold text-[var(--text)] mb-1">
+                {isDe ? 'Technische Dokumentation für CAMOS & VAMOS' : 'Technical Documentation for CAMOS & VAMOS'}
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {isDe
+                  ? 'Erfahren Sie mehr über das Zusammenspiel von CAMOS, VAMOS und unserer Infrastruktur.'
+                  : 'Read the full architectural overview covering CAMOS, VAMOS, and our provisioning workflows.'}
+              </p>
             </div>
+            <LocaleLink to="/docs/projects/camos" className="shrink-0">
+              <Button variant="primary" className="h-10 px-5 text-xs">
+                <span>{isDe ? 'Projekt-Dokumentation' : 'Project Documentation'}</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-2" />
+              </Button>
+            </LocaleLink>
           </div>
         </div>
       </section>
     </div>
   );
 };
-
+export default Camos;

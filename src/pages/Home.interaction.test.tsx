@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { LanguageProvider } from '../i18n';
 import { Home } from './Home';
@@ -16,103 +16,107 @@ function renderHome() {
 }
 
 describe('Home page interactions', () => {
-  it('renders hero section with title', () => {
+  it('renders hero section with pixelated typewriter heading and sleek purple highlight', () => {
     renderHome();
-    expect(screen.getByRole('heading', { level: 1 })).toBeDefined();
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1).toBeDefined();
+    expect(h1.className).toContain('font-pixel');
+    expect(h1.textContent).toContain('Infrastructure and Software.');
+    expect(h1.textContent).toContain('Engineered together.');
   });
 
-  it('renders CTA buttons in hero', () => {
+  it('renders Explore Services and About VaultScope CTA buttons in hero', () => {
     renderHome();
-    const links = screen.getAllByRole('link');
-    const infraLink = links.find(l => l.getAttribute('href')?.includes('/infrastructure'));
-    expect(infraLink).toBeDefined();
+    const exploreLink = screen.getByRole('link', { name: /Explore Services/i });
+    const aboutLink = screen.getByRole('link', { name: /About VaultScope/i });
+    expect(exploreLink.getAttribute('href')).toContain('/infrastructure');
+    expect(aboutLink.getAttribute('href')).toContain('/company/about');
   });
 
-  it('renders product overview with 4 product cards', () => {
+  it('renders low-poly 3D floating hero stack without mock hostnames or spec arrays', () => {
     renderHome();
-    const learnMoreLinks = screen.getAllByText(/Learn More/i);
-    expect(learnMoreLinks.length).toBeGreaterThanOrEqual(4);
+    const stack3D = screen.getByRole('img', { name: 'VaultScope 3D Infrastructure Stack' });
+    expect(stack3D).toBeDefined();
+    expect(stack3D.className).toContain('pointer-events-none');
+    expect(screen.queryByText('vps-eu-01')).toBeNull();
+    expect(screen.queryByText('srv-eu-ded-01')).toBeNull();
+    expect(screen.queryByText('VaultScope System Architecture')).toBeNull();
   });
 
-  it('switches infrastructure tabs on click', async () => {
+  it('renders Section 2: Why us? and Our Principles', () => {
+    renderHome();
+    expect(screen.getByText('Why us?')).toBeDefined();
+    expect(screen.getByText('Built on Open-Source')).toBeDefined();
+    expect(screen.getByText('User friendliness')).toBeDefined();
+    expect(screen.getByText('Fair Pricing')).toBeDefined();
+    expect(screen.getByText('Integration')).toBeDefined();
+
+    expect(screen.getByText('Our Principles')).toBeDefined();
+    expect(screen.getByText('Transparency')).toBeDefined();
+    expect(
+      screen.getByText(
+        /Transparency is the foundation of VaultScope\. From public pricing and hardware specifications/i
+      )
+    ).toBeDefined();
+    expect(screen.getByText('Community')).toBeDefined();
+    expect(
+      screen.getByText(
+        /We build VaultScope alongside the developers, system administrators, and teams/i
+      )
+    ).toBeDefined();
+    expect(screen.getByText('Trust')).toBeDefined();
+    expect(
+      screen.getByText(/Trust is earned through consistency and mutual respect\./i)
+    ).toBeDefined();
+  });
+
+  it('renders Section 3: Products (VPS soon, Dedicated soon, Storage SFTP only as of now)', () => {
+    renderHome();
+    expect(screen.getByText('Products')).toBeDefined();
+    expect(screen.getByText('VPS (soon)')).toBeDefined();
+    expect(screen.getByText('Dedicated (soon)')).toBeDefined();
+    expect(screen.getByText('Storage (SFTP only as of now)')).toBeDefined();
+  });
+
+  it('renders Section 4: Open-Source Software with Vamos and Camos only', () => {
+    renderHome();
+    expect(
+      screen.getByText(
+        /VaultScope engineers its own software stack alongside proven open-source technologies/i
+      )
+    ).toBeDefined();
+    expect(screen.getByText('Vamos')).toBeDefined();
+    expect(screen.getByText('Camos')).toBeDefined();
+    expect(screen.queryByText('Pegasus')).toBeNull();
+  });
+
+  it('allows switching catalog category filter buttons', async () => {
     renderHome();
     const user = userEvent.setup();
 
-    expect(screen.getByText('vps-eu-01')).toBeDefined();
-
-    const dedicatedTab = screen.getAllByText(/Dedicated/i).find(
-      el => el.tagName === 'SPAN' && el.textContent === 'Dedicated'
-    ) || screen.getByText(/Dedicated/i);
-
     const tabButtons = screen.getAllByRole('button');
-    const dedButton = tabButtons.find(b => b.textContent?.includes('Dedicated'));
-    if (dedButton) {
-      await user.click(dedButton);
-      expect(screen.getByText('srv-eu-ded-01')).toBeDefined();
-    }
-  });
-
-  it('both tab buttons are clickable', async () => {
-    renderHome();
-    const user = userEvent.setup();
-
-    const tabButtons = screen.getAllByRole('button');
-    const dedButton = tabButtons.find(b => b.textContent?.includes('Dedicated'));
-    const vpsButton = tabButtons.find(b => b.textContent?.includes('Cloud VPS'));
+    const dedButton = tabButtons.find((b) => b.textContent === 'Dedicated');
+    const vpsButton = tabButtons.find((b) => b.textContent === 'Cloud VPS');
 
     expect(dedButton).toBeDefined();
     expect(vpsButton).toBeDefined();
 
     if (dedButton) {
       await user.click(dedButton);
-      // After clicking dedicated, the dedicated visual content should be in DOM
-      expect(screen.getByText('srv-eu-ded-01')).toBeDefined();
+      expect(dedButton.className).toContain('bg-[var(--accent-subtle)]');
     }
     if (vpsButton) {
       await user.click(vpsButton);
-      // VPS tab click should not throw
-      expect(vpsButton).toBeDefined();
+      expect(vpsButton.className).toContain('bg-[var(--accent-subtle)]');
     }
   });
 
-  it('renders technology section with stack names', () => {
+  it('renders Newsletter section and contact link', async () => {
     renderHome();
-    expect(screen.getByText('PROXMOX')).toBeDefined();
-    expect(screen.getByText('DEBIAN')).toBeDefined();
-    expect(screen.getByText('DOCKER')).toBeDefined();
-  });
-
-  it('renders waitlist section with form', () => {
-    renderHome();
-    expect(screen.getByText(/Get notified at launch/)).toBeDefined();
-  });
-
-  it('renders Why VaultScope principles section', () => {
-    renderHome();
-    expect(screen.getByText('Engineering')).toBeDefined();
-    expect(screen.getByText('Transparency')).toBeDefined();
-    expect(screen.getByText('Integration')).toBeDefined();
-    expect(screen.getByText('Personal Service')).toBeDefined();
-  });
-
-  it('renders contact link in final CTA', () => {
-    renderHome();
+    expect(screen.getByText('Newsletter')).toBeDefined();
+    expect(await screen.findByText(/Subscribe to our newsletter/i)).toBeDefined();
     const links = screen.getAllByRole('link');
-    const contactLink = links.find(l => l.getAttribute('href')?.includes('/contact'));
+    const contactLink = links.find((l) => l.getAttribute('href')?.includes('/contact'));
     expect(contactLink).toBeDefined();
-  });
-
-  it('has deploy section with steps', () => {
-    renderHome();
-    expect(screen.getByText('Choose')).toBeDefined();
-    expect(screen.getByText('Configure')).toBeDefined();
-    expect(screen.getByText('Running')).toBeDefined();
-  });
-
-  it('has deploy category tags', () => {
-    renderHome();
-    expect(screen.getByText('Docker Containers')).toBeDefined();
-    expect(screen.getByText('PostgreSQL')).toBeDefined();
-    expect(screen.getByText('Redis')).toBeDefined();
   });
 });

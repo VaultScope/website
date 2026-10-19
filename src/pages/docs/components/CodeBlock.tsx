@@ -18,9 +18,8 @@ export const CodeBlock = ({ code, language = 'bash', title }: CodeBlockProps) =>
 
   return (
     <div className="my-5 rounded-lg border border-border bg-foreground/[0.02] overflow-hidden not-prose">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-foreground/[0.03] text-xs font-mono text-foreground/60">
-        <span className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-foreground/20" />
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--line)] bg-[var(--bg-elevated)] text-xs font-mono text-[var(--text-muted)]">
+        <span className="uppercase tracking-wider">
           {title || language}
         </span>
         <button

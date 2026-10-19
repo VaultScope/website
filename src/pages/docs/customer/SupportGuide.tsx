@@ -35,7 +35,7 @@ export const SupportGuide = () => {
         {/* Opening a Ticket */}
         <section id="submitting-tickets" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-blue-400" />
+            <HelpCircle className="w-5 h-5 text-[var(--text)]" />
             <span>Opening a Support Ticket</span>
           </h2>
           <p className="text-foreground/80">
@@ -98,7 +98,7 @@ export const SupportGuide = () => {
                   <td className="p-3 text-foreground/70">Severe performance degradation, degraded RAID array, packet loss on primary network uplink.</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-blue-400">Normal (P3)</td>
+                  <td className="p-3 font-semibold text-[var(--text)]">Normal (P3)</td>
                   <td className="p-3 font-mono text-foreground">&lt; 4 Hours</td>
                   <td className="p-3 text-foreground/70">Standard operational requests, reverse DNS updates, ISO mounting assistance, sub-account setup.</td>
                 </tr>
@@ -131,7 +131,7 @@ export const SupportGuide = () => {
         {/* Diagnostic File Attachments */}
         <section id="file-attachments" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Image className="w-5 h-5 text-purple-400" />
+            <Image className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Diagnostic File Attachments (10MB Limit)</span>
           </h2>
           <p className="text-foreground/80">
@@ -150,7 +150,7 @@ export const SupportGuide = () => {
         {/* Automated Email Alerts */}
         <section id="smtp-alerts" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Mail className="w-5 h-5 text-indigo-400" />
+            <Mail className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Automated Email Notification Alerts</span>
           </h2>
           <p className="text-foreground/80">

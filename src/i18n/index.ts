@@ -1,2 +1,3 @@
-export { LanguageProvider, useLanguage } from './context';
-export type { Locale } from './context';
+export { LanguageProvider, useLanguage, useTranslation, useLocalePath, LocaleLink } from './context';
+export type { Locale, LanguageContextValue } from './context';
+

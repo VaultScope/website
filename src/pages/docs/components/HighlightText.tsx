@@ -11,7 +11,7 @@ export const HighlightText = ({
   text,
   query,
   className = '',
-  highlightClassName = 'bg-amber-500/20 text-foreground font-semibold px-0.5 rounded border-b border-amber-500/40',
+  highlightClassName = 'bg-[var(--bg-elevated)] text-[var(--text)] font-semibold px-0.5 border-b border-[var(--line-strong)]',
 }: HighlightTextProps) => {
   if (!query || !query.trim()) {
     return <span className={className}>{text}</span>;

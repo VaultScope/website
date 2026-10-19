@@ -9,23 +9,23 @@ describe('searchDocs', () => {
     expect(searchDocs('   ')).toEqual([]);
   });
 
-  it('finds articles matching title or keywords', () => {
-    const results = searchDocs('docker');
+  it('finds SFTP articles matching title or keywords', () => {
+    const results = searchDocs('sftp');
     expect(results.length).toBeGreaterThan(0);
     const paths = results.map(r => r.article.path);
-    expect(paths.some(p => p.includes('storefront') || p.includes('vamos') || p.includes('camos'))).toBe(true);
+    expect(paths.some(p => p.includes('/docs/customer/sftp'))).toBe(true);
   });
 
-  it('finds Authentik OIDC guide', () => {
-    const results = searchDocs('authentik');
+  it('finds User Login guide', () => {
+    const results = searchDocs('login');
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].article.path).toBe('/docs/authentik');
+    expect(results.some(r => r.article.path === '/docs/customer/getting-started')).toBe(true);
   });
 
-  it('finds specific technical terms in section content like AES-256-GCM', () => {
-    const results = searchDocs('AES-256-GCM');
+  it('finds specific technical terms in section content like 2022 or FTHR', () => {
+    const results = searchDocs('2022');
     expect(results.length).toBeGreaterThan(0);
-    expect(results.some(r => r.article.path === '/docs/architecture')).toBe(true);
+    expect(results.some(r => r.article.path === '/docs/customer/sftp')).toBe(true);
   });
 });
 

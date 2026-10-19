@@ -1,1043 +1,804 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { WaitlistForm } from '../components/WaitlistForm';
-import { Button, parseHighlight } from '../components/Shared';
-import {
-  ArrowRight, Server, Shield, Cpu, Rocket,
-  Code2, Wrench, Monitor, HardDrive, Settings,
-} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  ArrowRight,
+  Server,
+  HardDrive,
+  FolderLock,
+  GitBranch,
+  Sliders,
+  Scale,
+  Layers,
+  Cpu,
+  Shield,
+} from 'lucide-react';
 import { useLanguage } from '../i18n';
-import { LocaleLink } from '../i18n/LocaleLink';
-import { SeoHead } from '../components/SeoHead';
+import { WaitlistForm } from '../components/WaitlistForm';
+import { CatalogErrorState } from '../components/Shared';
+import { api } from '../lib/api';
+import { HeroStack3D } from '../components/HeroStack3D';
 
-// ─── Helper Components ─────────────────────────────────────────────────────────
+interface CatalogProduct {
+  id: string;
+  name: string;
+  category: string;
+  provider: string;
+  price: string;
+  stock: number | null;
+  specs: {
+    cpu?: number;
+    ram?: number;
+    storage?: number;
+    bandwidth?: string;
+    location?: string;
+    description?: string;
+  } | null;
+}
 
-const FadeIn = ({
-  children,
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  delay?: number;
-}) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-10%' });
+const VAT_MULTIPLIER = 1.19;
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
+function formatPriceGross(netPriceStr: string): string {
+  const numeric = parseFloat(netPriceStr);
+  if (Number.isNaN(numeric)) return netPriceStr;
+  return (numeric * VAT_MULTIPLIER).toFixed(2);
+}
+
+interface TypewriterSentence {
+  highlight: string;
+  rest: string;
+}
+
+const HERO_SENTENCES: TypewriterSentence[] = [
+  {
+    highlight: 'Infrastructure and Software.',
+    rest: 'Engineered together.',
+  },
+  {
+    highlight: 'Hosting.',
+    rest: 'Built on Open-Source.',
+  },
+  {
+    highlight: 'Beyond Today.',
+    rest: "Built For What's Next.",
+  },
+];
+
+const TYPE_SPEED_MS = 38;
+const DELETE_SPEED_MS = 18;
+const HOLD_AFTER_WRITE_MS = 1500;
+
+export const Home = () => {
+  const { t, locale, localePath } = useLanguage();
+  const isDe = locale === 'de';
+
+  // ─── Typewriter State ──────────────────────────────────────────────────────
+  const [sentenceIndex, setSentenceIndex] = useState(0);
+  const [charCount, setCharCount] = useState(
+    HERO_SENTENCES[0].highlight.length + HERO_SENTENCES[0].rest.length
   );
-};
+  const [phase, setPhase] = useState<'typing' | 'waiting' | 'deleting'>('waiting');
 
-// ─── Three.js VaultScope Canvas ────────────────────────────────────────────────
-
-const VaultScopeCanvas = () => {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const [shouldRender, setShouldRender] = useState(false);
-  const scrollProgressRef = useRef(0);
-
-  const { scrollY } = useScroll();
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 900;
-  const canvasOpacity = useTransform(scrollY, [0, vh * 0.8, vh * 2.0], [1, 1, 0]);
+  const currentSentence = HERO_SENTENCES[sentenceIndex];
+  const fullLength = currentSentence.highlight.length + currentSentence.rest.length;
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const canvas = document.createElement('canvas');
-    const hasWebGL = !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
-    const saveData = (navigator as unknown as { connection?: { saveData?: boolean } }).connection?.saveData;
+    let timer: number;
 
-    if (!isMobile && !prefersReducedMotion && hasWebGL && !saveData) {
-      setShouldRender(true);
+    if (phase === 'typing') {
+      if (charCount < fullLength) {
+        timer = window.setTimeout(() => {
+          setCharCount((c) => c + 1);
+        }, TYPE_SPEED_MS);
+      } else {
+        setPhase('waiting');
+      }
+    } else if (phase === 'waiting') {
+      timer = window.setTimeout(() => {
+        setPhase('deleting');
+      }, HOLD_AFTER_WRITE_MS);
+    } else if (phase === 'deleting') {
+      if (charCount > 0) {
+        timer = window.setTimeout(() => {
+          setCharCount((c) => c - 1);
+        }, DELETE_SPEED_MS);
+      } else {
+        setSentenceIndex((idx) => (idx + 1) % HERO_SENTENCES.length);
+        setPhase('typing');
+      }
     }
+
+    return () => window.clearTimeout(timer);
+  }, [charCount, phase, fullLength]);
+
+  const typedHighlight = currentSentence.highlight.slice(
+    0,
+    Math.min(charCount, currentSentence.highlight.length)
+  );
+  const typedRest =
+    charCount > currentSentence.highlight.length
+      ? currentSentence.rest.slice(0, charCount - currentSentence.highlight.length)
+      : '';
+
+  // ─── Live Catalog State ────────────────────────────────────────────────────
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
+  const fetchCatalog = () => {
+    setLoadingCatalog(true);
+    setCatalogError(false);
+    api
+      .get<CatalogProduct[]>('/catalog')
+      .then((data) => {
+        setProducts(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setProducts([]);
+        setCatalogError(true);
+      })
+      .finally(() => {
+        setLoadingCatalog(false);
+      });
+  };
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get<CatalogProduct[]>('/catalog')
+      .then((data) => {
+        if (active) {
+          setProducts(Array.isArray(data) ? data : []);
+          setCatalogError(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setProducts([]);
+          setCatalogError(true);
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingCatalog(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
+  const filteredProducts =
+    activeCategory === 'all'
+      ? products
+      : products.filter((p) => p.category.toLowerCase() === activeCategory);
+
+  const categories = [
+    { id: 'all', label: isDe ? 'Alle Tarife' : 'All Plans' },
+    { id: 'vps', label: isDe ? 'Cloud VPS' : 'Cloud VPS' },
+    { id: 'dedicated', label: isDe ? 'Dediziert' : 'Dedicated' },
+    { id: 'storage', label: isDe ? 'Speicher' : 'Storage' },
+  ];
+
   useEffect(() => {
-    const el = mountRef.current;
-    if (!el || !shouldRender) return;
+    document.title = t.home.seo.title;
+  }, [t.home.seo.title]);
 
-    let disposed = false;
-    let raf = 0;
-
-    const init = async () => {
-      const THREE = await import('three');
-      const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-
-      if (disposed) return;
-
-      const width = el.clientWidth;
-      const height = el.clientHeight;
-
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        powerPreference: 'high-performance',
-      });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(width, height);
-      renderer.setClearColor(0x000000, 0);
-      el.appendChild(renderer.domElement);
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
-      camera.position.set(0, 0, 560);
-
-      scene.add(new THREE.AmbientLight(0xffffff, 50));
-
-      const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
-      keyLight.position.set(200, 400, 300);
-      scene.add(keyLight);
-
-      const rimLight = new THREE.DirectionalLight(0x3355ee, 0.7);
-      rimLight.position.set(-250, -100, -200);
-      scene.add(rimLight);
-
-      const accentLight = new THREE.PointLight(0x00cc77, 0.8, 1200);
-      accentLight.position.set(0, -300, 200);
-      scene.add(accentLight);
-
-      const rackGroup = new THREE.Group();
-      rackGroup.position.y = -400;
-      rackGroup.rotation.y = -0.25;
-      scene.add(rackGroup);
-
-      const onResize = () => {
-        if (!el) return;
-        const w = el.clientWidth;
-        const h = el.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      };
-      window.addEventListener('resize', onResize);
-
-      const updateScroll = () => {
-        scrollProgressRef.current = Math.min(1, window.scrollY / (window.innerHeight * 0.6));
-      };
-      window.addEventListener('scroll', updateScroll, { passive: true });
-      updateScroll();
-
-      const tick = () => {
-        raf = requestAnimationFrame(tick);
-        const progress = scrollProgressRef.current;
-        const targetCamZ = 560 - progress * 190;
-        camera.position.z += (targetCamZ - camera.position.z) * 0.05;
-        renderer.render(scene, camera);
-      };
-      tick();
-
-      const loader = new GLTFLoader();
-      loader.load(
-        '/3d/server_rack.glb',
-        (gltf) => {
-          const model = gltf.scene;
-          const box = new THREE.Box3().setFromObject(model);
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const scaleFactor = 700 / Math.max(size.x, size.y, size.z);
-          model.scale.setScalar(scaleFactor);
-          box.setFromObject(model);
-          const center = new THREE.Vector3();
-          box.getCenter(center);
-          model.position.sub(center);
-          rackGroup.add(model);
-        },
-        undefined,
-        (error) => console.error('Failed to load server rack model:', error),
-      );
-
-      return () => {
-        cancelAnimationFrame(raf);
-        window.removeEventListener('resize', onResize);
-        window.removeEventListener('scroll', updateScroll);
-        renderer.dispose();
-        scene.traverse((child: any) => {
-          if (child.geometry) child.geometry.dispose();
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach((m: any) => m.dispose());
-            } else {
-              child.material.dispose();
-            }
-          }
-        });
-        if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
-      };
-    };
-
-    let cleanup: (() => void) | undefined;
-    init().then((c) => { cleanup = c; });
-
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(raf);
-      cleanup?.();
-    };
-  }, [shouldRender]);
-
-  if (!shouldRender) return null;
-
-  return (
-    <motion.div
-      ref={mountRef}
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: 'none',
-        opacity: canvasOpacity,
-      }}
-    />
-  );
-};
-
-// ─── Product Overview Section ──────────────────────────────────────────────────
-
-const ProductOverview = () => {
-  const { t, localePath } = useLanguage();
-  const products = [
+  const whyChooseItems = [
     {
+      title: isDe ? 'Auf Open-Source aufgebaut' : 'Built on Open-Source',
+      desc: isDe
+        ? 'Unsere gesamte Plattform basiert auf überprüfbaren Open-Source-Technologien – ganz ohne proprietären Vendor-Lock-in.'
+        : 'Every layer of our platform is built on verifiable open-source technologies with zero proprietary lock-in.',
+      icon: GitBranch,
+    },
+    {
+      title: isDe ? 'Durchdachte Bedienung' : 'User friendliness',
+      desc: isDe
+        ? 'Aufgeräumte Oberflächen, präzise APIs und klare Workflows, die den täglichen Infrastrukturbetrieb spürbar vereinfachen.'
+        : 'Clean interfaces, predictable APIs, and straightforward workflows designed for effortless day-to-day operations.',
+      icon: Sliders,
+    },
+    {
+      title: isDe ? 'Faire & klare Preise' : 'Fair Pricing',
+      desc: isDe
+        ? 'Verlässliche monatliche Tarife ohne versteckte Einrichtungsgebühren, Überraschungskosten oder künstliche Bandbreitenlimits.'
+        : 'Transparent monthly rates with no setup fees, surprise renewal hikes, or artificial bandwidth tiers.',
+      icon: Scale,
+    },
+    {
+      title: isDe ? 'Nahtlose Integration' : 'Integration',
+      desc: isDe
+        ? 'Compute-Instanzen, Storage-Volumes und Verwaltungs-APIs greifen ohne Reibungsverluste direkt ineinander.'
+        : 'Compute instances, storage volumes, and management APIs work together as a single cohesive stack.',
+      icon: Layers,
+    },
+  ];
+
+  const principles = [
+    {
+      title: isDe ? 'Transparenz' : 'Transparency',
+      desc: isDe
+        ? 'Transparenz bildet das Fundament von VaultScope. Von offen einsehbaren Preisen und Hardwarespezifikationen bis hin zu unserem Quellcode und Betriebsstatus arbeiten wir ohne Blackboxen, versteckte Drosselungen oder intransparente Abhängigkeiten.'
+        : 'Transparency is the foundation of VaultScope. From public pricing and hardware specifications to our open-source codebase and operational status, we operate in the open—with no black boxes, hidden throttling, or undisclosed dependencies.',
+    },
+    {
+      title: 'Community',
+      desc: isDe
+        ? 'Wir entwickeln VaultScope im direkten Austausch mit den Entwicklern, Systemadministratoren und Teams, die unsere Plattform täglich nutzen. Öffentliche Roadmaps, offene Repositories und direkter technischer Dialog sorgen dafür, dass echtes Feedback unmittelbar in die Weiterentwicklung einfließt.'
+        : 'We build VaultScope alongside the developers, system administrators, and teams who run on our platform. Public roadmaps, open repositories, and direct technical dialogue ensure real-world feedback directly shapes what we ship next.',
+    },
+    {
+      title: isDe ? 'Vertrauen' : 'Trust',
+      desc: isDe
+        ? 'Vertrauen entsteht durch Verlässlichkeit und gegenseitigen Respekt. Wir begegnen unseren Kunden auf Augenhöhe – mit vollem Root-Zugriff, überprüfbarer Infrastruktur und klaren Zusagen statt restriktiver Verträge oder künstlichem Lock-in.'
+        : 'Trust is earned through consistency and mutual respect. We treat our clients as engineering peers—providing full root access, verifiable infrastructure, and clear commitments rather than restrictive contracts or artificial lock-in.',
+    },
+  ];
+
+  const productPillars = [
+    {
+      name: 'VPS',
+      badge: isDe ? 'bald' : 'soon',
+      title: 'VPS (soon)',
+      desc: isDe
+        ? 'KVM-isolierte virtuelle Server mit schnellem lokalem NVMe-Speicher und konstant hoher Rechenleistung.'
+        : 'KVM-isolated virtual private servers backed by local NVMe storage and consistent compute performance.',
+      href: '/infrastructure/cloud/',
       icon: Server,
-      label: t.home.products.infrastructure.title,
-      title: t.home.products.infrastructure.title,
-      desc: t.home.products.infrastructure.desc,
-      link: '/infrastructure/',
     },
     {
-      icon: Rocket,
-      label: t.home.products.deploy.title,
-      title: t.home.products.deploy.title,
-      desc: t.home.products.deploy.desc,
-      link: '/deploy/',
+      name: 'Dedicated',
+      badge: isDe ? 'bald' : 'soon',
+      title: 'Dedicated (soon)',
+      desc: isDe
+        ? 'Dedizierte Bare-Metal-Server mit vollem Root-Zugriff und maximaler Performance ohne Hypervisor-Overhead.'
+        : 'Single-tenant bare-metal servers with full root access and maximum throughput without hypervisor overhead.',
+      href: '/infrastructure/dedicated/',
+      icon: HardDrive,
     },
     {
-      icon: Code2,
-      label: t.home.products.software.title,
-      title: t.home.products.software.title,
-      desc: t.home.products.software.desc,
-      link: '/software/pegasus/',
-    },
-    {
-      icon: Wrench,
-      label: t.nav.managedInfrastructure,
-      title: t.nav.managedInfrastructure,
-      desc: t.home.infrastructure.managed.desc,
-      link: '/infrastructure/managed/',
+      name: 'Storage',
+      badge: null,
+      title: 'Storage (SFTP only as of now)',
+      desc: isDe
+        ? 'Verschlüsselter SFTP-Speicher für zuverlässige Off-Site-Backups, Langzeitarchive und sicheren Datentransfer.'
+        : 'Encrypted SFTP storage volumes built for off-site backups, long-term archives, and secure file transfers.',
+      href: '/infrastructure/storage/',
+      icon: FolderLock,
     },
   ];
 
-  return (
-    <section className="py-24 lg:py-32 bg-background border-t border-border">
-      <div className="container mx-auto px-6 lg:px-12">
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0 border border-border">
-            {products.map((product, i) => {
-              const Icon = product.icon;
-              return (
-                <Link
-                  key={product.title}
-                  to={localePath(product.link)}
-                  className={`group p-8 flex flex-col gap-6 hover:bg-foreground/[0.02] transition-colors ${
-                    i < products.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-border' : ''
-                  }`}
-                >
-                  <div className="w-12 h-12 border border-border flex items-center justify-center group-hover:border-foreground/30 transition-colors">
-                    <Icon className="w-5 h-5 text-foreground/50" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-2">
-                      {product.label}
-                    </p>
-                    <h3 className="text-xl font-medium text-foreground tracking-tight mb-2">
-                      {product.title}
-                    </h3>
-                    <p className="text-sm text-foreground/50 font-light leading-relaxed">
-                      {product.desc}
-                    </p>
-                  </div>
-                  <div className="mt-auto flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-foreground/30 group-hover:text-foreground/60 transition-colors">
-                    {t.common.learnMore}
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </FadeIn>
-      </div>
-    </section>
-  );
-};
-
-// ─── Infrastructure Section ────────────────────────────────────────────────────
-
-const InfrastructureSection = () => {
-  const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'vps' | 'dedicated'>('vps');
-
-  const scrollY = useScroll();
-  const progress = useTransform(scrollY.scrollYProgress, [0, 0.3], [0, 1]);
-
-  const CloudVPSVisual = () => {
-    const cpuPct = useTransform(progress, [0, 0.5], ['5%', '85%']);
-    const ramPct = useTransform(progress, [0, 0.5], ['10%', '72%']);
-    const dskPct = useTransform(progress, [0, 0.5], ['15%', '61%']);
-
-    return (
-      <motion.div
-        style={{
-          transform: useTransform(progress, [0, 0.2], ['scale(0.95) translateY(20px)', 'scale(1) translateY(0)']),
-          opacity: useTransform(progress, [0, 0.1], [0, 1]),
-        }}
-        className="w-full border border-border bg-background overflow-hidden"
-      >
-        <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-foreground/[0.02]">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <div className="absolute inset-0 w-2 h-2 rounded-full bg-green-500 animate-ping opacity-75" />
-            </div>
-            <span className="text-xs font-mono text-foreground">vps-eu-01</span>
-          </div>
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">{t.home.infraSection.online}</span>
-        </div>
-
-        <div className="px-6 pt-6 pb-4">
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-widest">CPU</span>
-              <span className="text-[10px] font-mono text-foreground/60">85%</span>
-            </div>
-            <div className="h-[2px] bg-foreground/10 w-full overflow-hidden">
-              <motion.div style={{ width: cpuPct }} className="h-full bg-foreground/60" />
-            </div>
-          </div>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-widest">Memory</span>
-              <span className="text-[10px] font-mono text-foreground/60">72%</span>
-            </div>
-            <div className="h-[2px] bg-foreground/10 w-full overflow-hidden">
-              <motion.div style={{ width: ramPct }} className="h-full bg-foreground/60" />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-widest">Storage</span>
-              <span className="text-[10px] font-mono text-foreground/60">61%</span>
-            </div>
-            <div className="h-[2px] bg-foreground/10 w-full overflow-hidden">
-              <motion.div style={{ width: dskPct }} className="h-full bg-foreground/60" />
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-border px-6 py-4 grid grid-cols-3 gap-4 text-xs font-mono text-foreground/40 uppercase tracking-widest">
-          <div>
-            <div className="mb-1">Location</div>
-            <div className="text-foreground">EU</div>
-          </div>
-          <div>
-            <div className="mb-1">CPU</div>
-            <div className="text-foreground">8 Cores</div>
-          </div>
-          <div>
-            <div className="mb-1">RAM</div>
-            <div className="text-foreground">32 GB</div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  const DedicatedVisual = () => {
-    const cpuPct = useTransform(progress, [0, 0.5], ['5%', '100%']);
-    const ramPct = useTransform(progress, [0, 0.5], ['8%', '100%']);
-    const dskPct = useTransform(progress, [0, 0.5], ['12%', '100%']);
-
-    return (
-      <motion.div
-        style={{
-          transform: useTransform(progress, [0, 0.2], ['scale(0.95) translateY(20px)', 'scale(1) translateY(0)']),
-          opacity: useTransform(progress, [0, 0.1], [0, 1]),
-        }}
-        className="w-full border border-border bg-background overflow-hidden"
-      >
-        <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-foreground/[0.02]">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <div className="absolute inset-0 w-2 h-2 rounded-full bg-green-500 animate-ping opacity-75" />
-            </div>
-            <span className="text-xs font-mono text-foreground">srv-eu-ded-01</span>
-          </div>
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/40">Dedicated</span>
-        </div>
-
-        <div className="px-6 pt-4 pb-2">
-          <div className="border border-foreground/20 px-4 py-2 bg-foreground/[0.02]">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
-              <span className="text-[9px] font-medium uppercase tracking-widest text-foreground/60">
-                {t.home.infraSection.exclusiveResources}
-              </span>
-            </div>
-            <p className="text-[10px] text-foreground/40">
-              {t.home.infraSection.exclusiveResourcesDesc}
-            </p>
-          </div>
-        </div>
-
-        <div className="px-6 pt-4 pb-4">
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-widest">CPU</span>
-              <span className="text-[10px] font-mono text-foreground/60">100%</span>
-            </div>
-            <div className="h-[3px] bg-foreground/10 w-full overflow-hidden">
-              <motion.div style={{ width: cpuPct }} className="h-full bg-foreground" />
-            </div>
-          </div>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-widest">Memory</span>
-              <span className="text-[10px] font-mono text-foreground/60">100%</span>
-            </div>
-            <div className="h-[3px] bg-foreground/10 w-full overflow-hidden">
-              <motion.div style={{ width: ramPct }} className="h-full bg-foreground" />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-widest">Storage</span>
-              <span className="text-[10px] font-mono text-foreground/60">100%</span>
-            </div>
-            <div className="h-[3px] bg-foreground/10 w-full overflow-hidden">
-              <motion.div style={{ width: dskPct }} className="h-full bg-foreground" />
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-border px-6 py-4 grid grid-cols-3 gap-4 text-xs font-mono text-foreground/40 uppercase tracking-widest">
-          <div>
-            <div className="mb-1">Location</div>
-            <div className="text-foreground">EU</div>
-          </div>
-          <div>
-            <div className="mb-1">CPU</div>
-            <div className="text-foreground">16 Cores</div>
-          </div>
-          <div>
-            <div className="mb-1">RAM</div>
-            <div className="text-foreground">64 GB</div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  return (
-    <section className="py-24 lg:py-32 relative bg-background border-t border-border">
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                {t.home.infraSection.eyebrow}
-              </p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-none mb-6">
-                {t.home.infraSection.title}<br />
-                <span className="highlight-marker inline-block mt-2">{t.home.infraSection.titleHighlight}</span>
-              </h2>
-              <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
-                {t.home.infraSection.description}
-              </p>
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.2}>
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="w-full md:w-64 flex flex-col gap-3">
-                <button
-                  onClick={() => setActiveTab('vps')}
-                  className={`text-left px-6 py-5 border transition-all duration-300 cursor-pointer ${
-                    activeTab === 'vps'
-                      ? 'bg-foreground text-background border-foreground'
-                      : 'bg-background text-foreground border-border hover:border-foreground/50'
-                  }`}
-                >
-                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">{t.home.infraSection.tier01}</span>
-                  <span className="text-2xl font-medium uppercase tracking-wider">{t.home.infraSection.cloudVps}</span>
-                  <p className={`text-xs mt-3 ${activeTab === 'vps' ? 'text-background/60' : 'text-foreground/60'}`}>{t.home.infraSection.vpsSubtitle}</p>
-                </button>
-                <button
-                  onClick={() => setActiveTab('dedicated')}
-                  className={`text-left px-6 py-5 border transition-all duration-300 cursor-pointer ${
-                    activeTab === 'dedicated'
-                      ? 'bg-foreground text-background border-foreground'
-                      : 'bg-background text-foreground border-border hover:border-foreground/50'
-                  }`}
-                >
-                  <span className="block text-xs font-mono mb-2 uppercase tracking-widest">{t.home.infraSection.tier02}</span>
-                  <span className="text-2xl font-medium uppercase tracking-wider">{t.home.infraSection.dedicated}</span>
-                  <p className={`text-xs mt-3 ${activeTab === 'dedicated' ? 'text-background/60' : 'text-foreground/60'}`}>{t.home.infraSection.dedicatedSubtitle}</p>
-                </button>
-              </div>
-
-              <div className="flex-1 w-full">
-                {activeTab === 'vps' ? <CloudVPSVisual /> : <DedicatedVisual />}
-              </div>
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.4}>
-            <div className="mt-20 grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'Modern Virtualization',
-                  desc: 'Proxmox-based infrastructure provides enterprise-grade virtualization with clean resource isolation.',
-                  icon: Server,
-                },
-                {
-                  title: 'Full Control',
-                  desc: 'Complete root access and infrastructure control. Deploy, manage, and monitor your resources.',
-                  icon: Cpu,
-                },
-                {
-                  title: 'Transparent Technology',
-                  desc: 'Open-source stack you can inspect, audit, and understand. No black boxes, no vendor lock-in.',
-                  icon: Shield,
-                },
-              ].map((item, i) => (
-                <div key={i} className="border border-border p-8 hover:bg-foreground/[0.02] transition-colors">
-                  <div className="w-12 h-12 border border-border flex items-center justify-center mb-6">
-                    <item.icon className="w-6 h-6 text-foreground/60" />
-                  </div>
-                  <h3 className="text-2xl font-medium text-foreground mb-4">{item.title}</h3>
-                  <p className="text-foreground/50 font-light leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.5}>
-            <div className="mt-12 text-center">
-              <LocaleLink to="/infrastructure/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
-                {t.home.infrastructure.cta}<ArrowRight className="w-4 h-4" />
-              </LocaleLink>
-            </div>
-          </FadeIn>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── ODP Section ───────────────────────────────────────────────────────────────
-
-const DeploySection = () => {
-  const { t } = useLanguage();
-  const steps = [
-    { step: '01', title: 'Choose', desc: 'Select from pre-configured services.' },
-    { step: '02', title: 'Configure', desc: 'Set parameters — name, region, resources.' },
-    { step: '03', title: 'Running', desc: 'Live on infrastructure in seconds.' },
+  const softwareList = [
+    {
+      name: 'Vamos',
+      desc: isDe
+        ? 'Unser in Rust entwickeltes Kernsystem für Ressourcen-Provisionierung, Authentifizierung, Abrechnung und Storefront-APIs.'
+        : 'Our core Rust backend engine handling resource provisioning, authentication, billing lifecycles, and storefront APIs.',
+      href: '/software/vamos/',
+      icon: Cpu,
+    },
+    {
+      name: 'Camos',
+      desc: isDe
+        ? 'Unsere Administrations-Suite zur zentralen Verwaltung von Kunden, Produkten, Mitarbeitern, rollenbasierter Zugriffskontrolle (RBAC) und Betriebsabläufen.'
+        : 'Our Administration Suite built to manage customers, products, staff, role-based access control (RBAC), and internal operations.',
+      href: '/software/camos/',
+      icon: Shield,
+    },
   ];
 
-  const categories = ['Docker Containers', 'PostgreSQL', 'Redis', 'Web Services'];
+  // ─── Scroll-Linked Fade-Out for Hero Background ────────────────────────────
+  const heroBgRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const updateHeroBgFade = () => {
+      const el = heroBgRef.current;
+      if (!el) return;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const fadeDistance = Math.max((window.innerHeight || 840) * 0.75, 420);
+      const progress = Math.min(Math.max(scrollY / fadeDistance, 0), 1);
+      const opacity = Math.max(0, 1 - Math.pow(progress, 1.15));
+      el.style.opacity = opacity.toFixed(3);
+      el.style.transform = `translate3d(0, ${(scrollY * 0.12).toFixed(1)}px, 0)`;
+    };
+
+    updateHeroBgFade();
+    window.addEventListener('scroll', updateHeroBgFade, { passive: true });
+    window.addEventListener('resize', updateHeroBgFade, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', updateHeroBgFade);
+      window.removeEventListener('resize', updateHeroBgFade);
+    };
+  }, []);
 
   return (
-    <section className="py-24 lg:py-32 bg-background border-t border-border">
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                One-Click Deploy
-              </p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Deploy in seconds.
-              </h2>
-              <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl">
-                Pre-built images and pre-configured settings. Launch a fully managed service on our
-                infrastructure without manual setup.
-              </p>
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.2}>
-            <div className="grid md:grid-cols-3 gap-0 border border-border mb-12">
-              {steps.map((item, i) => (
-                <div
-                  key={item.step}
-                  className={`p-10 flex flex-col gap-4 ${
-                    i < steps.length - 1 ? 'border-b md:border-b-0 md:border-r border-border' : ''
-                  }`}
-                >
-                  <span className="text-xs font-medium text-foreground/20 tracking-widest uppercase">{item.step}</span>
-                  <h3 className="text-2xl font-medium text-foreground tracking-tight">{item.title}</h3>
-                  <p className="text-sm text-foreground/40 font-light leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.3}>
-            <div className="flex flex-wrap gap-3 mb-12">
-              {categories.map((cat) => (
-                <span key={cat} className="border border-border px-4 py-2 text-xs font-medium text-foreground/40 uppercase tracking-widest">
-                  {cat}
-                </span>
-              ))}
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.4}>
-            <LocaleLink to="/deploy/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
-              {t.home.deploy.cta}<ArrowRight className="w-4 h-4" />
-            </LocaleLink>
-          </FadeIn>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Managed Infrastructure Section ────────────────────────────────────────────
-
-const ManagedSection = () => {
-  const { t } = useLanguage();
-  const capabilities = [
-    { icon: Settings, title: 'Architecture', desc: 'Infrastructure designed for your requirements.' },
-    { icon: Rocket, title: 'Deployment', desc: 'Provisioned and configured by engineers.' },
-    { icon: Monitor, title: 'Monitoring', desc: 'Proactive health tracking and alerting.' },
-    { icon: Wrench, title: 'Maintenance', desc: 'Updates, patches, and ongoing management.' },
-    { icon: HardDrive, title: 'Migration', desc: 'Move existing workloads with zero downtime.' },
-  ];
-
-  return (
-    <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none">
+    <div className="bg-[var(--bg)] text-[var(--fg)]">
+      {/* ─── SECTION 1: HERO (Pixelated Typewriter + Sleek Purple Highlight + Floating Stack) ─── */}
+      <section className="relative pt-28 pb-16 lg:min-h-screen lg:pt-20 lg:pb-12 lg:flex lg:items-center overflow-hidden">
+        {/* Animated Architectural Background that Slowly Fades Out on Scroll */}
         <div
-          className="w-full h-full"
-          style={{
-            backgroundImage:
-              'linear-gradient(var(--background) 1px, transparent 1px), linear-gradient(90deg,var(--background) 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-          }}
-        />
-      </div>
+          ref={heroBgRef}
+          aria-hidden="true"
+          data-testid="hero-animated-bg"
+          className="pointer-events-none select-none absolute inset-0 z-0 overflow-hidden will-change-[opacity,transform]"
+        >
+          {/* Drifting Ambient Volumetric Glows */}
+          <div
+            className="absolute -top-24 -left-24 w-[480px] h-[480px] lg:w-[640px] lg:h-[640px] rounded-full animate-ocd-drift-b"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(109, 40, 217, 0.16) 0%, rgba(155, 93, 229, 0.05) 48%, transparent 72%)',
+            }}
+          />
+          <div
+            className="absolute top-[12%] right-[-8%] w-[520px] h-[520px] lg:w-[720px] lg:h-[720px] rounded-full animate-ocd-drift-a"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(155, 93, 229, 0.20) 0%, rgba(109, 40, 217, 0.08) 45%, transparent 72%)',
+            }}
+          />
+          <div
+            className="absolute bottom-[6%] left-[28%] w-[420px] h-[420px] lg:w-[560px] lg:h-[560px] rounded-full animate-ocd-drift-c"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(124, 58, 237, 0.11) 0%, transparent 70%)',
+            }}
+          />
 
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">
-                Managed Infrastructure
+          {/* Panning Architectural Grid & Vertex Matrix */}
+          <div
+            className="absolute inset-0"
+            style={{
+              maskImage:
+                'radial-gradient(ellipse 85% 75% at 52% 45%, #000 25%, rgba(0,0,0,0.55) 62%, transparent 96%)',
+              WebkitMaskImage:
+                'radial-gradient(ellipse 85% 75% at 52% 45%, #000 25%, rgba(0,0,0,0.55) 62%, transparent 96%)',
+            }}
+          >
+            <div
+              className="absolute -top-16 inset-x-0 -bottom-16 animate-hero-grid-pan"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(155, 93, 229, 0.085) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(155, 93, 229, 0.085) 1px, transparent 1px),
+                  radial-gradient(circle, rgba(155, 93, 229, 0.28) 1px, transparent 1.5px)
+                `,
+                backgroundSize: '64px 64px, 64px 64px, 64px 64px',
+                backgroundPosition: '0 0, 0 0, 0 0',
+              }}
+            />
+
+            {/* Animated Telemetry Signal Beams Gliding Along Grid Tracks */}
+            <div className="absolute top-[192px] left-0 w-64 h-[1px] bg-gradient-to-r from-transparent via-[#9B5DE5]/70 to-transparent animate-hero-beam-x" />
+            <div className="absolute top-[384px] left-0 w-72 h-[1px] bg-gradient-to-r from-transparent via-[#6D28D9]/65 to-transparent animate-hero-beam-x-delayed" />
+            <div className="absolute top-0 left-[256px] lg:left-[384px] w-[1px] h-56 bg-gradient-to-b from-transparent via-[#9B5DE5]/60 to-transparent animate-hero-beam-y" />
+            <div className="absolute top-0 right-[192px] lg:right-[320px] w-[1px] h-64 bg-gradient-to-b from-transparent via-[#9B5DE5]/55 to-transparent animate-hero-beam-y-delayed" />
+          </div>
+
+          {/* Spatial Bottom Fade into Page Canvas */}
+          <div className="absolute inset-x-0 bottom-0 h-44 sm:h-56 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/80 to-transparent" />
+        </div>
+
+        <div className="vs-container relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-12 xl:gap-16 items-center">
+            <div className="lg:col-span-7">
+              <div className="grid mb-8 lg:mb-10">
+                {/* Invisible sizing anchor for the longest two-line sentence to prevent layout shift */}
+                <div
+                  aria-hidden="true"
+                  className="invisible select-none pointer-events-none col-start-1 row-start-1 font-pixel text-[1.18rem] sm:text-3xl lg:text-[2.75rem] xl:text-[3.2rem] leading-[1.3] tracking-[0.01em] break-words"
+                >
+                  <span className="block">Infrastructure and Software.</span>
+                  <span className="block">Engineered together.</span>
+                </div>
+
+                {/* Active pixelated typewriter heading: purple line always stacked on top of white line */}
+                <h1
+                  aria-label={`${currentSentence.highlight} ${currentSentence.rest}`}
+                  className="col-start-1 row-start-1 font-pixel text-[1.18rem] sm:text-3xl lg:text-[2.75rem] xl:text-[3.2rem] leading-[1.3] tracking-[0.01em] text-[var(--fg)] break-words"
+                >
+                  <span className="block text-[#9B5DE5]">
+                    {typedHighlight}
+                    {charCount <= currentSentence.highlight.length && (
+                      <span
+                        aria-hidden="true"
+                        className="inline-block w-[0.55ch] h-[0.88em] bg-[#9B5DE5] align-baseline ml-1 animate-pulse"
+                      />
+                    )}
+                  </span>
+                  <span className="block text-[var(--fg)] min-h-[1.3em]">
+                    {typedRest}
+                    {charCount > currentSentence.highlight.length && (
+                      <span
+                        aria-hidden="true"
+                        className="inline-block w-[0.55ch] h-[0.88em] bg-[#9B5DE5] align-baseline ml-1 animate-pulse"
+                      />
+                    )}
+                  </span>
+                </h1>
+              </div>
+
+              <p className="text-body-l lg:text-xl lg:leading-[1.7] font-desc text-[var(--fg-muted)] max-w-[56ch] mb-9 lg:mb-11">
+                {t.home.hero.subtext}
               </p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88] mb-6">
-                Infrastructure designed for<br />
-                your business.
+
+              <div className="flex flex-wrap items-center gap-3.5 lg:gap-4">
+                <Link
+                  to={localePath('/infrastructure/')}
+                  className="vs-btn-primary lg:h-12 lg:px-7 lg:text-[15px]"
+                >
+                  <span>{isDe ? 'Services entdecken' : 'Explore Services'}</span>
+                  <ArrowRight className="w-4 h-4 lg:w-4.5 lg:h-4.5" />
+                </Link>
+                <Link
+                  to={localePath('/company/about/')}
+                  className="vs-btn-secondary lg:h-12 lg:px-7 lg:text-[15px]"
+                >
+                  <span>{isDe ? 'Über VaultScope' : 'About VaultScope'}</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 flex items-center justify-center pointer-events-none select-none">
+              <HeroStack3D />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 2: WHY US & OUR PRINCIPLES ─── */}
+      <section className="vs-section">
+        <div className="vs-container space-y-20">
+          {/* 2.1 Why us? */}
+          <div>
+            <div className="max-w-2xl mb-10">
+              <h2 className="text-display-m text-[var(--fg)] mb-2.5">
+                {isDe ? 'Warum wir?' : 'Why us?'}
               </h2>
-              <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl">
-                Operated by engineers. Architecture, deployment, monitoring, and maintenance —
-                all handled for you.
+              <p className="text-body-l font-desc text-[var(--fg-muted)]">
+                {isDe
+                  ? 'Offene Architektur, klare Werkzeuge und verlässliche Infrastruktur.'
+                  : 'Open architecture, straightforward tooling, and dependable infrastructure.'}
               </p>
             </div>
-          </FadeIn>
 
-          <FadeIn delay={0.2}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-0 border border-background/20">
-              {capabilities.map((cap, i) => {
-                const Icon = cap.icon;
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+              {whyChooseItems.map((item) => {
+                const Icon = item.icon;
                 return (
-                  <div
-                    key={cap.title}
-                    className={`p-8 ${
-                      i < capabilities.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-background/20' : ''
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 text-background/40 mb-4" />
-                    <h3 className="text-base font-medium text-background mb-2">{cap.title}</h3>
-                    <p className="text-sm text-background/40 font-light leading-relaxed">{cap.desc}</p>
+                  <div key={item.title} className="space-y-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                      <h3 className="text-base font-semibold text-[var(--fg)] tracking-tight">{item.title}</h3>
+                    </div>
+                    <p className="font-desc text-sm text-[var(--fg-muted)] leading-relaxed">{item.desc}</p>
                   </div>
                 );
               })}
             </div>
-          </FadeIn>
-
-          <FadeIn delay={0.3}>
-            <div className="mt-12">
-              <LocaleLink to="/company/contact/">
-                <Button variant="dynamic">
-                  {t.common.getInTouch}
-                </Button>
-              </LocaleLink>
-            </div>
-          </FadeIn>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Software / Pegasus Section ────────────────────────────────────────────────
-
-const SoftwareSection = () => {
-  const { t } = useLanguage();
-  return (
-    <section className="py-24 lg:py-32 bg-background border-t border-border">
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">
-                  Software
-                </p>
-                <h2 className="text-5xl md:text-6xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                  Software built by<br />VaultScope.
-                </h2>
-                <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-xl mb-8">
-                  VaultScope develops software alongside its infrastructure services. Pegasus is
-                  a full-featured Discord community management platform — self-hostable and
-                  source-available.
-                </p>
-                <LocaleLink to="/software/pegasus/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground/50 hover:text-foreground transition-colors">
-                  {t.home.software.cta}<ArrowRight className="w-4 h-4" />
-                </LocaleLink>
-              </div>
-
-              <div className="border border-border p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 border border-border flex items-center justify-center">
-                    <Code2 className="w-5 h-5 text-foreground/50" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-foreground">Pegasus</h3>
-                    <p className="text-xs text-foreground/40 uppercase tracking-widest">Discord Platform</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-0 border border-border">
-                  {[
-                    { label: 'Modules', value: '8' },
-                    { label: 'License', value: 'PolyForm NC' },
-                    { label: 'Stack', value: 'TypeScript' },
-                    { label: 'Dashboard', value: 'Next.js' },
-                  ].map((stat) => (
-                    <div key={stat.label} className="border-b border-r border-border last:border-r-0 px-5 py-4">
-                      <div className="text-xs text-foreground/30 uppercase tracking-widest mb-1">{stat.label}</div>
-                      <div className="text-sm font-medium text-foreground">{stat.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Why VaultScope Section ────────────────────────────────────────────────────
-
-const WhyVaultScope = () => {
-  return (
-    <section className="py-24 lg:py-32 bg-background border-t border-border">
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-20">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">Principles</p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88]">
-                Why VaultScope.
-              </h2>
-            </div>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <FadeIn delay={0.1}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">01</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Engineering</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Infrastructure designed deliberately. Every component has purpose, every
-                  decision is intentional. No layers of unnecessary abstraction.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.2}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">02</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Transparency</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Open-source stack you can inspect and audit. Infrastructure should be
-                  understandable, observable, and controllable.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.3}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">03</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Integration</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Infrastructure and software, engineered together. Services that work as a
-                  system, not isolated products bolted to third-party platforms.
-                </p>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.4}>
-              <div className="border-l-2 border-foreground/20 pl-8">
-                <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-foreground/30 mb-3">04</p>
-                <h3 className="text-3xl font-medium text-foreground mb-4">Personal Service</h3>
-                <p className="text-lg text-foreground/50 font-light leading-relaxed">
-                  Talk to engineers, not support tiers. Problems get solved by the people who
-                  built the infrastructure — directly.
-                </p>
-              </div>
-            </FadeIn>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
-// ─── Technology Transparency Section ───────────────────────────────────────────
-
-const TechnologySection = () => {
-  const { t } = useLanguage();
-  const technologies = [
-    { name: 'PROXMOX', category: 'Virtualization', desc: 'Open-source hypervisor platform' },
-    { name: 'DEBIAN', category: 'Operating System', desc: 'Stable, production-grade Linux' },
-    { name: 'DOCKER', category: 'Containerization', desc: 'Industry-standard container management' },
-    { name: 'FORGEJO', category: 'Development', desc: 'Self-hosted Git platform' },
-    { name: 'UPTIME KUMA', category: 'Monitoring', desc: 'Service uptime tracking' },
-    { name: 'BESZEL', category: 'Monitoring', desc: 'Infrastructure health' },
-  ];
-
-  return (
-    <section className="py-24 lg:py-32 bg-foreground text-background relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage:
-              'linear-gradient(var(--background) 1px, transparent 1px), linear-gradient(90deg,var(--background) 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-          }}
-        />
-      </div>
-
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn>
-            <div className="mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-background/30 mb-4">The Stack</p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-background leading-[0.88] mb-6">
-                Built on open<br />
-                infrastructure.
+          {/* 2.2 Our Principles */}
+          <div>
+            <div className="max-w-2xl mb-10">
+              <h2 className="text-display-m text-[var(--fg)] mb-2.5">
+                {isDe ? 'Unsere Prinzipien' : 'Our Principles'}
               </h2>
-              <p className="text-xl text-background/50 font-light leading-relaxed max-w-2xl">
-                VaultScope runs on curated open-source tools — each chosen for stability,
-                performance, and community support.
+              <p className="text-body-l font-desc text-[var(--fg-muted)]">
+                {isDe
+                  ? 'Drei klare Leitlinien bestimmen, wie wir Infrastruktur aufbauen, Software entwickeln und mit unseren Kunden zusammenarbeiten.'
+                  : 'Three core commitments guide how we build infrastructure, engineer software, and work with our clients.'}
               </p>
             </div>
-          </FadeIn>
 
-          <FadeIn delay={0.2}>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-background/20 mb-12">
-              {technologies.map((tech) => (
-                <div key={tech.name} className="group border-b border-r border-background/20 p-8 hover:bg-background/10 transition-colors">
-                  <div className="text-5xl font-medium text-background/10 mb-3 group-hover:text-background/20 transition-colors">
-                    {tech.name[0]}
-                  </div>
-                  <h3 className="text-lg font-medium text-background mb-1">{tech.name}</h3>
-                  <p className="text-sm text-background/50 font-light">{tech.category}</p>
-                  <p className="text-xs text-background/40 font-light mt-2">{tech.desc}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+              {principles.map((item, idx) => (
+                <div key={item.title} className="space-y-2.5">
+                  <span className="block font-mono text-xs font-semibold text-[var(--accent-bright)]">0{idx + 1}</span>
+                  <h3 className="text-base font-semibold text-[var(--fg)] tracking-tight">{item.title}</h3>
+                  <p className="font-desc text-sm text-[var(--fg-muted)] leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
-          </FadeIn>
-
-          <FadeIn delay={0.3}>
-            <LocaleLink to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-background/50 hover:text-background transition-colors">
-              {t.home.techTransparency.cta}<ArrowRight className="w-4 h-4" />
-            </LocaleLink>
-          </FadeIn>
+          </div>
         </div>
-      </div>
-    </section>
-  );
-};
+      </section>
 
-// ─── Pre-Launch / Waitlist Section ─────────────────────────────────────────────
+      {/* ─── SECTION 3: PRODUCTS ─── */}
+      <section className="vs-section" id="products">
+        <div className="vs-container">
+          <div className="max-w-2xl mb-10">
+            <h2 className="text-display-m text-[var(--fg)] mb-2.5">
+              {isDe ? 'Produkte' : 'Products'}
+            </h2>
+            <p className="text-body-l font-desc text-[var(--fg-muted)]">
+              {t.home.infrastructure.subtext}
+            </p>
+          </div>
 
-const WaitlistSection = () => {
-  return (
-    <section id="waitlist" className="py-24 lg:py-32 bg-background border-t border-border">
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="max-w-4xl mx-auto">
-          <FadeIn>
-            <div className="text-center mb-16">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-foreground/30 mb-4">Pre-Launch</p>
-              <h2 className="text-5xl md:text-7xl font-medium tracking-tighter text-foreground leading-[0.88] mb-6">
-                Built before the<br />first customer.
-              </h2>
-              <p className="text-xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto">
-                Cloud VPS, Dedicated Servers, and One-Click Deploy are in preparation.
-                Join the waitlist to be notified when services launch.
-              </p>
-            </div>
-          </FadeIn>
+          {/* Core Product Pillars: VPS (soon), Dedicated (soon), Storage (SFTP only as of now) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 mb-16">
+            {productPillars.map((product) => {
+              const Icon = product.icon;
+              return (
+                <div
+                  key={product.name}
+                  className="flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                        <h3 className="text-base font-semibold text-[var(--fg)] tracking-tight">
+                          {product.title}
+                        </h3>
+                      </div>
+                      {product.badge && (
+                        <span className="px-2 py-0.5 rounded font-mono text-[11px] uppercase tracking-wider bg-[var(--accent-subtle)] text-[var(--accent-bright)]">
+                          {product.badge}
+                        </span>
+                      )}
+                    </div>
 
-          <FadeIn delay={0.2}>
-            <div className="border border-border p-10 text-center">
-              <h3 className="text-2xl font-medium text-foreground mb-6">Get notified at launch</h3>
-              <div className="max-w-md mx-auto">
-                <WaitlistForm />
+                    <p className="font-desc text-sm text-[var(--fg-muted)] leading-relaxed mb-5">
+                      {product.desc}
+                    </p>
+                  </div>
+
+                  <Link
+                    to={localePath(product.href)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                  >
+                    <span>{isDe ? 'Mehr erfahren' : 'Learn More'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Live Self-Service Catalog Ledger */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <h3 className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-[var(--fg)]">
+                  {isDe ? 'Live-Katalog' : 'Live Catalog'}
+                </h3>
+                <span className="text-xs text-[var(--fg-muted)]">
+                  {isDe ? 'Alle Preise inkl. 19 % MwSt.' : 'All prices incl. 19% VAT'}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {categories.map((cat) => {
+                  const active = activeCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveCategory(cat.id)}
+                      aria-pressed={active}
+                      className={`px-3.5 py-1.5 rounded-[4px] text-xs font-medium transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-[var(--accent-subtle)] text-[var(--fg)]'
+                          : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </FadeIn>
+
+            {loadingCatalog ? (
+              <div className="divide-y divide-[var(--line)]">
+                <div className="py-3 flex items-center justify-between font-mono text-xs text-[var(--fg-muted)]">
+                  <span>{isDe ? 'Tarife werden geladen...' : 'Loading plans...'}</span>
+                  <span className="text-[var(--fg-faint)]">VAMOS-CATALOG</span>
+                </div>
+                {[0, 1, 2].map((row) => (
+                  <div key={row} className="py-4 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 items-center">
+                    <div className="h-3.5 w-24 sm:w-32 rounded bg-[var(--bg-subtle)] animate-pulse" />
+                    <div className="h-3 w-full max-w-[12rem] rounded bg-[var(--bg-subtle)] animate-pulse" />
+                    <div className="hidden sm:block h-3 w-28 rounded bg-[var(--bg-subtle)] animate-pulse" />
+                    <div className="hidden sm:block h-3.5 w-20 rounded bg-[var(--bg-subtle)] animate-pulse justify-self-end" />
+                  </div>
+                ))}
+              </div>
+            ) : catalogError ? (
+              <CatalogErrorState isDe={isDe} onRetry={fetchCatalog} />
+            ) : filteredProducts.length === 0 ? (
+              <div className="py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <p className="text-sm text-[var(--fg-muted)]">
+                  {activeCategory === 'all'
+                    ? isDe
+                      ? 'Keine öffentlichen Selbstbedienungs-Tarife im Live-Katalog freigeschaltet.'
+                      : 'No public self-service plans currently published in live catalog.'
+                    : isDe
+                      ? 'Keine Tarife in dieser Kategorie freigeschaltet.'
+                      : 'No public self-service plans currently published in this category.'}
+                </p>
+                {activeCategory !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveCategory('all')}
+                    className="vs-btn-secondary text-xs h-8 px-3 shrink-0"
+                  >
+                    {isDe ? 'Alle Tarife anzeigen' : 'Show All Plans'}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="vs-table min-w-[560px] sm:min-w-full">
+                  <thead>
+                    <tr>
+                      <th className="pl-0">{isDe ? 'Tarif' : 'Plan'}</th>
+                      <th>{isDe ? 'Kategorie' : 'Category'}</th>
+                      <th>{isDe ? 'Ressourcen' : 'Resources'}</th>
+                      <th>{isDe ? 'Standort & Traffic' : 'Location & Bandwidth'}</th>
+                      <th>{isDe ? 'Status' : 'Status'}</th>
+                      <th className="text-right">{isDe ? 'Monatlich' : 'Monthly'}</th>
+                      <th className="text-right pr-0">{isDe ? 'Aktion' : 'Action'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((plan) => {
+                      const inStock = plan.stock === null || plan.stock > 0;
+                      const cpuLabel = plan.specs?.cpu ? `${plan.specs.cpu} vCPU` : null;
+                      const ramLabel = plan.specs?.ram ? `${plan.specs.ram} GB RAM` : null;
+                      const storageLabel = plan.specs?.storage
+                        ? `${plan.specs.storage} GB NVMe`
+                        : null;
+                      const rawDesc = plan.specs?.description?.trim();
+                      const cleanDesc =
+                        rawDesc && rawDesc !== '-' && rawDesc !== '—' && rawDesc.toUpperCase() !== 'N/A'
+                          ? rawDesc
+                          : null;
+                      const specSummary =
+                        [cpuLabel, ramLabel, storageLabel].filter(Boolean).join(' · ') ||
+                        cleanDesc ||
+                        (isDe ? 'Standard-Konfiguration' : 'Standard configuration');
+
+                      const rawLoc = plan.specs?.location?.trim();
+                      const cleanLoc =
+                        rawLoc && rawLoc !== '-' && rawLoc !== '—' && rawLoc.toUpperCase() !== 'N/A'
+                          ? rawLoc
+                          : isDe
+                            ? 'Deutschland (EU-Zentral)'
+                            : 'Germany (EU-Central)';
+
+                      const rawBw = plan.specs?.bandwidth?.trim();
+                      const cleanBw =
+                        rawBw && rawBw !== '-' && rawBw !== '—' && rawBw.toUpperCase() !== 'N/A'
+                          ? rawBw
+                          : null;
+
+                      const locBwText = cleanBw ? `${cleanLoc} · ${cleanBw}` : cleanLoc;
+
+                      return (
+                        <tr key={plan.id}>
+                          <td className="pl-0 font-mono font-semibold text-[var(--fg)]">{plan.name}</td>
+                          <td className="font-mono text-xs uppercase text-[var(--fg-muted)]">
+                            {plan.category}
+                          </td>
+                          <td className="font-mono text-xs text-[var(--fg)]">{specSummary}</td>
+                          <td className="font-mono text-xs text-[var(--fg-muted)]">{locBwText}</td>
+                          <td>
+                            <span
+                              className={`inline-flex items-center font-mono text-xs ${
+                                inStock ? 'text-[var(--fg)]' : 'text-[var(--fg-faint)]'
+                              }`}
+                            >
+                              {inStock
+                                ? isDe
+                                  ? 'Verfügbar'
+                                  : 'Available'
+                                : isDe
+                                  ? 'Ausverkauft'
+                                  : 'Out of Stock'}
+                            </span>
+                          </td>
+                          <td className="text-right font-mono font-semibold text-[var(--fg)]">
+                            €{formatPriceGross(plan.price)}
+                            <span className="text-[11px] font-normal text-[var(--fg-muted)] ml-1">
+                              / {isDe ? 'Monat' : 'mo'}
+                            </span>
+                          </td>
+                          <td className="text-right pr-0">
+                            {inStock ? (
+                              <Link
+                                to={localePath(
+                                  `/dashboard/new?product=${encodeURIComponent(plan.id)}`
+                                )}
+                                className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                              >
+                                <span>{isDe ? 'Bereitstellen' : 'Deploy'}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </Link>
+                            ) : (
+                              <span className="font-mono text-xs text-[var(--fg-faint)]">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
-  );
-};
+      </section>
 
-// ─── Final CTA Section ─────────────────────────────────────────────────────────
-
-const FinalCTASection = () => {
-  const { t } = useLanguage();
-  return (
-    <section className="py-24 lg:py-32 bg-background border-t border-border relative overflow-hidden">
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <FadeIn>
-            <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter text-foreground leading-[0.88] mb-8">
-              Ready to talk<br />
-              infrastructure?
+      {/* ─── SECTION 4: OPEN-SOURCE SOFTWARE (Vamos and Camos only) ─── */}
+      <section className="vs-section">
+        <div className="vs-container">
+          <div className="max-w-3xl mb-10">
+            <h2 className="text-display-m text-[var(--fg)] mb-2.5">
+              {isDe ? 'Open-Source-Software' : 'Open-Source Software'}
             </h2>
-          </FadeIn>
-
-          <FadeIn delay={0.2}>
-            <p className="text-xl md:text-2xl text-foreground/50 font-light leading-relaxed max-w-2xl mx-auto mb-16">
-              Cloud VPS, Dedicated Servers, and managed infrastructure — built for applications
-              that need engineering they can rely on.
+            <p className="text-body-l font-desc text-[var(--fg-muted)]">
+              {isDe
+                ? 'VaultScope entwickelt eigene Software-Systeme und kombiniert diese mit bewährten Open-Source-Technologien. Jedes von uns geschriebene System veröffentlichen wir konsequent als Open Source.'
+                : 'VaultScope engineers its own software stack alongside proven open-source technologies—and we release the software we build as open-source.'}
             </p>
-          </FadeIn>
+          </div>
 
-          <FadeIn delay={0.3}>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <LocaleLink to="/company/contact/">
-                <Button>
-                  {t.common.contact}<ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </LocaleLink>
-              <a href="#waitlist">
-                <Button variant="outline">
-                  {t.common.joinWaitlist}
-                </Button>
-              </a>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
+            {softwareList.map((sw) => {
+              const Icon = sw.icon;
+              return (
+                <div
+                  key={sw.name}
+                  className="flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <Icon className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                      <h3 className="text-xl font-semibold text-[var(--fg)] tracking-tight">{sw.name}</h3>
+                    </div>
+
+                    <p className="font-desc text-sm text-[var(--fg-muted)] leading-relaxed mb-5">
+                      {sw.desc}
+                    </p>
+                  </div>
+
+                  <Link
+                    to={localePath(sw.href)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                  >
+                    <span>{isDe ? 'Mehr erfahren' : 'Learn More'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 5: NEWSLETTER ─── */}
+      <section className="vs-section" id="waitlist">
+        <div className="vs-container">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-5">
+              <h2 className="text-display-m text-[var(--fg)] mb-3">Newsletter</h2>
+              <p className="text-body-m font-desc text-[var(--fg-muted)] mb-6">
+                {t.home.waitlist.subtext}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link to={localePath('/company/contact/')} className="vs-btn-secondary">
+                  <span>{t.common.getInTouch}</span>
+                </Link>
+              </div>
             </div>
-          </FadeIn>
+            <div className="lg:col-span-7">
+              <WaitlistForm />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Main Home Component ───────────────────────────────────────────────────────
-
-export const Home = () => {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { t, localePath } = useLanguage();
-
-  useEffect(() => {
-    document.title = t.home.meta.title;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute('content', t.home.meta.description);
-    }
-  }, [t]);
-
-  return (
-    <div className="flex flex-col w-full overflow-x-hidden bg-background text-foreground">
-      <SeoHead
-        title={t.home.meta.title.replace(' — VaultScope', '')}
-        description={t.home.meta.description}
-      />
-      <VaultScopeCanvas />
-
-      <div ref={heroRef} className="relative min-h-[90vh] lg:min-h-screen overflow-hidden border-b border-border flex items-start justify-center pt-[20vh] lg:pt-[25vh]">
-        <div className="relative flex flex-col items-center justify-center px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30, filter: 'blur(12px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center max-w-5xl"
-          >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tighter text-foreground leading-[0.92] mb-8">
-              {parseHighlight(t.home.hero.title)}
-            </h1>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center text-foreground/50 max-w-xl text-base md:text-lg font-light leading-relaxed mb-14"
-          >
-            {t.home.hero.description}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col sm:flex-row gap-4"
-          >
-            <Link to={localePath('/infrastructure/')}>
-              <Button>
-                {t.home.hero.primaryCta}<ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-            <Link to={localePath('/company/contact/')}>
-              <Button variant="outline">
-                {t.home.hero.secondaryCta}
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </div>
-
-      <ProductOverview />
-
-      <InfrastructureSection />
-
-      <DeploySection />
-
-      <ManagedSection />
-
-      <SoftwareSection />
-
-      <WhyVaultScope />
-
-      <TechnologySection />
-
-      <WaitlistSection />
-
-      <FinalCTASection />
+      </section>
     </div>
   );
 };

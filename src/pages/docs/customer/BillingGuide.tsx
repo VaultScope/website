@@ -67,7 +67,7 @@ export const BillingGuide = () => {
         {/* 19% VAT & Reverse Charge */}
         <section id="vat-taxation" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Building className="w-5 h-5 text-blue-400" />
+            <Building className="w-5 h-5 text-[var(--text-muted)]" />
             <span>German 19% VAT & EU B2B Reverse Charge</span>
           </h2>
           <p className="text-foreground/80">
@@ -116,7 +116,7 @@ export const BillingGuide = () => {
         {/* Vector PDF Invoices */}
         <section id="pdf-invoices" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-purple-400" />
+            <ShieldCheck className="w-5 h-5 text-[var(--text)]" />
             <span>Downloading Vector PDF Invoices</span>
           </h2>
           <p className="text-foreground/80">
@@ -161,7 +161,7 @@ export const BillingGuide = () => {
         {/* Accounting Email CC */}
         <section id="accounting-cc" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Mail className="w-5 h-5 text-indigo-400" />
+            <Mail className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Automated Accounting Email CC</span>
           </h2>
           <p className="text-foreground/80">

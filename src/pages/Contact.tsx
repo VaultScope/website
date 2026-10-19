@@ -1,58 +1,111 @@
-import { PageHero, Breadcrumbs } from '../components/Shared';
+import { PageHero } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { LifeBuoy, GitBranch, Activity, BookOpen, FileText, Shield, CreditCard, Handshake, Info, MessageSquare } from 'lucide-react';
+import {
+  LifeBuoy,
+  GitBranch,
+  Activity,
+  BookOpen,
+  FileText,
+  Shield,
+  CreditCard,
+  Handshake,
+  Info,
+  MessageSquare,
+} from 'lucide-react';
 import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
 import { SeoHead } from '../components/SeoHead';
 
 export const Contact = () => {
   const { t } = useLanguage();
 
   const contactLinks = [
-    { email: 'support@vaultscope.de', label: 'Technical Support', icon: LifeBuoy, desc: 'For help with your instances and services.' },
-    { email: 'billing@vaultscope.de', label: 'Billing & Sales', icon: CreditCard, desc: 'For invoice and payment inquiries.' },
-    { email: 'data@vaultscope.de', label: 'Data & Privacy', icon: Shield, desc: 'For GDPR and data removal requests.' },
-    { email: 'dmca@vaultscope.de', label: 'Abuse & DMCA', icon: Shield, desc: 'To report abuse or copyright infringement.' },
-    { email: 'opensource@vaultscope.de', label: 'Open Source', icon: GitBranch, desc: 'For open-source project collaboration.' },
-    { email: 'partner@vaultscope.de', label: 'Partnerships', icon: Handshake, desc: 'For business inquiries and partnerships.' },
-    { email: 'pegasus@vaultscope.de', label: 'Pegasus Bot', icon: Info, desc: 'For inquiries regarding Pegasus.' }
+    {
+      email: 'support@vaultscope.de',
+      label: 'Technical Support',
+      icon: LifeBuoy,
+      desc: 'For help with your instances and services.',
+    },
+    {
+      email: 'billing@vaultscope.de',
+      label: 'Billing & Sales',
+      icon: CreditCard,
+      desc: 'For invoice and payment inquiries.',
+    },
+    {
+      email: 'data@vaultscope.de',
+      label: 'Data & Privacy',
+      icon: Shield,
+      desc: 'For GDPR and data removal requests.',
+    },
+    {
+      email: 'dmca@vaultscope.de',
+      label: 'Abuse & DMCA',
+      icon: Shield,
+      desc: 'To report abuse or copyright infringement.',
+    },
+    {
+      email: 'opensource@vaultscope.de',
+      label: 'Open Source',
+      icon: GitBranch,
+      desc: 'For open-source project collaboration.',
+    },
+    {
+      email: 'partner@vaultscope.de',
+      label: 'Partnerships',
+      icon: Handshake,
+      desc: 'For business inquiries and partnerships.',
+    },
+    {
+      email: 'pegasus@vaultscope.de',
+      label: 'Pegasus Bot',
+      icon: Info,
+      desc: 'For inquiries regarding Pegasus.',
+    },
   ];
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full bg-[var(--bg-primary)] text-[var(--text)]">
       <SeoHead
         title="Contact & Enterprise Support"
         description="Get in touch with the VaultScope engineering team for enterprise deployments, custom setups, or technical support."
         path="/company/contact"
       />
-      <div className="container mx-auto px-6 lg:px-12 pt-32">
-        <Breadcrumbs items={[{ label: t.contactPage.breadcrumbs.company }, { label: t.contactPage.breadcrumbs.contact }]} />
-      </div>
+
       <PageHero
-        eyebrow={t.contactPage.eyebrow}
+        breadcrumbs={[
+          { label: t.contactPage.breadcrumbs.company, href: '/company/about/' },
+          { label: t.contactPage.breadcrumbs.contact },
+        ]}
         title={t.contactPage.heroTitle}
         description={t.contactPage.heroDescription}
         align="left"
       />
 
-      {/* Contact channels */}
-      <section className="py-20 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-border max-w-6xl">
-            {contactLinks.map((item, i) => {
+      {/* Contact Channels */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+            {contactLinks.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.email} className={`p-8 border-border flex flex-col gap-4 ${i % 3 !== 2 ? 'lg:border-r' : ''} ${i < contactLinks.length - (contactLinks.length % 3 || 3) ? 'border-b' : ''}`}>
-                  <div className="w-10 h-10 border border-border flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-foreground/50" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-medium text-foreground tracking-tight mb-2">{item.label}</p>
-                    <p className="text-sm text-foreground/50 font-light leading-relaxed mb-4">
-                      {item.desc}
+                <div
+                  key={item.email}
+                  className="py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
+                >
+                  <div className="md:col-span-4 flex items-center gap-3">
+                    <Icon className="w-4 h-4 text-[var(--accent-bright)] shrink-0" />
+                    <p className="text-sm font-semibold text-[var(--text)] tracking-tight">
+                      {item.label}
                     </p>
+                  </div>
+                  <p className="md:col-span-5 text-xs text-[var(--text-muted)] leading-relaxed">
+                    {item.desc}
+                  </p>
+                  <div className="md:col-span-3 md:text-right">
                     <a
                       href={`mailto:${item.email}`}
-                      className="text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
+                      className="font-mono text-xs font-medium text-[var(--accent-bright)] hover:text-[var(--text)] transition-colors break-all"
                     >
                       {item.email}
                     </a>
@@ -62,8 +115,8 @@ export const Contact = () => {
             })}
           </div>
 
-          {/* Secondary links */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-0 border border-border border-t-0 max-w-6xl mt-8">
+          {/* Secondary Resources */}
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
             {[
               {
                 icon: MessageSquare,
@@ -90,8 +143,8 @@ export const Contact = () => {
                 icon: BookOpen,
                 label: t.contactPage.links.documentation.label,
                 desc: t.contactPage.links.documentation.desc,
-                href: 'https://pegasusbot.app/docs',
-                external: true,
+                href: '/docs',
+                external: false,
               },
               {
                 icon: FileText,
@@ -100,41 +153,61 @@ export const Contact = () => {
                 href: '/legal/imprint/',
                 external: false,
               },
-            ].map((item, i) => {
+            ].map((item) => {
               const Icon = item.icon;
-              const cls = `p-6 flex flex-col gap-3 border-r border-border last:border-r-0 hover:bg-foreground/[0.01] transition-colors ${i >= 2 ? 'border-t border-border' : ''} md:border-t-0`;
+              const cls = 'group flex flex-col gap-2.5 transition-colors';
               const content = (
                 <>
-                  <Icon className="w-4 h-4 text-foreground/30" />
+                  <Icon className="w-4 h-4 text-[var(--accent-bright)]" />
                   <div>
-                    <p className="text-sm font-medium text-foreground tracking-tight">{item.label}</p>
-                    <p className="text-xs text-foreground/40 font-light mt-0.5">{item.desc}</p>
+                    <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent-bright)] transition-colors tracking-tight">
+                      {item.label}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
+                      {item.desc}
+                    </p>
                   </div>
                 </>
               );
-              return item.external
-                ? <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className={cls}>{content}</a>
-                : <a key={item.label} href={item.href} className={cls}>{content}</a>;
+              return item.external ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cls}
+                >
+                  {content}
+                </a>
+              ) : (
+                <LocaleLink key={item.label} to={item.href} className={cls}>
+                  {content}
+                </LocaleLink>
+              );
             })}
           </div>
         </div>
       </section>
 
       {/* Waitlist */}
-      <section className="py-20 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-medium tracking-tighter text-foreground mb-4">
-              {t.contactPage.waitlist.title}
-            </h2>
-            <p className="text-foreground/50 font-light mb-10 leading-relaxed">
-              {t.contactPage.waitlist.description}
-            </p>
-            <WaitlistForm />
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-5">
+              <p className="text-eyebrow mb-2">Availability & Updates</p>
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-[-0.025em] text-[var(--text)] mb-3">
+                {t.contactPage.waitlist.title}
+              </h2>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                {t.contactPage.waitlist.description}
+              </p>
+            </div>
+            <div className="lg:col-span-7">
+              <WaitlistForm />
+            </div>
           </div>
         </div>
       </section>
-
     </div>
   );
 };

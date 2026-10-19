@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PageHero } from '../components/Shared';
+import { PageHero, LegalDocumentLayout } from '../components/Shared';
 
 export const Imprint = () => {
   useEffect(() => {
@@ -14,20 +14,19 @@ export const Imprint = () => {
         align="left"
       />
 
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-4xl">
-          <div className="flex flex-col gap-16 text-foreground/70 font-light leading-relaxed">
+      <LegalDocumentLayout>
+          <div className="flex flex-col gap-16 text-[var(--text-muted)] leading-relaxed">
 
             {/* Service Provider */}
             <div>
               <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-6">Service Provider</div>
-              <div className="border border-border p-8 text-sm leading-7">
+              <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
                 <p className="font-medium text-foreground text-base">Anton Schmidt</p>
                 <p>VaultScope (Einzelunternehmen)</p>
                 <p>Gottlob-Spieß-Straße 2</p>
                 <p>74343 Sachsenheim</p>
                 <p>Germany</p>
-                <div className="mt-5 pt-5 border-t border-border flex flex-col gap-1.5">
+                <div className="mt-4 pt-4 border-t border-border flex flex-col gap-1.5">
                   <p>
                     <span className="text-foreground/40 uppercase tracking-widest text-xs mr-3">Email</span>
                     <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
@@ -60,7 +59,7 @@ export const Imprint = () => {
               <p className="text-sm mb-4">
                 Person responsible for editorial content pursuant to § 18 Abs. 2 MStV:
               </p>
-              <div className="border border-border p-8 text-sm leading-7">
+              <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
                 <p className="font-medium text-foreground">Anton Schmidt</p>
                 <p>Gottlob-Spieß-Straße 2</p>
                 <p>74343 Sachsenheim</p>
@@ -140,8 +139,7 @@ export const Imprint = () => {
             </div>
 
           </div>
-        </div>
-      </section>
+      </LegalDocumentLayout>
     </div>
   );
 };

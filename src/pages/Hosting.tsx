@@ -1,194 +1,307 @@
-import { useEffect } from 'react';
-import { PageHero } from '../components/Shared';
+import { PageHero, Button, RuledTable } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { Server, Cpu } from 'lucide-react';
-import { LocaleLink as Link } from '../i18n/LocaleLink';
-import { motion } from 'framer-motion';
-
-const CLOUD_VPS_FEATURES = [
-  'Virtual compute on dedicated hardware',
-  'Clean resource isolation per instance',
-  'Suitable for applications, services, and development',
-  'Modern virtualization infrastructure',
-  'EU datacentres',
-];
-
-const DEDICATED_FEATURES = [
-  'Dedicated physical hardware, fully isolated',
-  'No shared resources or contention',
-  'Full control over the infrastructure layer',
-  'Suited to demanding, performance-sensitive workloads',
-  'EU datacentres',
-];
+import { ArrowRight, Check } from 'lucide-react';
+import { useLanguage } from '../i18n';
+import { LocaleLink } from '../i18n/LocaleLink';
+import { SeoHead } from '../components/SeoHead';
 
 export const Hosting = () => {
-  useEffect(() => {
-    document.title = "Hosting — VaultScope";
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute(
-        'content',
-        'VaultScope Cloud VPS and Dedicated Servers — flexible virtual infrastructure and dedicated physical hosting, built on EU-based infrastructure.'
-      );
-    }
-  }, []);
+  const { t, locale } = useLanguage();
+  const isDe = locale === 'de';
+
+  const comparisonRows = isDe
+    ? [
+        {
+          product: 'Cloud VPS',
+          href: '/infrastructure/cloud/',
+          isolation: 'KVM-Hypervisor (Proxmox VE)',
+          storage: 'Enterprise-NVMe-Pool',
+          network: 'DE / AT · IPv4 + /64 IPv6',
+          status: 'In Vorbereitung (Warteliste)',
+          availableNow: false,
+        },
+        {
+          product: 'Dedizierte Server',
+          href: '/infrastructure/dedicated/',
+          isolation: 'Single-Tenant Physische Hardware',
+          storage: 'Dedizierte NVMe / ZFS RAID',
+          network: 'DE / AT · Ungeteilter Port + IPMI',
+          status: 'In Vorbereitung (Warteliste)',
+          availableNow: false,
+        },
+        {
+          product: 'SFTP-Backup-Speicher',
+          href: '/infrastructure/storage/',
+          isolation: 'Chroot-Verzeichnis + ZFS-Dataset',
+          storage: 'Redundante ZFS-Prüfsummen-Pools',
+          network: 'DE / AT · SSH / SFTP / rsync',
+          status: 'In Vorbereitung (Warteliste)',
+          availableNow: false,
+        },
+        {
+          product: 'Managed Infrastructure',
+          href: '/infrastructure/managed/',
+          isolation: 'Dedizierte & geclusterte Systeme',
+          storage: 'Verwaltete ZFS/NVMe + Offsite-Backups',
+          network: 'DE / AT · 24/7 Überwachung & Betrieb',
+          status: 'Auf Anfrage verfügbar',
+          availableNow: true,
+        },
+      ]
+    : [
+        {
+          product: 'Cloud VPS',
+          href: '/infrastructure/cloud/',
+          isolation: 'KVM Hypervisor (Proxmox VE)',
+          storage: 'Enterprise NVMe Pool',
+          network: 'DE / AT · IPv4 + /64 IPv6',
+          status: 'In Preparation (Waitlist)',
+          availableNow: false,
+        },
+        {
+          product: 'Dedicated Servers',
+          href: '/infrastructure/dedicated/',
+          isolation: 'Single-Tenant Physical Hardware',
+          storage: 'Dedicated NVMe / ZFS RAID',
+          network: 'DE / AT · Unshared Port + IPMI',
+          status: 'In Preparation (Waitlist)',
+          availableNow: false,
+        },
+        {
+          product: 'SFTP Backup Storage',
+          href: '/infrastructure/storage/',
+          isolation: 'Chroot Directory + ZFS Dataset',
+          storage: 'Redundant ZFS Checksum Pools',
+          network: 'DE / AT · SSH / SFTP / rsync',
+          status: 'In Preparation (Waitlist)',
+          availableNow: false,
+        },
+        {
+          product: 'Managed Infrastructure',
+          href: '/infrastructure/managed/',
+          isolation: 'Dedicated & Clustered Systems',
+          storage: 'Managed ZFS/NVMe + Offsite Backups',
+          network: 'DE / AT · 24/7 Monitoring & Operations',
+          status: 'Available on Request',
+          availableNow: true,
+        },
+      ];
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full bg-[var(--bg)] text-[var(--fg)]">
+      <SeoHead
+        title={t.hosting.meta.title.replace(' — VaultScope', '')}
+        description={t.hosting.meta.description}
+        path="/hosting"
+      />
+
       <PageHero
-        eyebrow="HOSTING SERVICES"
-        title="Cloud VPS & Dedicated Servers."
-        description="Two infrastructure tiers built on EU-based infrastructure. Currently in preparation — join the waitlist to be notified when services launch."
+        breadcrumbs={[{ label: t.nav.infrastructure, href: '/infrastructure/' }, { label: 'Hosting' }]}
+        title={t.hosting.heroTitle}
+        description={t.hosting.heroDescription}
+        primaryCta={t.common.joinWaitlist}
+        primaryLink="#waitlist"
+        secondaryCta={t.common.getInTouch}
+        secondaryLink="/company/contact/"
         align="left"
       />
 
-      {/* Services */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="grid md:grid-cols-2 gap-0 border border-border">
-
+      {/* Two Core Hosting Offerings — Open Architectural Split */}
+      <section className="py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
             {/* Cloud VPS */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="p-10 md:p-12 flex flex-col border-b md:border-b-0 md:border-r border-border bg-background"
-            >
-              <div className="flex items-start justify-between mb-8">
-                <div className="w-12 h-12 border border-border flex items-center justify-center">
-                  <Server className="w-5 h-5 text-foreground/60" />
+            <div className="flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--accent-bright)]">
+                    KVM / Proxmox VE
+                  </span>
+                  <span className="font-mono text-[11px] text-[var(--fg-muted)]">
+                    {isDe ? 'Warteliste offen' : 'Waitlist Open'}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 border border-border px-3 py-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-foreground/20 block" />
-                  <span className="text-xs font-medium text-foreground/40 uppercase tracking-widest">Coming Soon</span>
-                </div>
+                <h2 className="text-h3 text-[var(--fg)] mb-2.5">
+                  {t.hosting.cloudVps.title}
+                </h2>
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-6">
+                  {t.hosting.cloudVps.description}
+                </p>
+                <ul className="space-y-2.5 mb-8 border-t border-[var(--line)] pt-5">
+                  {t.hosting.cloudVps.features.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-[var(--fg)]">
+                      <Check className="w-4 h-4 text-[var(--accent-bright)] shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              <h2 className="text-3xl font-medium text-foreground tracking-tight mb-4">Cloud VPS</h2>
-              <p className="text-foreground/50 font-light leading-relaxed mb-8 flex-1 text-lg">
-                Flexible virtual infrastructure for applications, services, and development workloads.
-                Built on modern virtualization technology, providing clean resource isolation and
-                predictable performance without the overhead of a shared environment.
-              </p>
-
-              <div className="flex flex-col gap-3 border-t border-border pt-8 mb-8">
-                {CLOUD_VPS_FEATURES.map((f) => (
-                  <div key={f} className="flex items-start gap-3 text-sm text-foreground/40 font-light">
-                    <span className="w-px h-4 bg-foreground/15 block shrink-0 mt-0.5" />
-                    {f}
-                  </div>
-                ))}
+              <div className="pt-4 border-t border-[var(--line)] flex items-center justify-between">
+                <span className="font-mono text-xs text-[var(--fg-muted)]">DE / AT</span>
+                <LocaleLink
+                  to="/infrastructure/cloud/"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                >
+                  <span>{t.common.learnMore}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </LocaleLink>
               </div>
-
-              <p className="text-xs text-foreground/25 font-light">
-                Specifications and pricing will be published at launch.
-              </p>
-            </motion.div>
+            </div>
 
             {/* Dedicated Servers */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="p-10 md:p-12 flex flex-col bg-foreground/[0.015]"
-            >
-              <div className="flex items-start justify-between mb-8">
-                <div className="w-12 h-12 border border-border flex items-center justify-center">
-                  <Cpu className="w-5 h-5 text-foreground/60" />
+            <div className="flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--accent-bright)]">
+                    Single-Tenant Bare Metal
+                  </span>
+                  <span className="font-mono text-[11px] text-[var(--fg-muted)]">
+                    {isDe ? 'Warteliste offen' : 'Waitlist Open'}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 border border-border px-3 py-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-foreground/20 block" />
-                  <span className="text-xs font-medium text-foreground/40 uppercase tracking-widest">Coming Soon</span>
-                </div>
+                <h2 className="text-h3 text-[var(--fg)] mb-2.5">
+                  {t.hosting.dedicated.title}
+                </h2>
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-6">
+                  {t.hosting.dedicated.description}
+                </p>
+                <ul className="space-y-2.5 mb-8 border-t border-[var(--line)] pt-5">
+                  {t.hosting.dedicated.features.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-[var(--fg)]">
+                      <Check className="w-4 h-4 text-[var(--accent-bright)] shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              <h2 className="text-3xl font-medium text-foreground tracking-tight mb-4">Dedicated Servers</h2>
-              <p className="text-foreground/50 font-light leading-relaxed mb-8 flex-1 text-lg">
-                Dedicated physical infrastructure with full resource ownership. No shared hardware,
-                no resource contention — built for workloads that require consistent performance
-                and direct hardware control without compromise.
-              </p>
-
-              <div className="flex flex-col gap-3 border-t border-border pt-8 mb-8">
-                {DEDICATED_FEATURES.map((f) => (
-                  <div key={f} className="flex items-start gap-3 text-sm text-foreground/40 font-light">
-                    <span className="w-px h-4 bg-foreground/15 block shrink-0 mt-0.5" />
-                    {f}
-                  </div>
-                ))}
+              <div className="pt-4 border-t border-[var(--line)] flex items-center justify-between">
+                <span className="font-mono text-xs text-[var(--fg-muted)]">DE / AT</span>
+                <LocaleLink
+                  to="/infrastructure/dedicated/"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                >
+                  <span>{t.common.learnMore}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </LocaleLink>
               </div>
-
-              <p className="text-xs text-foreground/25 font-light">
-                Specifications and pricing will be published at launch.
-              </p>
-            </motion.div>
-
+            </div>
           </div>
+
+          <p className="mt-8 text-xs text-[var(--fg-muted)]">
+            {t.hosting.pricingNote}
+          </p>
         </div>
       </section>
 
-      {/* Infrastructure note */}
-      <section className="py-24 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-          <div className="grid md:grid-cols-3 gap-0 border border-border">
-            {[
-              {
-                label: 'Infrastructure',
-                value: 'Enterprise Hardware',
-                note: 'Premium EU datacentres.',
-              },
-              {
-                label: 'Locations',
-                value: 'European Union',
-                note: 'All servers hosted in premium EU-based datacentres across NL, DE, FR, IT, and UK.',
-              },
-              {
-                label: 'Legal',
-                value: 'GDPR compliant',
-                note: 'No data transfer outside the EEA for server infrastructure.',
-              },
-            ].map((item, i) => (
-              <div key={item.label} className={`p-8 ${i < 2 ? 'border-b md:border-b-0 md:border-r border-border' : ''}`}>
-                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">{item.label}</p>
-                <p className="text-base font-medium text-foreground mb-2">{item.value}</p>
-                <p className="text-sm text-foreground/40 font-light">{item.note}</p>
+      {/* Infrastructure Comparison Matrix & Availability */}
+      <section className="py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="mb-8">
+            <h2 className="text-display-m text-[var(--fg)] mb-2">
+              {isDe ? 'Architektur- & Verfügbarkeitsübersicht' : 'Architecture & Availability Matrix'}
+            </h2>
+            <p className="text-sm text-[var(--fg-muted)]">
+              {isDe
+                ? 'Direkter Vergleich unserer Infrastruktur-Plattformen, Isolationsmodelle und des aktuellen Bereitstellungsstatus.'
+                : 'Direct comparison of our infrastructure platforms, isolation models, and current deployment availability.'}
+            </p>
+          </div>
+
+          <RuledTable>
+            <table className="w-full text-left border-collapse border-t border-b border-[var(--line)]">
+              <thead>
+                <tr className="border-b border-[var(--line)] text-xs font-mono text-[var(--fg-muted)]">
+                  <th className="py-3.5 pr-5 font-medium">{isDe ? 'Plattform' : 'Platform'}</th>
+                  <th className="py-3.5 px-4 font-medium">{isDe ? 'Isolationsmodell' : 'Isolation Model'}</th>
+                  <th className="py-3.5 px-4 font-medium">{isDe ? 'Speicher' : 'Storage'}</th>
+                  <th className="py-3.5 px-4 font-medium">{isDe ? 'Netzwerk & Standort' : 'Network & Region'}</th>
+                  <th className="py-3.5 px-4 font-medium">{isDe ? 'Status' : 'Availability'}</th>
+                  <th className="py-3.5 pl-5 font-medium text-right">{isDe ? 'Details' : 'Details'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--line)]">
+                {comparisonRows.map((row) => (
+                  <tr key={row.href} className="hover:bg-[var(--bg-elevated)]/50 transition-colors">
+                    <td className="py-4 pr-5 font-semibold text-sm text-[var(--fg)]">
+                      <LocaleLink to={row.href} className="hover:text-[var(--accent-bright)] transition-colors">
+                        {row.product}
+                      </LocaleLink>
+                    </td>
+                    <td className="py-4 px-4 text-xs text-[var(--fg-muted)] font-mono">{row.isolation}</td>
+                    <td className="py-4 px-4 text-xs text-[var(--fg-muted)]">{row.storage}</td>
+                    <td className="py-4 px-4 text-xs text-[var(--fg-muted)] font-mono">{row.network}</td>
+                    <td className="py-4 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 font-mono text-[11px] ${
+                          row.availableNow ? 'text-emerald-400' : 'text-[var(--fg-muted)]'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            row.availableNow ? 'bg-emerald-400' : 'bg-[var(--accent-bright)]'
+                          }`}
+                        />
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="py-4 pl-5 text-right">
+                      <LocaleLink
+                        to={row.href}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                      >
+                        <span>{t.common.learnMore}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </LocaleLink>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </RuledTable>
+
+          {/* Key Facts Row */}
+          <div className="mt-10 pt-8 border-t border-[var(--line)] grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {t.hosting.facts.map((fact) => (
+              <div key={fact.label}>
+                <p className="text-xs font-mono text-[var(--accent-bright)] mb-1.5">
+                  {fact.label}
+                </p>
+                <p className="text-base font-semibold text-[var(--fg)] mb-1">
+                  {fact.value}
+                </p>
+                <p className="text-xs text-[var(--fg-muted)] leading-relaxed">
+                  {fact.note}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Waitlist */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
-              Be the first to know.
-            </h2>
-            <p className="text-foreground/50 font-light mb-10 text-lg leading-relaxed">
-              Cloud VPS and Dedicated Server services are currently in preparation.
-              Leave your email and we'll notify you the moment they launch.
-            </p>
-            <WaitlistForm />
-            <div className="mt-8 pt-8 border-t border-border/[0.05]">
-              <p className="text-sm text-foreground/30 font-light">
-                Questions before launch?{' '}
-                <Link to="/contact" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
-                  Get in touch
-                </Link>
-                {' '}or review the{' '}
-                <Link to="/hosting-terms" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
-                  Hosting Terms
-                </Link>
-                .
+      {/* Launch Waitlist */}
+      <section id="waitlist" className="py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+            <div className="lg:col-span-5">
+              <h2 className="text-display-m text-[var(--fg)] mb-3">
+                {t.hosting.waitlist.title}
+              </h2>
+              <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-6">
+                {t.hosting.waitlist.description}
               </p>
+              <LocaleLink to="/company/contact/">
+                <Button variant="outline">{t.common.getInTouch}</Button>
+              </LocaleLink>
+            </div>
+            <div className="lg:col-span-7">
+              <WaitlistForm />
             </div>
           </div>
         </div>
       </section>
-
     </div>
   );
 };
+export default Hosting;

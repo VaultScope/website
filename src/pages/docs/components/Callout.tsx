@@ -9,9 +9,9 @@ interface CalloutProps {
 export const Callout = ({ type = 'info', title, children }: CalloutProps) => {
   const styles = {
     info: {
-      border: 'border-blue-500/30',
-      bg: 'bg-blue-500/[0.04]',
-      iconText: 'text-blue-500',
+      border: 'border-[var(--line-strong)]',
+      bg: 'bg-white/[0.03]',
+      iconText: 'text-[var(--text)]',
       icon: Info,
       defaultTitle: 'Note',
     },
@@ -46,7 +46,7 @@ export const Callout = ({ type = 'info', title, children }: CalloutProps) => {
         <Icon className={`w-4 h-4 shrink-0 ${styles.iconText}`} />
         <span className="text-xs uppercase tracking-wider font-mono font-semibold">{title || styles.defaultTitle}</span>
       </div>
-      <div className="text-foreground/80 pl-6 text-[13px] leading-normal font-light">
+      <div className="text-[var(--text-muted)] pl-6 text-[13px] leading-normal">
         {children}
       </div>
     </div>

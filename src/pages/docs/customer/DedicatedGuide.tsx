@@ -36,7 +36,7 @@ export const DedicatedGuide = () => {
         {/* Bare-Metal Architecture */}
         <section id="hardware-specs" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-purple-400" />
+            <Cpu className="w-5 h-5 text-[var(--text)]" />
             <span>Bare-Metal Single-Tenant Architecture</span>
           </h2>
           <p className="text-foreground/80">
@@ -68,7 +68,7 @@ export const DedicatedGuide = () => {
         {/* IPMI / KVM Access */}
         <section id="ipmi-kvm" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Monitor className="w-5 h-5 text-blue-400" />
+            <Monitor className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Out-of-Band IPMI / KVM Access</span>
           </h2>
           <p className="text-foreground/80">
@@ -162,7 +162,7 @@ dmesg | grep -i -E "edac|mce|error"`}
         {/* Network Uplinks */}
         <section id="network-uplinks" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <HardDrive className="w-5 h-5 text-indigo-400" />
+            <HardDrive className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Network Uplinks, VLANs & Secondary IPs</span>
           </h2>
           <p className="text-foreground/80">

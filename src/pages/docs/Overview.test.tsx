@@ -14,32 +14,24 @@ function renderComponent() {
 describe('DocsOverview', () => {
   it('renders the main heading', () => {
     renderComponent();
-    expect(screen.getByText('VaultScope Ecosystem Documentation')).toBeDefined();
+    expect(screen.getByText('VaultScope Documentation')).toBeDefined();
   });
 
-  it('renders description of the ecosystem', () => {
+  it('renders description of the documentation', () => {
     renderComponent();
-    expect(screen.getByText(/Comprehensive documentation covering the VaultScope ecosystem/)).toBeDefined();
+    expect(screen.getByText(/Clear, step-by-step guides for signing in/)).toBeDefined();
   });
 
-  it('mentions VaultScope Storefront', () => {
+  it('mentions User Login & Account', () => {
     renderComponent();
-    expect(screen.getByText(/VaultScope Storefront/)).toBeDefined();
+    expect(screen.getAllByText(/User Login & Account/).length).toBeGreaterThan(0);
   });
 
-  it('mentions VAMOS', () => {
+  it('mentions SFTP Storage Guide and Port 2022', () => {
     renderComponent();
-    expect(screen.getAllByText(/VAMOS/).length).toBeGreaterThan(0);
-  });
-
-  it('mentions CAMOS', () => {
-    renderComponent();
-    expect(screen.getAllByText(/CAMOS/).length).toBeGreaterThan(0);
-  });
-
-  it('mentions Security architecture', () => {
-    renderComponent();
-    expect(screen.getByText(/Security First Approach/)).toBeDefined();
+    expect(screen.getAllByText(/SFTP Storage Guide/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('2022').length).toBeGreaterThan(0);
+    expect(screen.getByText('sftp.vaultscope.de')).toBeDefined();
   });
 
   it('sets document title', () => {

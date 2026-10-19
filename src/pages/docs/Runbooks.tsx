@@ -59,7 +59,6 @@ sudo journalctl -u vamos --since "1 hour ago" | grep -i "hetzner"`;
           { label: 'Runbooks' },
         ]}
         title="Production Operations Runbooks"
-        badge={{ label: 'Operations & SRE' }}
         description="Standard operating procedures, disaster recovery scripts, job queue troubleshooting, and diagnostic workflows for on-call engineers."
         tocItems={TOC}
       />
@@ -67,17 +66,17 @@ sudo journalctl -u vamos --since "1 hour ago" | grep -i "hetzner"`;
         <div className="space-y-12 text-sm leading-relaxed">
           {/* Automated DB Backups */}
           <section id="cron-backups" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">1. Automated Database Backups</h2>
-            <p className="text-foreground/80">
-              Save the following bash script to <code className="font-mono text-foreground">/usr/local/bin/vaultscope-backup.sh</code> and configure executable permissions (<code className="font-mono text-foreground">chmod +x</code>):
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">1. Automated Database Backups</h2>
+            <p className="text-[var(--text-secondary)]">
+              Save the following bash script to <code className="font-mono text-[var(--text)]">/usr/local/bin/vaultscope-backup.sh</code> and configure executable permissions (<code className="font-mono text-[var(--text)]">chmod +x</code>):
             </p>
             <CodeBlock
               code={cronScript}
               language="bash"
               title="/usr/local/bin/vaultscope-backup.sh"
             />
-            <p className="text-foreground/80">
-              Install a nightly cron job under root crontab (<code className="font-mono text-foreground">crontab -e</code>):
+            <p className="text-[var(--text-secondary)]">
+              Install a nightly cron job under root crontab (<code className="font-mono text-[var(--text)]">crontab -e</code>):
             </p>
             <CodeBlock
               code="0 2 * * * /usr/local/bin/vaultscope-backup.sh >> /var/log/vaultscope-backup.log 2>&1"
@@ -88,11 +87,11 @@ sudo journalctl -u vamos --since "1 hour ago" | grep -i "hetzner"`;
 
           {/* Job Queue Triage */}
           <section id="job-triage" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">2. Job Queue Triage & Failure Recovery</h2>
-            <p className="text-foreground/80">
-              When an upstream cloud provider API (such as Hetzner Cloud) suffers an outage, provisioning tasks will exhaust their retry quota and enter the <code className="font-mono text-foreground">failed</code> state.
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">2. Job Queue Triage & Failure Recovery</h2>
+            <p className="text-[var(--text-secondary)]">
+              When an upstream cloud provider API (such as Hetzner Cloud) suffers an outage, provisioning tasks will exhaust their retry quota and enter the <code className="font-mono text-[var(--text)]">failed</code> state.
             </p>
-            <p className="text-foreground/80">
+            <p className="text-[var(--text-secondary)]">
               Operators can inspect failed jobs directly in the CAMOS UI under <strong>System &rarr; Job Queue</strong>, or query the database directly via SQL:
             </p>
             <CodeBlock
@@ -104,22 +103,22 @@ sudo journalctl -u vamos --since "1 hour ago" | grep -i "hetzner"`;
 
           {/* SSL ACME */}
           <section id="ssl-certificates" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">3. SSL Certificate & ACME Triage</h2>
-            <p className="text-foreground/80">
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">3. SSL Certificate & ACME Triage</h2>
+            <p className="text-[var(--text-secondary)]">
               Caddy automatically provisions Let's Encrypt certificates for the Storefront. If a certificate fails to renew:
             </p>
-            <ul className="list-disc pl-5 space-y-1.5 text-foreground/70">
-              <li>Verify that port 80 and 443 are unobstructed by host firewalls: <code className="font-mono text-foreground">sudo ufw status</code>.</li>
-              <li>Verify DNS propagation for domain A and AAAA records: <code className="font-mono text-foreground">dig +short A vaultscope.de</code>.</li>
-              <li>Inspect Caddy internal TLS logs: <code className="font-mono text-foreground">docker logs vaultscope-storefront | grep tls</code>.</li>
+            <ul className="list-disc pl-5 space-y-1.5 text-[var(--text-secondary)]">
+              <li>Verify that port 80 and 443 are unobstructed by host firewalls: <code className="font-mono text-[var(--text)]">sudo ufw status</code>.</li>
+              <li>Verify DNS propagation for domain A and AAAA records: <code className="font-mono text-[var(--text)]">dig +short A vaultscope.de</code>.</li>
+              <li>Inspect Caddy internal TLS logs: <code className="font-mono text-[var(--text)]">docker logs vaultscope-storefront | grep tls</code>.</li>
             </ul>
           </section>
 
           {/* Log Inspection */}
           <section id="log-inspection" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">4. Telemetry & Log Inspection</h2>
-            <p className="text-foreground/80">
-              VAMOS utilizes Tokio's <code className="font-mono text-foreground">tracing</code> ecosystem. Logs are emitted to standard output in structured JSON or human-readable format according to the <code className="font-mono text-foreground">RUST_LOG</code> configuration:
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">4. Telemetry & Log Inspection</h2>
+            <p className="text-[var(--text-secondary)]">
+              VAMOS utilizes Tokio's <code className="font-mono text-[var(--text)]">tracing</code> ecosystem. Logs are emitted to standard output in structured JSON or human-readable format according to the <code className="font-mono text-[var(--text)]">RUST_LOG</code> configuration:
             </p>
             <CodeBlock
               code={journalSnippet}
@@ -130,17 +129,17 @@ sudo journalctl -u vamos --since "1 hour ago" | grep -i "hetzner"`;
 
           {/* Incident Response Checklist */}
           <section id="incident-checklist" className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">5. Incident Response Checklist</h2>
-            <div className="border border-border rounded-lg p-4 bg-foreground/[0.01] space-y-2 not-prose text-xs">
-              <div className="flex items-center gap-2 text-foreground font-medium">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <h2 className="text-xl font-semibold text-[var(--text)] tracking-tight">5. Incident Response Checklist</h2>
+            <div className="border border-[var(--line)] p-5 bg-[var(--bg-card)] space-y-2.5 not-prose text-xs">
+              <div className="flex items-center gap-2 text-[var(--text)] font-mono uppercase tracking-[0.06em] font-semibold">
+                <span className="w-1.5 h-1.5 bg-[var(--text)]" />
                 <span>Severity 1: Complete Storefront or API Outage</span>
               </div>
-              <ol className="list-decimal pl-5 space-y-1 text-foreground/70 leading-relaxed">
-                <li>Check VAMOS daemon status: <code className="font-mono">sudo systemctl status vamos</code>.</li>
-                <li>Check PostgreSQL connection limit: <code className="font-mono">SELECT count(*) FROM pg_stat_activity;</code>.</li>
-                <li>Check Redis memory consumption: <code className="font-mono">redis-cli info memory</code>.</li>
-                <li>Check host disk space and inode exhaustion: <code className="font-mono">df -h && df -i</code>.</li>
+              <ol className="list-decimal pl-5 space-y-1.5 text-[var(--text-secondary)] leading-relaxed">
+                <li>Check VAMOS daemon status: <code className="font-mono text-[var(--text)]">sudo systemctl status vamos</code>.</li>
+                <li>Check PostgreSQL connection limit: <code className="font-mono text-[var(--text)]">SELECT count(*) FROM pg_stat_activity;</code>.</li>
+                <li>Check Redis memory consumption: <code className="font-mono text-[var(--text)]">redis-cli info memory</code>.</li>
+                <li>Check host disk space and inode exhaustion: <code className="font-mono text-[var(--text)]">df -h && df -i</code>.</li>
               </ol>
             </div>
           </section>

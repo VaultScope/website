@@ -1,190 +1,186 @@
 import { PageHero, Button } from '../components/Shared';
 import { WaitlistForm } from '../components/WaitlistForm';
-import { Server, Cpu, HardDrive, Cloud, Settings2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { SeoHead } from '../components/SeoHead';
 
 export const InfrastructureOverview = () => {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const isDe = locale === 'de';
+
+  const pillars = [
+    {
+      title: t.infrastructureOverview.cloud.title,
+      desc: t.infrastructureOverview.cloud.desc,
+      cta: t.infrastructureOverview.cloud.cta,
+      href: '/infrastructure/cloud/',
+      status: isDe ? 'Warteliste offen' : 'Waitlist Open',
+      availableNow: false,
+    },
+    {
+      title: t.infrastructureOverview.dedicated.title,
+      desc: t.infrastructureOverview.dedicated.desc,
+      cta: t.infrastructureOverview.dedicated.cta,
+      href: '/infrastructure/dedicated/',
+      status: isDe ? 'Warteliste offen' : 'Waitlist Open',
+      availableNow: false,
+    },
+    {
+      title: isDe ? 'SFTP- & Backup-Speicher' : 'SFTP & Backup Storage',
+      desc: isDe
+        ? 'Chroot-isolierter Netzwerkspeicher auf ZFS-Basis für automatisierte Offsite-Backups mit BorgBackup, Restic, rsync und rclone.'
+        : 'Chroot-isolated network storage backed by redundant ZFS pools for automated offsite backups via BorgBackup, Restic, rsync, and rclone.',
+      cta: isDe ? 'Speicher ansehen' : 'Explore Storage',
+      href: '/infrastructure/storage/',
+      status: isDe ? 'Warteliste offen' : 'Waitlist Open',
+      availableNow: false,
+    },
+    {
+      title: isDe ? 'One-Click Deploy (ODP)' : 'One-Click Deploy (ODP)',
+      desc: isDe
+        ? 'Vorkonfigurierte Open-Source-Anwendungen auf isolierten Proxmox-Instanzen mit automatischem Reverse-Proxy und TLS.'
+        : 'Pre-configured open-source applications deployed on isolated Proxmox instances with automated reverse proxy and TLS.',
+      cta: isDe ? 'ODP ansehen' : 'Explore ODP',
+      href: '/infrastructure/odp/',
+      status: isDe ? 'Warteliste offen' : 'Waitlist Open',
+      availableNow: false,
+    },
+    {
+      title: t.infrastructureOverview.managed.title,
+      desc: t.infrastructureOverview.managed.desc,
+      cta: t.infrastructureOverview.managed.cta,
+      href: '/infrastructure/managed/',
+      status: isDe ? 'Auf Anfrage verfügbar' : 'Available on Request',
+      availableNow: true,
+    },
+  ];
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full bg-[var(--bg)] text-[var(--fg)]">
       <SeoHead
-        title="Infrastructure Overview — Cloud VPS, Dedicated & Storage"
-        description="Enterprise Cloud VPS, bare-metal Dedicated Servers, and NVMe SFTP storage in premium European datacentres with unmetered bandwidth."
+        title={t.infrastructureOverview.title}
+        description={t.infrastructureOverview.description}
         path="/infrastructure"
       />
+
       <PageHero
-        eyebrow="INFRASTRUCTURE"
-        title="Compute. Storage. Deployments. *Managed Infrastructure*."
-        description="Comprehensive infrastructure stack built on EU-based infrastructure. Transparent technology, open-source tooling, and engineering without unnecessary complexity."
-        primaryCta="Join the Waitlist"
+        breadcrumbs={[{ label: t.nav.infrastructure }]}
+        title={t.infrastructureOverview.title}
+        description={t.infrastructureOverview.description}
+        primaryCta={t.common.joinWaitlist}
         primaryLink="#waitlist"
+        secondaryCta={t.common.getInTouch}
+        secondaryLink="/company/contact/"
         align="left"
       />
 
-      {/* Infrastructure models */}
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border border border-border">
-            {[
-              {
-                icon: Server,
-                label: 'Tier 01',
-                title: 'Cloud VPS',
-                desc: 'Flexible virtual infrastructure for applications, services, and development workloads. Clean resource isolation on modern virtualization technology.',
-                link: '/infrastructure/cloud/',
-                cta: 'Explore Cloud VPS',
-              },
-              {
-                icon: Cpu,
-                label: 'Tier 02',
-                title: 'Dedicated Servers',
-                desc: 'Physical hardware with full resource ownership. No shared tenancy, no contention — built for workloads that require consistent performance.',
-                link: '/infrastructure/dedicated/',
-                cta: 'Explore Dedicated',
-              },
-              {
-                icon: HardDrive,
-                label: 'Tier 03',
-                title: 'Storage & SFTP',
-                desc: 'High-speed storage boxes and dedicated SFTP/FTPS endpoints with automated snapshotting, quota controls, and EU data privacy compliance.',
-                link: '/infrastructure/storage/',
-                cta: 'Explore Storage',
-              },
-              {
-                icon: Cloud,
-                label: 'Platform',
-                title: 'One-Click Deploy (OCD)',
-                desc: 'Instant containerized application deployment. Run databases, Minecraft servers, dev environments, and tools in seconds without configuration hassle.',
-                link: '/deploy/',
-                cta: 'Explore OCD',
-              },
-              {
-                icon: Settings2,
-                label: 'Managed',
-                title: 'Managed Infrastructure',
-                desc: 'Custom architecture designed and operated by engineers. From provisioning to monitoring to incident response — infrastructure without the operational overhead.',
-                link: '/infrastructure/managed/',
-                cta: 'Learn More',
-              },
-            ].map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className="p-10 md:p-12 flex flex-col bg-background"
-                >
-                  <div className="flex items-start justify-between mb-8">
-                    <div className="w-12 h-12 border border-border flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-foreground/60" />
-                    </div>
-                    <span className="text-xs font-medium text-foreground/30 uppercase tracking-widest">
-                      {item.label}
-                    </span>
-                  </div>
-                  <h2 className="text-3xl font-medium text-foreground tracking-tight mb-4">{item.title}</h2>
-                  <p className="text-foreground/50 font-light leading-relaxed mb-8 flex-1 text-lg">
-                    {item.desc}
-                  </p>
-                  <LocaleLink to={item.link}>
-                    <Button variant="outline" className="w-full">{item.cta}</Button>
-                  </LocaleLink>
-                </motion.div>
-              );
-            })}
+      {/* Core Infrastructure Offerings */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h2 className="text-display-m text-[var(--fg)] mb-2">
+                {isDe ? 'Infrastruktur-Plattformen' : 'Infrastructure Platforms'}
+              </h2>
+              <p className="text-sm text-[var(--fg-muted)]">
+                {isDe
+                  ? 'Übersicht über unsere Compute-, Speicher- und Managed-Hosting-Systeme in Deutschland und Österreich.'
+                  : 'Overview of our compute, storage, and managed hosting systems operated in Germany and Austria.'}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Infrastructure facts */}
-      <section className="py-24 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-          <div className="grid md:grid-cols-3 gap-0 border border-border">
-            {[
-              {
-                label: 'Infrastructure',
-                value: 'Enterprise Hardware',
-                note: 'Premium EU datacentres.',
-              },
-              {
-                label: 'Locations',
-                value: 'European Union',
-                note: 'All servers hosted in premium EU-based datacentres across NL, DE, FR, IT, and UK.',
-              },
-              {
-                label: 'Legal',
-                value: 'GDPR compliant',
-                note: 'No data transfer outside the EEA for server infrastructure.',
-              },
-            ].map((item, i) => (
-              <div key={item.label} className={`p-8 ${i < 2 ? 'border-b md:border-b-0 md:border-r border-border' : ''}`}>
-                <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">{item.label}</p>
-                <p className="text-base font-medium text-foreground mb-2">{item.value}</p>
-                <p className="text-sm text-foreground/40 font-light">{item.note}</p>
+          <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+            {pillars.map((pillar) => (
+              <div
+                key={pillar.href}
+                className="py-6 sm:py-7 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
+              >
+                <div className="lg:col-span-4">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className="text-h3 text-[var(--fg)]">
+                      <LocaleLink
+                        to={pillar.href}
+                        className="hover:text-[var(--accent-bright)] transition-colors"
+                      >
+                        {pillar.title}
+                      </LocaleLink>
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5">
+                  <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
+                    {pillar.desc}
+                  </p>
+                </div>
+
+                <div className="lg:col-span-3 flex sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 font-mono text-[11px] ${
+                      pillar.availableNow ? 'text-emerald-400' : 'text-[var(--fg-muted)]'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        pillar.availableNow ? 'bg-emerald-400' : 'bg-[var(--accent-bright)]'
+                      }`}
+                    />
+                    {pillar.status}
+                  </span>
+
+                  <LocaleLink
+                    to={pillar.href}
+                    className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+                  >
+                    <span>{pillar.cta}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </LocaleLink>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Technology */}
-      <section className="py-24 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-6">Technology Foundation</p>
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
-              Built on open infrastructure.
+      {/* Open-Source Stack */}
+      <section className="py-12 lg:py-16">
+        <div className="vs-container">
+          <div className="max-w-2xl">
+            <h2 className="text-display-m text-[var(--fg)] mb-3">
+              {t.infrastructureOverview.technology.title}
             </h2>
-            <p className="text-foreground/50 font-light text-lg max-w-3xl mb-12">
-              Proxmox-based virtualization on Debian. Enterprise-grade monitoring and automated deployment pipelines. Version-controlled on Forgejo.
+            <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-6">
+              {t.infrastructureOverview.technology.description}
             </p>
-            <LocaleLink to="/company/open-source/" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground hover:text-foreground/70 transition-colors">
-              {t.infrastructureOverview.technology.cta}
+            <LocaleLink to="/company/open-source/">
+              <Button variant="outline">{t.infrastructureOverview.technology.cta}</Button>
             </LocaleLink>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Waitlist */}
-      <section id="waitlist" className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-foreground mb-4">
-              Be the first to know.
+      <section id="waitlist" className="py-12 lg:py-16">
+        <div className="vs-container grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          <div className="lg:col-span-5">
+            <h2 className="text-display-m text-[var(--fg)] mb-3">
+              {t.infrastructureOverview.waitlist.title}
             </h2>
-            <p className="text-foreground/50 font-light mb-10 text-lg leading-relaxed">
-              Cloud VPS and Dedicated Server services are currently in preparation.
-              Leave your email and we'll notify you the moment they launch.
+            <p className="text-sm font-sans text-[var(--fg-muted)] leading-relaxed mb-6">
+              {t.infrastructureOverview.waitlist.description}
             </p>
+            <LocaleLink to="/company/contact/">
+              <Button variant="outline">{t.common.getInTouch}</Button>
+            </LocaleLink>
+          </div>
+          <div className="lg:col-span-7">
             <WaitlistForm />
-            <div className="mt-8 pt-8 border-t border-border/[0.05]">
-              <p className="text-sm text-foreground/30 font-light">
-                Questions before launch?{' '}
-                <LocaleLink to="/company/contact/" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
-                  {t.common.getInTouch.toLowerCase()}
-                </LocaleLink>
-                {' '}or review the{' '}
-                <LocaleLink to="/legal/hosting-terms/" className="text-foreground/50 hover:text-foreground transition-colors underline underline-offset-2">
-                  {t.nav.hostingTerms}
-                </LocaleLink>
-                .
-              </p>
-            </div>
           </div>
         </div>
       </section>
     </div>
   );
 };
+export default InfrastructureOverview;

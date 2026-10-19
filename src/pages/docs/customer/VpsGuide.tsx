@@ -36,7 +36,7 @@ export const VpsGuide = () => {
         {/* Connecting via SSH */}
         <section id="connecting-ssh" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-blue-400" />
+            <Terminal className="w-5 h-5 text-[var(--text)]" />
             <span>Connecting via SSH & Key Management</span>
           </h2>
           <p className="text-foreground/80">
@@ -120,7 +120,7 @@ export const VpsGuide = () => {
 
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
               <div className="flex items-center gap-2 font-semibold text-foreground text-sm mb-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-white" />
                 <span>Hardware Reset</span>
               </div>
               <p className="text-xs text-foreground/70">
@@ -133,7 +133,7 @@ export const VpsGuide = () => {
         {/* In-Browser noVNC Console */}
         <section id="web-console" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Monitor className="w-5 h-5 text-purple-400" />
+            <Monitor className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Interactive In-Browser noVNC Console</span>
           </h2>
           <p className="text-foreground/80">
@@ -226,7 +226,7 @@ reboot`}
         {/* Reverse DNS (PTR) */}
         <section id="networking" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-            <Network className="w-5 h-5 text-blue-400" />
+            <Network className="w-5 h-5 text-[var(--text-muted)]" />
             <span>Reverse DNS (PTR) & Network Setup</span>
           </h2>
           <p className="text-foreground/80">

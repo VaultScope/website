@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PageHero } from '../components/Shared';
+import { PageHero, LegalDocumentLayout } from '../components/Shared';
 
 const GDPR_RIGHTS = [
   {
@@ -60,9 +60,8 @@ export const Privacy = () => {
         align="left"
       />
 
-      <section className="py-32 relative bg-background border-t border-border/[0.05]">
-        <div className="container mx-auto px-6 lg:px-12 max-w-4xl">
-          <div className="flex flex-col gap-16 text-foreground/70 font-light leading-relaxed">
+      <LegalDocumentLayout>
+          <div className="flex flex-col gap-16 text-[var(--text-muted)] leading-relaxed">
 
             {/* Intro */}
             <div>
@@ -85,7 +84,7 @@ export const Privacy = () => {
               <p className="text-sm mb-5">
                 The data controller for the processing described in this policy is:
               </p>
-              <div className="border border-border p-8 text-sm leading-7">
+              <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
                 <p className="font-medium text-foreground">Anton Schmidt</p>
                 <p>VaultScope (Einzelunternehmen)</p>
                 <p>Gottlob-Spieß-Straße 2</p>
@@ -306,19 +305,19 @@ export const Privacy = () => {
                 VaultScope engages the following sub-processors for the delivery of its services.
                 Each is subject to a data processing agreement and applicable data protection obligations.
               </p>
-              <div className="border border-border overflow-hidden">
-                <div className="grid grid-cols-3 border-b border-border bg-foreground/[0.02]">
+              <div className="border-t border-b border-border divide-y divide-border">
+                <div className="grid grid-cols-3">
                   {['Sub-processor', 'Role', 'Transfer mechanism'].map((h) => (
-                    <div key={h} className="px-5 py-3 text-xs font-medium text-foreground/40 uppercase tracking-widest border-r last:border-r-0 border-border">
+                    <div key={h} className="py-3 pr-4 text-xs font-medium text-foreground/40 uppercase tracking-widest">
                       {h}
                     </div>
                   ))}
                 </div>
                 {SUB_PROCESSORS.map((sp) => (
-                  <div key={sp.name} className="grid grid-cols-3 border-b last:border-b-0 border-border">
-                    <div className="px-5 py-4 text-sm font-medium text-foreground/70 border-r border-border">{sp.name}</div>
-                    <div className="px-5 py-4 text-sm text-foreground/60 border-r border-border">{sp.role}</div>
-                    <div className="px-5 py-4 text-sm text-foreground/60">{sp.transfer}</div>
+                  <div key={sp.name} className="grid grid-cols-3">
+                    <div className="py-4 pr-4 text-sm font-medium text-foreground/70">{sp.name}</div>
+                    <div className="py-4 pr-4 text-sm text-foreground/60">{sp.role}</div>
+                    <div className="py-4 text-sm text-foreground/60">{sp.transfer}</div>
                   </div>
                 ))}
               </div>
@@ -379,7 +378,7 @@ export const Privacy = () => {
                 If you believe that our processing of your personal data infringes the GDPR, you have
                 the right to lodge a complaint with the competent supervisory authority:
               </p>
-              <div className="border border-border p-8 text-sm leading-7">
+              <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
                 <p className="font-medium text-foreground">
                   Der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg
                 </p>
@@ -409,8 +408,7 @@ export const Privacy = () => {
             </div>
 
           </div>
-        </div>
-      </section>
+      </LegalDocumentLayout>
     </div>
   );
 };
