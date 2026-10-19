@@ -53,7 +53,11 @@ export default function SftpStorage() {
       setServices(sftpServices);
       setCatalog(
         (Array.isArray(catList) ? catList : []).filter(
-          (p) => p.name?.toLowerCase().includes('sftp') || p.category === 'storage'
+          (p) =>
+            !p.hidden &&
+            (p.name?.toLowerCase().includes('sftp') ||
+              p.category?.toLowerCase() === 'storage' ||
+              p.provider?.toLowerCase() === 'sftpgo')
         )
       );
     } catch (e: any) {

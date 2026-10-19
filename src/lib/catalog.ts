@@ -139,6 +139,7 @@ export function normalizeCatalogProduct(raw: RawCatalogProduct): CatalogProduct 
     specsObj.storage ??
     specsObj.disk ??
     specsObj.nvme ??
+    specsObj.storage_gb ??
     specsObj.quota_gb ??
     raw.storage ??
     raw.disk;
@@ -162,12 +163,12 @@ export function normalizeCatalogProduct(raw: RawCatalogProduct): CatalogProduct 
     raw.stock === null || raw.stock === undefined
       ? null
       : Number(raw.stock);
-  const inStock = stock === null || stock > 0;
+  const inStock = stock === null || !Number.isFinite(stock) || stock < 0 || stock > 0;
   const trialDays = Number(raw.trial_days || 0);
 
-  const cpu = formatSpecValue(cpuRaw, typeof cpuRaw === 'number' ? 'vCPU' : undefined);
-  const ram = formatSpecValue(ramRaw, typeof ramRaw === 'number' ? 'GB' : undefined);
-  const storage = formatSpecValue(storageRaw, typeof storageRaw === 'number' ? 'GB NVMe' : undefined);
+  const cpu = formatSpecValue(cpuRaw, 'vCPU');
+  const ram = formatSpecValue(ramRaw, 'GB');
+  const storage = formatSpecValue(storageRaw, 'GB NVMe');
   const bandwidth = formatSpecValue(bandwidthRaw);
   const formattedLocation = formatSpecValue(locationRaw);
   const location =

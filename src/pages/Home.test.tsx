@@ -226,6 +226,45 @@ describe('Home', () => {
       )
     ).toBeDefined();
   });
-});
 
+  it('fetches from /storefront/catalog and treats stock: -1 as Available', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce([
+      {
+        id: '01a13705-90f5-7a90-bde7-02686af823d1',
+        name: 'SFTP - Basic',
+        category: 'Storage',
+        provider: 'sftpgo',
+        price: '8.40',
+        stock: -1,
+        hidden: false,
+        specs: {
+          location: 'Helsinki, FI',
+          protocols: 'SFTP, SCP, FTPS, WebDAV',
+          storage: '150 GB SFTP Storage',
+          traffic: 'Unmetered / Fair Use',
+        },
+      },
+    ]);
+
+    const { Home } = await import('./Home');
+    const { container } = render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <Home />
+        </LanguageProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('SFTP - Basic')).toBeDefined();
+    });
+
+    expect(api.get).toHaveBeenCalledWith('/storefront/catalog');
+    const text = container.textContent ?? '';
+    expect(text).toContain('Available');
+    expect(text).toContain('150 GB SFTP Storage · SFTP, SCP, FTPS, WebDAV');
+    expect(text).toContain('Helsinki, FI · Unmetered / Fair Use');
+    expect(text).not.toContain('150 GB SFTP Storage GB NVMe');
+  });
+});
 

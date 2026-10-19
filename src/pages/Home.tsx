@@ -25,11 +25,14 @@ interface CatalogProduct {
   provider: string;
   price: string;
   stock: number | null;
+  hidden?: boolean;
   specs: {
-    cpu?: number;
-    ram?: number;
-    storage?: number;
+    cpu?: number | string;
+    ram?: number | string;
+    storage?: number | string;
     bandwidth?: string;
+    traffic?: string;
+    protocols?: string;
     location?: string;
     description?: string;
   } | null;
@@ -129,9 +132,9 @@ export const Home = () => {
     setLoadingCatalog(true);
     setCatalogError(false);
     api
-      .get<CatalogProduct[]>('/catalog')
+      .get<CatalogProduct[]>('/storefront/catalog')
       .then((data) => {
-        setProducts(Array.isArray(data) ? data : []);
+        setProducts(Array.isArray(data) ? data.filter((p) => !p.hidden) : []);
       })
       .catch(() => {
         setProducts([]);
@@ -145,10 +148,10 @@ export const Home = () => {
   useEffect(() => {
     let active = true;
     api
-      .get<CatalogProduct[]>('/catalog')
+      .get<CatalogProduct[]>('/storefront/catalog')
       .then((data) => {
         if (active) {
-          setProducts(Array.isArray(data) ? data : []);
+          setProducts(Array.isArray(data) ? data.filter((p) => !p.hidden) : []);
           setCatalogError(false);
         }
       })
@@ -169,7 +172,20 @@ export const Home = () => {
   const filteredProducts =
     activeCategory === 'all'
       ? products
-      : products.filter((p) => p.category.toLowerCase() === activeCategory);
+      : products.filter((p) => {
+          const cat = (p.category || '').toLowerCase();
+          const prov = (p.provider || '').toLowerCase();
+          if (activeCategory === 'vps') {
+            return cat === 'vps' || cat === 'cloud' || prov === 'hetzner' || prov === 'proxmox';
+          }
+          if (activeCategory === 'dedicated') {
+            return cat === 'dedicated' || cat === 'ds' || cat === 'bare-metal' || prov === 'reliablesite';
+          }
+          if (activeCategory === 'storage') {
+            return cat === 'storage' || cat === 'sftp' || prov === 'sftpgo';
+          }
+          return cat === activeCategory;
+        });
 
   const categories = [
     { id: 'all', label: isDe ? 'Alle Tarife' : 'All Plans' },
@@ -644,19 +660,41 @@ export const Home = () => {
                   </thead>
                   <tbody>
                     {filteredProducts.map((plan) => {
-                      const inStock = plan.stock === null || plan.stock > 0;
-                      const cpuLabel = plan.specs?.cpu ? `${plan.specs.cpu} vCPU` : null;
-                      const ramLabel = plan.specs?.ram ? `${plan.specs.ram} GB RAM` : null;
-                      const storageLabel = plan.specs?.storage
-                        ? `${plan.specs.storage} GB NVMe`
+                      const inStock =
+                        plan.stock === null ||
+                        plan.stock === undefined ||
+                        plan.stock < 0 ||
+                        plan.stock > 0;
+                      const cpuStr = plan.specs?.cpu !== undefined ? String(plan.specs.cpu).trim() : '';
+                      const cpuLabel = cpuStr
+                        ? /[a-zA-Z]/.test(cpuStr)
+                          ? cpuStr
+                          : `${cpuStr} vCPU`
                         : null;
+                      const ramStr = plan.specs?.ram !== undefined ? String(plan.specs.ram).trim() : '';
+                      const ramLabel = ramStr
+                        ? /[a-zA-Z]/.test(ramStr)
+                          ? ramStr
+                          : `${ramStr} GB RAM`
+                        : null;
+                      const storageStr =
+                        plan.specs?.storage !== undefined ? String(plan.specs.storage).trim() : '';
+                      const storageLabel = storageStr
+                        ? /[a-zA-Z]/.test(storageStr)
+                          ? storageStr
+                          : `${storageStr} GB NVMe`
+                        : null;
+                      const protocolsLabel =
+                        !cpuLabel && !ramLabel && plan.specs?.protocols
+                          ? String(plan.specs.protocols).trim()
+                          : null;
                       const rawDesc = plan.specs?.description?.trim();
                       const cleanDesc =
                         rawDesc && rawDesc !== '-' && rawDesc !== '—' && rawDesc.toUpperCase() !== 'N/A'
                           ? rawDesc
                           : null;
                       const specSummary =
-                        [cpuLabel, ramLabel, storageLabel].filter(Boolean).join(' · ') ||
+                        [cpuLabel, ramLabel, storageLabel, protocolsLabel].filter(Boolean).join(' · ') ||
                         cleanDesc ||
                         (isDe ? 'Standard-Konfiguration' : 'Standard configuration');
 
@@ -668,7 +706,7 @@ export const Home = () => {
                             ? 'Deutschland (EU-Zentral)'
                             : 'Germany (EU-Central)';
 
-                      const rawBw = plan.specs?.bandwidth?.trim();
+                      const rawBw = (plan.specs?.bandwidth || plan.specs?.traffic)?.trim();
                       const cleanBw =
                         rawBw && rawBw !== '-' && rawBw !== '—' && rawBw.toUpperCase() !== 'N/A'
                           ? rawBw

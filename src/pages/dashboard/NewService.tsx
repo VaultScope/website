@@ -60,14 +60,23 @@ function CheckoutForm({
   );
 }
 
+function resolveCategoryTab(rawCat?: string, rawProvider?: string): 'vps' | 'ds' | 'odp' | 'storage' {
+  const c = (rawCat || '').toLowerCase();
+  const p = (rawProvider || '').toLowerCase();
+  if (c === 'ds' || c === 'dedicated' || c === 'bare-metal' || p === 'reliablesite') return 'ds';
+  if (c === 'odp' || c === 'ocd') return 'odp';
+  if (c === 'storage' || c === 'sftp' || p === 'sftpgo') return 'storage';
+  return 'vps';
+}
+
 export function NewService() {
   const [searchParams] = useSearchParams();
-  const initialCat = searchParams.get('category') || 'vps';
+  const rawCatParam = searchParams.get('category');
+  const productParam = searchParams.get('product') || searchParams.get('plan');
+  const initialCat = rawCatParam ? resolveCategoryTab(rawCatParam) : 'vps';
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [category, setCategory] = useState<'vps' | 'ds' | 'odp' | 'storage'>(
-    ['vps', 'ds', 'odp', 'storage'].includes(initialCat) ? (initialCat as any) : 'vps'
-  );
+  const [category, setCategory] = useState<'vps' | 'ds' | 'odp' | 'storage'>(initialCat);
   const [catalog, setCatalog] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [locations, setLocations] = useState<any[]>([]);
@@ -105,8 +114,27 @@ export function NewService() {
       api.get('/storefront/catalog').catch(() => []),
       api.get('/storefront/options').catch(() => ({})),
     ]).then(([catData, optsData]: [any, any]) => {
-      const list = Array.isArray(catData) ? catData : [];
+      const list = (Array.isArray(catData) ? catData : []).filter(
+        (p: any) => !p.hidden && (p.stock === null || p.stock === undefined || Number(p.stock) !== 0)
+      );
       setCatalog(list);
+
+      if (productParam) {
+        const matched = list.find((p: any) => String(p.id) === productParam);
+        if (matched) {
+          setCategory(resolveCategoryTab(matched.category, matched.provider));
+          setSelectedProduct(matched);
+        }
+      } else if (!rawCatParam && list.length > 0) {
+        const hasInitialCat = list.some(
+          (p: any) => resolveCategoryTab(p.category, p.provider) === initialCat
+        );
+        if (!hasInitialCat) {
+          const firstCat = resolveCategoryTab(list[0].category, list[0].provider);
+          setCategory(firstCat);
+          setSelectedProduct(list[0]);
+        }
+      }
 
       const locs = Array.isArray(optsData?.locations) ? optsData.locations : [];
       const rawTemplates =
@@ -121,16 +149,18 @@ export function NewService() {
       if (templates.length > 0) setOs(templates[0].id);
       setLoading(false);
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredProducts = catalog.filter((p) => {
-    if (category === 'ds') return p.category === 'ds' || p.category === 'dedicated';
-    if (category === 'odp') return p.category === 'odp' || p.category === 'ocd';
-    return p.category === category;
-  });
+  const filteredProducts = catalog.filter(
+    (p) => resolveCategoryTab(p.category, p.provider) === category
+  );
 
   useEffect(() => {
-    if (filteredProducts.length > 0 && (!selectedProduct || selectedProduct.category !== category)) {
+    if (
+      filteredProducts.length > 0 &&
+      (!selectedProduct ||
+        resolveCategoryTab(selectedProduct.category, selectedProduct.provider) !== category)
+    ) {
       setSelectedProduct(filteredProducts[0]);
     }
   }, [category, catalog]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -326,7 +356,15 @@ export function NewService() {
                           </div>
                           <div className="text-xs text-[var(--fg-muted)] pl-6">
                             {plan.description ||
-                              [specs.cpu, specs.ram, specs.disk].filter(Boolean).join(' · ')}
+                              [
+                                specs.cpu,
+                                specs.ram,
+                                specs.disk || specs.storage,
+                                specs.protocols,
+                                specs.location,
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')}
                           </div>
                         </div>
                         <div className="text-right shrink-0 pl-6 sm:pl-0">
