@@ -24,27 +24,37 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error caught by ErrorBoundary:', error, errorInfo);
 
-    // Auto-reload once if this was a chunk loading failure from a new deployment
+    // Auto-reload once if this was a chunk loading failure from a new deployment,
+    // but only if the server is reachable so we never trigger a browser ERR_CONNECTION_REFUSED screen.
     const msg = error?.message || '';
     if (
       msg.includes('Failed to fetch dynamically imported module') ||
       msg.includes('error loading dynamically imported module') ||
-      msg.includes('Importing a module script failed')
+      msg.includes('Importing a module script failed') ||
+      msg.includes("reading 'default'")
     ) {
       if (!sessionStorage.getItem('chunk_reload_boundary')) {
         sessionStorage.setItem('chunk_reload_boundary', '1');
-        window.location.reload();
+        fetch('/api/health', { method: 'HEAD', cache: 'no-store' })
+          .then((res) => {
+            if (res.ok) window.location.reload();
+          })
+          .catch(() => {
+            // Server momentarily unreachable; stay in SPA ErrorBoundary UI
+          });
       }
     }
   }
 
   private handleReload = () => {
     sessionStorage.removeItem('chunk_reload_boundary');
+    sessionStorage.removeItem('chunk_reload_triggered');
     window.location.reload();
   };
 
   private handleGoHome = () => {
     sessionStorage.removeItem('chunk_reload_boundary');
+    sessionStorage.removeItem('chunk_reload_triggered');
     window.location.href = '/';
   };
 

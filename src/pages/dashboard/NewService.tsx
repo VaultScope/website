@@ -2,31 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Server, Cpu, HardDrive, FolderLock, Lock } from 'lucide-react';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import {
+  Elements,
+  ExpressCheckoutElement,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
 import { api } from '../../lib/api';
-
-const steps = ['Product', 'Configuration', 'Review', 'Payment', 'Provisioning'];
 
 function CheckoutForm({
   onSuccess,
   totalGross,
 }: {
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId?: string) => void;
   totalGross: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [hasExpressMethods, setHasExpressMethods] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const confirmStripePayment = async () => {
     if (!stripe || !elements) return;
     setProcessing(true);
     setError('');
 
-    const { error: submitError } = await stripe.confirmPayment({
+    const { error: submitError, paymentIntent } = await stripe.confirmPayment({
       elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/dashboard`,
+      },
       redirect: 'if_required',
     });
 
@@ -34,14 +41,100 @@ function CheckoutForm({
       setError(submitError.message || 'Payment failed');
       setProcessing(false);
     } else {
-      onSuccess();
+      onSuccess(paymentIntent?.id);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await confirmStripePayment();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--line)]">
+        <span className="text-xs font-medium text-[var(--fg-muted)]">
+          Select a payment method
+        </span>
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--fg-faint)]">
+          <span className="px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--line)] text-[var(--fg)]">
+            Apple Pay
+          </span>
+          <span className="px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--line)] text-[var(--fg)]">
+            Google Pay
+          </span>
+          <span className="px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--line)]">
+            Card / SEPA
+          </span>
+        </div>
+      </div>
+
+      {/* Express Wallet Checkout (Apple Pay & Google Pay) */}
+      <div className={hasExpressMethods ? 'space-y-4' : ''}>
+        <ExpressCheckoutElement
+          options={{
+            paymentMethods: {
+              applePay: 'always',
+              googlePay: 'always',
+              link: 'auto',
+            },
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'link'],
+            buttonType: {
+              applePay: 'buy',
+              googlePay: 'buy',
+            },
+            buttonTheme: {
+              applePay: 'white-outline',
+              googlePay: 'black',
+            },
+            layout: {
+              maxColumns: 2,
+              maxRows: 1,
+            },
+          }}
+          onReady={({ availablePaymentMethods }) => {
+            if (availablePaymentMethods) {
+              setHasExpressMethods(
+                Boolean(
+                  availablePaymentMethods.applePay ||
+                    availablePaymentMethods.googlePay ||
+                    availablePaymentMethods.link
+                )
+              );
+            }
+          }}
+          onConfirm={confirmStripePayment}
+        />
+
+        {hasExpressMethods && (
+          <div className="relative flex items-center py-1">
+            <div className="flex-grow border-t border-[var(--line)]" />
+            <span className="flex-shrink mx-3 text-[11px] font-mono uppercase tracking-wider text-[var(--fg-faint)]">
+              Or pay with card / wallet
+            </span>
+            <div className="flex-grow border-t border-[var(--line)]" />
+          </div>
+        )}
+      </div>
+
       <div className="p-5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--line)]">
-        <PaymentElement options={{ layout: 'tabs' }} />
+        <PaymentElement
+          options={{
+            layout: 'tabs',
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+            },
+            paymentMethodOrder: [
+              'apple_pay',
+              'google_pay',
+              'card',
+              'paypal',
+              'klarna',
+              'sepa_debit',
+            ],
+          }}
+        />
       </div>
       {error && (
         <div role="alert" className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[var(--err)] text-xs">{error}</div>
@@ -64,7 +157,7 @@ function resolveCategoryTab(rawCat?: string, rawProvider?: string): 'vps' | 'ds'
   const c = (rawCat || '').toLowerCase();
   const p = (rawProvider || '').toLowerCase();
   if (c === 'ds' || c === 'dedicated' || c === 'bare-metal' || p === 'reliablesite') return 'ds';
-  if (c === 'odp' || c === 'ocd') return 'odp';
+  if (c === 'odp' || c === 'ocd' || c.includes('one click')) return 'odp';
   if (c === 'storage' || c === 'sftp' || p === 'sftpgo') return 'storage';
   return 'vps';
 }
@@ -79,13 +172,9 @@ export function NewService() {
   const [category, setCategory] = useState<'vps' | 'ds' | 'odp' | 'storage'>(initialCat);
   const [catalog, setCatalog] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [locations, setLocations] = useState<any[]>([]);
-  const [osTemplates, setOsTemplates] = useState<any[]>([]);
-  const [games, setGames] = useState<any[]>([]);
-  const [location, setLocation] = useState('');
-  const [os, setOs] = useState('');
-  const [hostname, setHostname] = useState('');
-  const [sshKey, setSshKey] = useState('');
+  const [serviceForms, setServiceForms] = useState<any[]>([]);
+  const [sshKeys, setSshKeys] = useState<any[]>([]);
+  const [customConfig, setCustomConfig] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -136,17 +225,10 @@ export function NewService() {
         }
       }
 
-      const locs = Array.isArray(optsData?.locations) ? optsData.locations : [];
-      const rawTemplates =
-        optsData?.os_templates || optsData?.osImages || optsData?.os_images || [];
-      const templates = Array.isArray(rawTemplates) ? rawTemplates : [];
-      const gms = Array.isArray(optsData?.games) ? optsData.games : [];
-      setLocations(locs);
-      setOsTemplates(templates);
-      setGames(gms);
-
-      if (locs.length > 0) setLocation(locs[0].id);
-      if (templates.length > 0) setOs(templates[0].id);
+      const rawForms = optsData?.service_forms || optsData?.serviceForms || [];
+      setServiceForms(Array.isArray(rawForms) ? rawForms : []);
+      const rawSshKeys = optsData?.ssh_keys || optsData?.sshKeys || [];
+      setSshKeys(Array.isArray(rawSshKeys) ? rawSshKeys : []);
       setLoading(false);
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -165,8 +247,95 @@ export function NewService() {
     }
   }, [category, catalog]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
+  // Determine if the selected product has a custom CAMOS Service Form attached
+  const activeServiceForm = selectedProduct?.service_form_id
+    ? serviceForms.find((f: any) => String(f.id) === String(selectedProduct.service_form_id)) ||
+      selectedProduct?.service_form ||
+      null
+    : selectedProduct?.service_form || null;
+
+  const customFields: any[] = Array.isArray(activeServiceForm?.fields)
+    ? activeServiceForm.fields
+    : Array.isArray(selectedProduct?.custom_fields)
+      ? selectedProduct.custom_fields
+      : [];
+
+  const hasCustomConfig = Boolean(customFields.length > 0);
+
+  // Initialize default values when the active service form changes
+  useEffect(() => {
+    if (!hasCustomConfig) {
+      setCustomConfig({});
+      if (currentStep === 1) {
+        setCurrentStep(0);
+      }
+      return;
+    }
+    const defaults: Record<string, any> = {};
+    for (const field of customFields) {
+      const key = field.variable || field.id;
+      if (!key) continue;
+      if (field.type === 'checkbox') {
+        defaults[key] = false;
+      } else if (field.type === 'select' && field.options) {
+        const opts = String(field.options)
+          .split(',')
+          .map((o: string) => o.trim())
+          .filter(Boolean);
+        defaults[key] = opts[0] || '';
+      } else {
+        defaults[key] = '';
+      }
+    }
+    setCustomConfig(defaults);
+  }, [selectedProduct?.id, activeServiceForm?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activeSteps = hasCustomConfig
+    ? [
+        { id: 0, label: 'Product' },
+        { id: 1, label: 'Configuration' },
+        { id: 2, label: 'Review' },
+        { id: 3, label: 'Payment' },
+        { id: 4, label: 'Provisioning' },
+      ]
+    : [
+        { id: 0, label: 'Product' },
+        { id: 2, label: 'Review' },
+        { id: 3, label: 'Payment' },
+        { id: 4, label: 'Provisioning' },
+      ];
+
+  const nextStep = () => {
+    setError('');
+    if (currentStep === 0) {
+      setCurrentStep(hasCustomConfig ? 1 : 2);
+      return;
+    }
+    if (currentStep === 1) {
+      for (const field of customFields) {
+        const key = field.variable || field.id;
+        if (field.required && field.type !== 'checkbox') {
+          const val = customConfig[key];
+          if (val === undefined || val === null || String(val).trim() === '') {
+            setError(`Please fill in required field: ${field.label || key}`);
+            return;
+          }
+        }
+      }
+      setCurrentStep(2);
+      return;
+    }
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
+  };
+
+  const prevStep = () => {
+    setError('');
+    if (currentStep === 2) {
+      setCurrentStep(hasCustomConfig ? 1 : 0);
+      return;
+    }
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
 
   const price = selectedProduct ? parseFloat(selectedProduct.price || '0') : 0;
   const vat = price * 0.19;
@@ -174,8 +343,8 @@ export function NewService() {
 
   const handleProceedToPayment = async () => {
     if (!selectedProduct) return;
-    // When Stripe isn't configured, provision directly
-    if (!stripePromise) {
+    // When Stripe isn't configured or the plan is free/trial, provision directly
+    if (!stripePromise || total <= 0) {
       await handleCreateOrder();
       return;
     }
@@ -188,9 +357,14 @@ export function NewService() {
         amount: amountCents,
         currency: 'eur',
       });
-      setClientSecret(res?.client_secret || res?.clientSecret || '');
-      setPaymentIntentId(res?.payment_intent_id || res?.paymentIntentId || '');
-      nextStep();
+      const secret = res?.client_secret || res?.clientSecret || '';
+      const piId =
+        res?.payment_intent_id ||
+        res?.paymentIntentId ||
+        (secret.includes('_secret_') ? secret.split('_secret_')[0] : '');
+      setClientSecret(secret);
+      setPaymentIntentId(piId);
+      setCurrentStep(3);
     } catch (e: any) {
       setError(e.message || 'Failed to initialize payment');
     } finally {
@@ -198,29 +372,32 @@ export function NewService() {
     }
   };
 
-  const handleCreateOrder = async () => {
+  const handleCreateOrder = async (confirmedPaymentIntentId?: string) => {
     if (!selectedProduct) return;
     setCurrentStep(4);
     setError('');
     try {
-      const resolvedHostname = hostname || `${category}-node.vaultscope.internal`;
+      const configuredHostname =
+        typeof customConfig.hostname === 'string' && customConfig.hostname.trim()
+          ? customConfig.hostname.trim()
+          : undefined;
+      const effectivePaymentIntentId =
+        confirmedPaymentIntentId ||
+        paymentIntentId ||
+        (clientSecret.includes('_secret_') ? clientSecret.split('_secret_')[0] : undefined);
+
       const res: any = await api.post('/storefront/orders', {
         product_id: selectedProduct.id,
-        hostname: resolvedHostname,
-        payment_intent_id: paymentIntentId || undefined,
+        hostname: configuredHostname,
+        payment_intent_id: effectivePaymentIntentId || undefined,
         billing_cycle: selectedProduct.billing_cycle || 'monthly',
-        config: {
-          hostname: resolvedHostname,
-          location,
-          os_template: os,
-          ssh_key: sshKey || undefined,
-        },
+        config: hasCustomConfig ? customConfig : undefined,
       });
       setTimeout(() => {
         if (category === 'storage') {
           navigate('/dashboard/sftp');
         } else {
-          navigate(`/dashboard/${category}/${res?.id || ''}`);
+          navigate(`/dashboard/${category}/${res?.service_id || res?.id || ''}`);
         }
       }, 1000);
     } catch (e: any) {
@@ -228,9 +405,6 @@ export function NewService() {
       setCurrentStep(2);
     }
   };
-
-  const selectedLocObj = locations.find((l: any) => l.id === location);
-  const selectedOsObj = (category === 'odp' ? games : osTemplates).find((o: any) => o.id === os);
 
   return (
     <div className="space-y-8">
@@ -246,12 +420,12 @@ export function NewService() {
 
         {/* Step Pill Bar */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {steps.map((step, index) => {
-            const done = index < currentStep;
-            const active = index === currentStep;
+          {activeSteps.map((step, index) => {
+            const done = step.id < currentStep;
+            const active = step.id === currentStep;
             return (
               <div
-                key={step}
+                key={step.label}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-xs font-medium shrink-0 border transition-colors ${
                   active
                     ? 'bg-[var(--accent-subtle)] border-[var(--accent-bright)] text-[var(--fg)]'
@@ -263,7 +437,7 @@ export function NewService() {
                 <span className="font-mono text-[10px]">
                   {done ? <Check className="w-3 h-3" /> : `0${index + 1}`}
                 </span>
-                <span>{step}</span>
+                <span>{step.label}</span>
               </div>
             );
           })}
@@ -359,7 +533,7 @@ export function NewService() {
                               [
                                 specs.cpu,
                                 specs.ram,
-                                specs.disk || specs.storage,
+                                specs.disk || specs.storage || (plan.quota_gb ? `${plan.quota_gb} GB Storage` : undefined),
                                 specs.protocols,
                                 specs.location,
                               ]
@@ -384,93 +558,133 @@ export function NewService() {
             </div>
           )}
 
-          {currentStep === 1 && (
+          {currentStep === 1 && hasCustomConfig && (
             <div className="space-y-6">
-              {locations.length > 0 && (
-                <div className="space-y-2">
-                  <label className="block text-xs font-medium text-[var(--fg-muted)]">Datacenter Region</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {locations.map((loc: any) => (
-                      <button
-                        key={loc.id}
-                        type="button"
-                        onClick={() => setLocation(loc.id)}
-                        className={`p-3.5 rounded-[5px] text-left flex items-center justify-between border transition-all cursor-pointer ${
-                          location === loc.id
-                            ? 'bg-[var(--accent-subtle)] border-[var(--accent-bright)]'
-                            : 'bg-[var(--bg-subtle)] border-[var(--line)] hover:border-[var(--line-strong)]'
-                        }`}
-                      >
-                        <span className="text-xs font-medium text-[var(--fg)]">
-                          {loc.flag} {loc.name}
-                        </span>
-                        {loc.ping_ms && (
-                          <span className="text-[11px] font-mono text-[var(--ok)]">
-                            {loc.ping_ms} ms
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(category === 'odp' ? games : osTemplates).length > 0 && (
-                <div className="space-y-2">
-                  <label className="block text-xs font-medium text-[var(--fg-muted)]">
-                    {category === 'odp' ? 'Application Template' : 'Operating System Image'}
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {(category === 'odp' ? games : osTemplates).map((item: any) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setOs(item.id)}
-                        className={`p-3.5 rounded-[5px] text-left border transition-all cursor-pointer ${
-                          os === item.id
-                            ? 'bg-[var(--accent-subtle)] border-[var(--accent-bright)]'
-                            : 'bg-[var(--bg-subtle)] border-[var(--line)] hover:border-[var(--line-strong)]'
-                        }`}
-                      >
-                        <div className="text-xs font-medium text-[var(--fg)]">{item.name}</div>
-                        {item.version && (
-                          <div className="text-[11px] font-mono text-[var(--fg-faint)]">
-                            v{item.version}
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+              {activeServiceForm && (
+                <div className="space-y-1 border-b border-[var(--line)] pb-4">
+                  <h2 className="text-base font-semibold text-[var(--fg)]">
+                    {activeServiceForm.name || 'Service Configuration'}
+                  </h2>
+                  {activeServiceForm.description && (
+                    <p className="text-xs text-[var(--fg-muted)]">
+                      {activeServiceForm.description}
+                    </p>
+                  )}
                 </div>
               )}
 
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="new-service-hostname" className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5">Hostname</label>
-                  <input
-                    id="new-service-hostname"
-                    type="text"
-                    value={hostname}
-                    onChange={(e) => setHostname(e.target.value)}
-                    placeholder="node-01.vaultscope.internal"
-                    className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
-                  />
-                </div>
-                {category !== 'odp' && (
-                  <div>
-                    <label htmlFor="new-service-ssh-key" className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5">
-                      SSH Public Key (Optional)
-                    </label>
-                    <textarea
-                      id="new-service-ssh-key"
-                      rows={2}
-                      value={sshKey}
-                      onChange={(e) => setSshKey(e.target.value)}
-                      placeholder="ssh-ed25519 AAAAC3NzaC..."
-                      className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
-                    />
-                  </div>
-                )}
+                {customFields.map((field: any) => {
+                  const key = field.variable || field.id;
+                  const fieldId = `service-form-field-${key}`;
+                  const value = customConfig[key] ?? '';
+                  const selectOptions =
+                    field.type === 'select' && field.options
+                      ? String(field.options)
+                          .split(',')
+                          .map((o: string) => o.trim())
+                          .filter(Boolean)
+                      : [];
+
+                  return (
+                    <div key={field.id || key}>
+                      {field.type === 'checkbox' ? (
+                        <label
+                          htmlFor={fieldId}
+                          className="flex items-center gap-2.5 cursor-pointer py-1"
+                        >
+                          <input
+                            id={fieldId}
+                            type="checkbox"
+                            checked={Boolean(value)}
+                            onChange={(e) =>
+                              setCustomConfig((prev) => ({ ...prev, [key]: e.target.checked }))
+                            }
+                            className="w-4 h-4 rounded border-[var(--line)] accent-[var(--accent)]"
+                          />
+                          <span className="text-xs font-medium text-[var(--fg)]">
+                            {field.label || key}
+                          </span>
+                        </label>
+                      ) : (
+                        <>
+                          <label
+                            htmlFor={fieldId}
+                            className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5"
+                          >
+                            {field.label || key}
+                            {field.required && (
+                              <span className="text-[var(--err)] ml-1">*</span>
+                            )}
+                          </label>
+
+                          {field.type === 'select' ? (
+                            <select
+                              id={fieldId}
+                              value={value}
+                              onChange={(e) =>
+                                setCustomConfig((prev) => ({ ...prev, [key]: e.target.value }))
+                              }
+                              className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                            >
+                              {selectOptions.map((opt: string) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : field.type === 'ssh_key_selector' ? (
+                            <div className="space-y-2">
+                              {sshKeys.length > 0 && (
+                                <select
+                                  value={value}
+                                  onChange={(e) =>
+                                    setCustomConfig((prev) => ({ ...prev, [key]: e.target.value }))
+                                  }
+                                  className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                                >
+                                  <option value="">-- Select saved SSH key or paste below --</option>
+                                  {sshKeys.map((k: any) => (
+                                    <option key={k.id} value={k.public_key || k.name || k.id}>
+                                      {k.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                              <textarea
+                                id={fieldId}
+                                rows={2}
+                                value={value}
+                                onChange={(e) =>
+                                  setCustomConfig((prev) => ({ ...prev, [key]: e.target.value }))
+                                }
+                                placeholder="ssh-ed25519 AAAAC3NzaC..."
+                                className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                              />
+                            </div>
+                          ) : (
+                            <input
+                              id={fieldId}
+                              type={
+                                field.type === 'password'
+                                  ? 'password'
+                                  : field.type === 'number'
+                                    ? 'number'
+                                    : 'text'
+                              }
+                              value={value}
+                              onChange={(e) =>
+                                setCustomConfig((prev) => ({ ...prev, [key]: e.target.value }))
+                              }
+                              placeholder={field.placeholder || ''}
+                              className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                            />
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -483,12 +697,32 @@ export function NewService() {
                   <span className="text-[var(--fg-muted)]">Plan</span>
                   <span className="font-mono text-[var(--fg)]">{selectedProduct.name}</span>
                 </div>
-                <div className="flex justify-between py-3">
-                  <span className="text-[var(--fg-muted)]">Hostname</span>
-                  <span className="font-mono text-[var(--fg)]">
-                    {hostname || `${category}-node.vaultscope.internal`}
-                  </span>
-                </div>
+                {selectedProduct.quota_gb ? (
+                  <div className="flex justify-between py-3">
+                    <span className="text-[var(--fg-muted)]">Storage Quota</span>
+                    <span className="font-mono text-[var(--fg)]">{selectedProduct.quota_gb} GB</span>
+                  </div>
+                ) : null}
+                {hasCustomConfig &&
+                  customFields.map((field: any) => {
+                    const key = field.variable || field.id;
+                    const val = customConfig[key];
+                    if (val === undefined || val === null || val === '') return null;
+                    return (
+                      <div key={field.id || key} className="flex justify-between py-3 gap-4">
+                        <span className="text-[var(--fg-muted)]">{field.label || key}</span>
+                        <span className="font-mono text-[var(--fg)] truncate max-w-[260px]">
+                          {field.type === 'password'
+                            ? '••••••••'
+                            : typeof val === 'boolean'
+                              ? val
+                                ? 'Yes'
+                                : 'No'
+                              : String(val)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 <div className="flex justify-between py-3">
                   <span className="text-[var(--fg-muted)]">Net Monthly</span>
                   <span className="font-mono text-[var(--fg)]">€{price.toFixed(2)}</span>
@@ -529,7 +763,7 @@ export function NewService() {
               <div className="w-8 h-8 rounded-full border-2 border-[var(--accent-bright)] border-t-transparent animate-spin mx-auto" />
               <div className="text-sm font-medium text-[var(--fg)]">Provisioning resource...</div>
               <p className="text-xs text-[var(--fg-muted)]">
-                Allocating compute node and configuring network interfaces.
+                Allocating resource and configuring access credentials.
               </p>
             </div>
           )}
@@ -566,7 +800,7 @@ export function NewService() {
                 >
                   {submitting
                     ? 'Initializing...'
-                    : stripePromise
+                    : stripePromise && total > 0
                       ? 'Proceed to Payment'
                       : 'Deploy Now'}
                 </button>
@@ -593,24 +827,47 @@ export function NewService() {
                 {selectedProduct?.name || 'None'}
               </span>
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[var(--fg-muted)]">Region</span>
-              <span className="font-mono text-[var(--fg)]">
-                {selectedLocObj?.name || 'Frankfurt (DE)'}
-              </span>
-            </div>
-            {selectedOsObj && (
+            {selectedProduct?.quota_gb ? (
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[var(--fg-muted)]">Image</span>
-                <span className="font-mono text-[var(--fg)]">{selectedOsObj.name}</span>
+                <span className="text-[var(--fg-muted)]">Storage Quota</span>
+                <span className="font-mono text-[var(--fg)]">
+                  {selectedProduct.quota_gb} GB
+                </span>
               </div>
-            )}
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[var(--fg-muted)]">Hostname</span>
-              <span className="font-mono text-[var(--fg)] truncate max-w-[180px]">
-                {hostname || `${category}-node.vaultscope.internal`}
-              </span>
-            </div>
+            ) : null}
+            {selectedProduct?.specs &&
+              Object.entries(selectedProduct.specs)
+                .slice(0, 4)
+                .map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between gap-2">
+                    <span className="text-[var(--fg-muted)] capitalize">
+                      {k.replace(/_/g, ' ')}
+                    </span>
+                    <span className="font-mono text-[var(--fg)] truncate max-w-[180px]">
+                      {String(v)}
+                    </span>
+                  </div>
+                ))}
+            {hasCustomConfig &&
+              customFields.map((field: any) => {
+                const key = field.variable || field.id;
+                const val = customConfig[key];
+                if (val === undefined || val === null || val === '') return null;
+                return (
+                  <div key={field.id || key} className="flex items-center justify-between gap-2">
+                    <span className="text-[var(--fg-muted)]">{field.label || key}</span>
+                    <span className="font-mono text-[var(--fg)] truncate max-w-[180px]">
+                      {field.type === 'password'
+                        ? '••••••••'
+                        : typeof val === 'boolean'
+                          ? val
+                            ? 'Yes'
+                            : 'No'
+                          : String(val)}
+                    </span>
+                  </div>
+                );
+              })}
           </div>
 
           <div className="border-t border-[var(--line)] pt-4 space-y-2 text-xs">

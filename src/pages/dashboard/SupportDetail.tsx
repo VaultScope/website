@@ -11,7 +11,12 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'vaultscope.de' ||
+    window.location.hostname.endsWith('.vaultscope.de'))
+    ? '/api'
+    : import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 

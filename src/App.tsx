@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, type ComponentType } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Navbar, Footer } from './components/Shared';
@@ -14,99 +14,134 @@ import { Odp }        from './pages/Odp';
 import { Contact }    from './pages/Contact';
 import { NotFound }   from './pages/NotFound';
 
+// Resilient React.lazy wrapper that retries transient network blips and never resolves with an undefined default export
+function lazyWithRetry<T extends ComponentType<any>>(
+  factory: () => Promise<{ default: T }>,
+) {
+  return lazy(async () => {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const mod = await factory();
+        if (mod && typeof mod === 'object' && 'default' in mod && mod.default) {
+          return mod;
+        }
+        throw new Error('Chunk resolved without a default component export');
+      } catch (err) {
+        lastError = err;
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 350 * (attempt + 1)));
+        }
+      }
+    }
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('chunk_reload_triggered')) {
+      sessionStorage.setItem('chunk_reload_triggered', '1');
+      try {
+        const res = await fetch('/api/health', { method: 'HEAD', cache: 'no-store' });
+        if (res.ok) {
+          window.location.reload();
+          return new Promise<{ default: T }>(() => {});
+        }
+      } catch {
+        // Server momentarily unreachable; let ErrorBoundary handle without forcing browser ERR_CONNECTION_REFUSED
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error('Failed to load page module');
+  });
+}
 
 // ─── Lazily loaded ───────────────────────────────────────────────────────────
-const InfrastructureCloud     = lazy(() => import('./pages/InfrastructureCloud').then(m => ({ default: m.InfrastructureCloud })));
-const InfrastructureDedicated = lazy(() => import('./pages/InfrastructureDedicated').then(m => ({ default: m.InfrastructureDedicated })));
-const InfrastructureManaged   = lazy(() => import('./pages/InfrastructureManaged').then(m => ({ default: m.InfrastructureManaged })));
-const InfrastructureStorage   = lazy(() => import('./pages/InfrastructureStorage').then(m => ({ default: m.InfrastructureStorage })));
-const OpenSource   = lazy(() => import('./pages/OpenSource').then(m => ({ default: m.OpenSource })));
-const About        = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
-const Team         = lazy(() => import('./pages/Team').then(m => ({ default: m.Team })));
-const Pegasus      = lazy(() => import('./pages/Pegasus').then(m => ({ default: m.Pegasus })));
-const Vamos        = lazy(() => import('./pages/Vamos').then(m => ({ default: m.Vamos })));
-const Camos        = lazy(() => import('./pages/Camos').then(m => ({ default: m.Camos })));
-const Privacy      = lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
-const Terms        = lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
-const Imprint      = lazy(() => import('./pages/Imprint').then(m => ({ default: m.Imprint })));
-const HostingTerms = lazy(() => import('./pages/HostingTerms').then(m => ({ default: m.HostingTerms })));
-const Cancellation = lazy(() => import('./pages/Cancellation').then(m => ({ default: m.Cancellation })));
-const Aup          = lazy(() => import('./pages/Aup').then(m => ({ default: m.Aup })));
-const Dpa          = lazy(() => import('./pages/Dpa').then(m => ({ default: m.Dpa })));
-const Partners     = lazy(() => import('./pages/Partners').then(m => ({ default: m.Partners })));
-const Roadmap      = lazy(() => import('./pages/Roadmap').then(m => ({ default: m.Roadmap })));
+const InfrastructureCloud     = lazyWithRetry(() => import('./pages/InfrastructureCloud').then(m => ({ default: m.InfrastructureCloud })));
+const InfrastructureDedicated = lazyWithRetry(() => import('./pages/InfrastructureDedicated').then(m => ({ default: m.InfrastructureDedicated })));
+const InfrastructureManaged   = lazyWithRetry(() => import('./pages/InfrastructureManaged').then(m => ({ default: m.InfrastructureManaged })));
+const InfrastructureStorage   = lazyWithRetry(() => import('./pages/InfrastructureStorage').then(m => ({ default: m.InfrastructureStorage })));
+const OpenSource   = lazyWithRetry(() => import('./pages/OpenSource').then(m => ({ default: m.OpenSource })));
+const About        = lazyWithRetry(() => import('./pages/About').then(m => ({ default: m.About })));
+const Team         = lazyWithRetry(() => import('./pages/Team').then(m => ({ default: m.Team })));
+const Pegasus      = lazyWithRetry(() => import('./pages/Pegasus').then(m => ({ default: m.Pegasus })));
+const Vamos        = lazyWithRetry(() => import('./pages/Vamos').then(m => ({ default: m.Vamos })));
+const Camos        = lazyWithRetry(() => import('./pages/Camos').then(m => ({ default: m.Camos })));
+const Privacy      = lazyWithRetry(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
+const Terms        = lazyWithRetry(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
+const Imprint      = lazyWithRetry(() => import('./pages/Imprint').then(m => ({ default: m.Imprint })));
+const HostingTerms = lazyWithRetry(() => import('./pages/HostingTerms').then(m => ({ default: m.HostingTerms })));
+const Cancellation = lazyWithRetry(() => import('./pages/Cancellation').then(m => ({ default: m.Cancellation })));
+const Aup          = lazyWithRetry(() => import('./pages/Aup').then(m => ({ default: m.Aup })));
+const Dpa          = lazyWithRetry(() => import('./pages/Dpa').then(m => ({ default: m.Dpa })));
+const Partners     = lazyWithRetry(() => import('./pages/Partners').then(m => ({ default: m.Partners })));
+const Roadmap      = lazyWithRetry(() => import('./pages/Roadmap').then(m => ({ default: m.Roadmap })));
 
 // ─── Dashboard Routes ────────────────────────────────────────────────────────
-const DashboardLayout = lazy(() => import('./pages/dashboard/Layout').then(m => ({ default: m.DashboardLayout })));
-const DashboardOverview = lazy(() => import('./pages/dashboard/Overview').then(m => ({ default: m.DashboardOverview })));
-const NewService = lazy(() => import('./pages/dashboard/NewService').then(m => ({ default: m.NewService })));
+const DashboardLayout = lazyWithRetry(() => import('./pages/dashboard/Layout').then(m => ({ default: m.DashboardLayout })));
+const DashboardOverview = lazyWithRetry(() => import('./pages/dashboard/Overview').then(m => ({ default: m.DashboardOverview })));
+const NewService = lazyWithRetry(() => import('./pages/dashboard/NewService').then(m => ({ default: m.NewService })));
 
-const VpsList = lazy(() => import('./pages/dashboard/VpsList').then(m => ({ default: m.VpsList })));
-const VpsDetail = lazy(() => import('./pages/dashboard/VpsDetail').then(m => ({ default: m.VpsDetail })));
-const DsList = lazy(() => import('./pages/dashboard/DsList').then(m => ({ default: m.DsList })));
-const DsDetail = lazy(() => import('./pages/dashboard/DsDetail').then(m => ({ default: m.DsDetail })));
-const OdpList = lazy(() => import('./pages/dashboard/OdpList').then(m => ({ default: m.OdpList })));
-const OdpDetail = lazy(() => import('./pages/dashboard/OdpDetail').then(m => ({ default: m.OdpDetail })));
-const SftpStorage = lazy(() => import('./pages/dashboard/SftpStorage').then(m => ({ default: m.default })));
+const VpsList = lazyWithRetry(() => import('./pages/dashboard/VpsList').then(m => ({ default: m.VpsList })));
+const VpsDetail = lazyWithRetry(() => import('./pages/dashboard/VpsDetail').then(m => ({ default: m.VpsDetail })));
+const DsList = lazyWithRetry(() => import('./pages/dashboard/DsList').then(m => ({ default: m.DsList })));
+const DsDetail = lazyWithRetry(() => import('./pages/dashboard/DsDetail').then(m => ({ default: m.DsDetail })));
+const OdpList = lazyWithRetry(() => import('./pages/dashboard/OdpList').then(m => ({ default: m.OdpList })));
+const OdpDetail = lazyWithRetry(() => import('./pages/dashboard/OdpDetail').then(m => ({ default: m.OdpDetail })));
+const SftpStorage = lazyWithRetry(() => import('./pages/dashboard/SftpStorage').then(m => ({ default: m.default })));
 
-const SupportList = lazy(() => import('./pages/dashboard/SupportList').then(m => ({ default: m.SupportList })));
-const SupportDetail = lazy(() => import('./pages/dashboard/SupportDetail').then(m => ({ default: m.SupportDetail })));
+const SupportList = lazyWithRetry(() => import('./pages/dashboard/SupportList').then(m => ({ default: m.SupportList })));
+const SupportDetail = lazyWithRetry(() => import('./pages/dashboard/SupportDetail').then(m => ({ default: m.SupportDetail })));
 
-const ProfileLayout = lazy(() => import('./pages/dashboard/profile/Layout').then(m => ({ default: m.ProfileLayout })));
-const ProfileAccount = lazy(() => import('./pages/dashboard/profile/Account').then(m => ({ default: m.ProfileAccount })));
-const ProfileMfa = lazy(() => import('./pages/dashboard/profile/Mfa').then(m => ({ default: m.ProfileMfa })));
-const ProfileBilling = lazy(() => import('./pages/dashboard/profile/Billing').then(m => ({ default: m.ProfileBilling })));
-const ProfileLogs = lazy(() => import('./pages/dashboard/profile/Logs').then(m => ({ default: m.ProfileLogs })));
+const ProfileLayout = lazyWithRetry(() => import('./pages/dashboard/profile/Layout').then(m => ({ default: m.ProfileLayout })));
+const ProfileAccount = lazyWithRetry(() => import('./pages/dashboard/profile/Account').then(m => ({ default: m.ProfileAccount })));
+const ProfileMfa = lazyWithRetry(() => import('./pages/dashboard/profile/Mfa').then(m => ({ default: m.ProfileMfa })));
+const ProfileBilling = lazyWithRetry(() => import('./pages/dashboard/profile/Billing').then(m => ({ default: m.ProfileBilling })));
+const ProfileLogs = lazyWithRetry(() => import('./pages/dashboard/profile/Logs').then(m => ({ default: m.ProfileLogs })));
 
 // ─── Resources Routes ────────────────────────────────────────────────────────
-const BlogList = lazy(() => import('./pages/BlogList').then(m => ({ default: m.BlogList })));
-const BlogDetail = lazy(() => import('./pages/BlogDetail').then(m => ({ default: m.BlogDetail })));
-const ForumList = lazy(() => import('./pages/ForumList').then(m => ({ default: m.ForumList })));
-const ForumCategory = lazy(() => import('./pages/ForumCategory').then(m => ({ default: m.ForumCategory })));
-const ForumThread = lazy(() => import('./pages/ForumThread').then(m => ({ default: m.ForumThread })));
+const BlogList = lazyWithRetry(() => import('./pages/BlogList').then(m => ({ default: m.BlogList })));
+const BlogDetail = lazyWithRetry(() => import('./pages/BlogDetail').then(m => ({ default: m.BlogDetail })));
+const ForumList = lazyWithRetry(() => import('./pages/ForumList').then(m => ({ default: m.ForumList })));
+const ForumCategory = lazyWithRetry(() => import('./pages/ForumCategory').then(m => ({ default: m.ForumCategory })));
+const ForumThread = lazyWithRetry(() => import('./pages/ForumThread').then(m => ({ default: m.ForumThread })));
 
 // ─── Report Routes ────────────────────────────────────────────────────────
-const ReportLayout = lazy(() => import('./pages/report/Layout').then(m => ({ default: m.ReportLayout })));
-const ReportAbuse = lazy(() => import('./pages/report/Abuse').then(m => ({ default: m.ReportAbuse })));
-const ReportDmca = lazy(() => import('./pages/report/Dmca').then(m => ({ default: m.ReportDmca })));
-const ReportOther = lazy(() => import('./pages/report/Other').then(m => ({ default: m.ReportOther })));
+const ReportLayout = lazyWithRetry(() => import('./pages/report/Layout').then(m => ({ default: m.ReportLayout })));
+const ReportAbuse = lazyWithRetry(() => import('./pages/report/Abuse').then(m => ({ default: m.ReportAbuse })));
+const ReportDmca = lazyWithRetry(() => import('./pages/report/Dmca').then(m => ({ default: m.ReportDmca })));
+const ReportOther = lazyWithRetry(() => import('./pages/report/Other').then(m => ({ default: m.ReportOther })));
 
 // ─── Docs Routes ──────────────────────────────────────────────────────────
-const DocsLayout = lazy(() => import('./pages/docs/Layout').then(m => ({ default: m.DocsLayout })));
-const DocsOverview = lazy(() => import('./pages/docs/Overview').then(m => ({ default: m.DocsOverview })));
-const DocsArchitecture = lazy(() => import('./pages/docs/Architecture').then(m => ({ default: m.DocsArchitecture })));
-const DocsAuthentikGuide = lazy(() => import('./pages/docs/AuthentikGuide').then(m => ({ default: m.DocsAuthentikGuide })));
-const DocsApiReference = lazy(() => import('./pages/docs/ApiReference').then(m => ({ default: m.DocsApiReference })));
-const DocsRunbooks = lazy(() => import('./pages/docs/Runbooks').then(m => ({ default: m.DocsRunbooks })));
-const DocsProjects = lazy(() => import('./pages/docs/Projects').then(m => ({ default: m.DocsProjects })));
+const DocsLayout = lazyWithRetry(() => import('./pages/docs/Layout').then(m => ({ default: m.DocsLayout })));
+const DocsOverview = lazyWithRetry(() => import('./pages/docs/Overview').then(m => ({ default: m.DocsOverview })));
+const DocsArchitecture = lazyWithRetry(() => import('./pages/docs/Architecture').then(m => ({ default: m.DocsArchitecture })));
+const DocsAuthentikGuide = lazyWithRetry(() => import('./pages/docs/AuthentikGuide').then(m => ({ default: m.DocsAuthentikGuide })));
+const DocsApiReference = lazyWithRetry(() => import('./pages/docs/ApiReference').then(m => ({ default: m.DocsApiReference })));
+const DocsRunbooks = lazyWithRetry(() => import('./pages/docs/Runbooks').then(m => ({ default: m.DocsRunbooks })));
+const DocsProjects = lazyWithRetry(() => import('./pages/docs/Projects').then(m => ({ default: m.DocsProjects })));
 
-const DocsStorefront = lazy(() => import('./pages/docs/Storefront').then(m => ({ default: m.DocsStorefront })));
-const StorefrontInstall = lazy(() => import('./pages/docs/storefront/StorefrontInstall').then(m => ({ default: m.StorefrontInstall })));
-const StorefrontConfig = lazy(() => import('./pages/docs/storefront/StorefrontConfig').then(m => ({ default: m.StorefrontConfig })));
-const StorefrontLifecycle = lazy(() => import('./pages/docs/storefront/StorefrontLifecycle').then(m => ({ default: m.StorefrontLifecycle })));
+const DocsStorefront = lazyWithRetry(() => import('./pages/docs/Storefront').then(m => ({ default: m.DocsStorefront })));
+const StorefrontInstall = lazyWithRetry(() => import('./pages/docs/storefront/StorefrontInstall').then(m => ({ default: m.StorefrontInstall })));
+const StorefrontConfig = lazyWithRetry(() => import('./pages/docs/storefront/StorefrontConfig').then(m => ({ default: m.StorefrontConfig })));
+const StorefrontLifecycle = lazyWithRetry(() => import('./pages/docs/storefront/StorefrontLifecycle').then(m => ({ default: m.StorefrontLifecycle })));
 
-const DocsVamos = lazy(() => import('./pages/docs/Vamos').then(m => ({ default: m.DocsVamos })));
-const VamosInstall = lazy(() => import('./pages/docs/vamos/VamosInstall').then(m => ({ default: m.VamosInstall })));
-const VamosConfig = lazy(() => import('./pages/docs/vamos/VamosConfig').then(m => ({ default: m.VamosConfig })));
-const VamosLifecycle = lazy(() => import('./pages/docs/vamos/VamosLifecycle').then(m => ({ default: m.VamosLifecycle })));
+const DocsVamos = lazyWithRetry(() => import('./pages/docs/Vamos').then(m => ({ default: m.DocsVamos })));
+const VamosInstall = lazyWithRetry(() => import('./pages/docs/vamos/VamosInstall').then(m => ({ default: m.VamosInstall })));
+const VamosConfig = lazyWithRetry(() => import('./pages/docs/vamos/VamosConfig').then(m => ({ default: m.VamosConfig })));
+const VamosLifecycle = lazyWithRetry(() => import('./pages/docs/vamos/VamosLifecycle').then(m => ({ default: m.VamosLifecycle })));
 
-const DocsCamos = lazy(() => import('./pages/docs/Camos').then(m => ({ default: m.DocsCamos })));
-const CamosInstall = lazy(() => import('./pages/docs/camos/CamosInstall').then(m => ({ default: m.CamosInstall })));
-const CamosConfig = lazy(() => import('./pages/docs/camos/CamosConfig').then(m => ({ default: m.CamosConfig })));
-const CamosLifecycle = lazy(() => import('./pages/docs/camos/CamosLifecycle').then(m => ({ default: m.CamosLifecycle })));
+const DocsCamos = lazyWithRetry(() => import('./pages/docs/Camos').then(m => ({ default: m.DocsCamos })));
+const CamosInstall = lazyWithRetry(() => import('./pages/docs/camos/CamosInstall').then(m => ({ default: m.CamosInstall })));
+const CamosConfig = lazyWithRetry(() => import('./pages/docs/camos/CamosConfig').then(m => ({ default: m.CamosConfig })));
+const CamosLifecycle = lazyWithRetry(() => import('./pages/docs/camos/CamosLifecycle').then(m => ({ default: m.CamosLifecycle })));
 
-const CustomerGettingStarted = lazy(() => import('./pages/docs/customer/GettingStarted').then(m => ({ default: m.GettingStarted })));
-const CustomerVpsGuide = lazy(() => import('./pages/docs/customer/VpsGuide').then(m => ({ default: m.VpsGuide })));
-const CustomerSftpGuide = lazy(() => import('./pages/docs/customer/SftpGuide').then(m => ({ default: m.SftpGuide })));
-const CustomerDedicatedGuide = lazy(() => import('./pages/docs/customer/DedicatedGuide').then(m => ({ default: m.DedicatedGuide })));
-const CustomerBillingGuide = lazy(() => import('./pages/docs/customer/BillingGuide').then(m => ({ default: m.BillingGuide })));
-const CustomerSupportGuide = lazy(() => import('./pages/docs/customer/SupportGuide').then(m => ({ default: m.SupportGuide })));
+const CustomerGettingStarted = lazyWithRetry(() => import('./pages/docs/customer/GettingStarted').then(m => ({ default: m.GettingStarted })));
+const CustomerVpsGuide = lazyWithRetry(() => import('./pages/docs/customer/VpsGuide').then(m => ({ default: m.VpsGuide })));
+const CustomerSftpGuide = lazyWithRetry(() => import('./pages/docs/customer/SftpGuide').then(m => ({ default: m.SftpGuide })));
+const CustomerDedicatedGuide = lazyWithRetry(() => import('./pages/docs/customer/DedicatedGuide').then(m => ({ default: m.DedicatedGuide })));
+const CustomerBillingGuide = lazyWithRetry(() => import('./pages/docs/customer/BillingGuide').then(m => ({ default: m.BillingGuide })));
+const CustomerSupportGuide = lazyWithRetry(() => import('./pages/docs/customer/SupportGuide').then(m => ({ default: m.SupportGuide })));
 
 // ─── Registration ────────────────────────────────────────────────────────────
-const Register = lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
-const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail').then(m => ({ default: m.VerifyEmail })));
-const PartnerLanding = lazy(() => import('./pages/PartnerLanding').then(m => ({ default: m.PartnerLanding })));
+const Register = lazyWithRetry(() => import('./pages/Register').then(m => ({ default: m.Register })));
+const Login = lazyWithRetry(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const VerifyEmail = lazyWithRetry(() => import('./pages/VerifyEmail').then(m => ({ default: m.VerifyEmail })));
+const PartnerLanding = lazyWithRetry(() => import('./pages/PartnerLanding').then(m => ({ default: m.PartnerLanding })));
 
 // ─── Route definitions ───────────────────────────────────────────────────────
 
@@ -250,6 +285,8 @@ const REDIRECT_ROUTES: RouteConfig[] = [
   { path: '/de/managed', element: <Navigate to="/de/infrastructure/managed" replace /> },
   { path: '/odp', element: <Navigate to="/deploy" replace /> },
   { path: '/de/odp', element: <Navigate to="/de/deploy" replace /> },
+  { path: '/infrastructure/odp', element: <Navigate to="/deploy" replace /> },
+  { path: '/de/infrastructure/odp', element: <Navigate to="/de/deploy" replace /> },
   { path: '/pegasus', element: <Navigate to="/software/pegasus" replace /> },
   { path: '/about', element: <Navigate to="/company/about" replace /> },
   { path: '/team', element: <Navigate to="/company/team" replace /> },
@@ -295,7 +332,7 @@ function AppContent() {
       </a>
       {!isDashboard && <Navbar />}
       <main id="main-content" className="flex-1 flex flex-col">
-        <ErrorBoundary>
+        <ErrorBoundary key={location.pathname}>
           <Suspense fallback={
             <div className="flex-1 flex items-center justify-center min-h-[40vh] p-8">
               <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">

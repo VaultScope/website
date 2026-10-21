@@ -18,7 +18,12 @@ import { api } from '../lib/api';
 import { isAuthenticated } from '../lib/auth';
 import { SeoHead } from '../components/SeoHead';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'vaultscope.de' ||
+    window.location.hostname.endsWith('.vaultscope.de'))
+    ? '/api'
+    : import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 interface PartnerInfo {
   id: string;
@@ -46,6 +51,7 @@ interface ProductInfo {
   trial_days?: number | null;
   trial_quota_gb?: number | null;
   quota_gb?: number | null;
+  service_form_id?: string | null;
 }
 
 interface PartnerPayload {
@@ -121,7 +127,7 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
     try {
       await api.post('/storefront/orders', {
         product_id: data.product.id,
-        hostname: hostname.trim() || undefined,
+        hostname: data.product.service_form_id && hostname.trim() ? hostname.trim() : undefined,
         partner_slug: data.partner.slug,
       });
 
@@ -184,6 +190,11 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
   const priceNum = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
   const monthlyPriceVat = (priceNum * 1.19).toFixed(2);
   const specs = (product.specs || {}) as Record<string, any>;
+  const isStorageProduct =
+    (product.category || '').toLowerCase().includes('storage') ||
+    (product.category || '').toLowerCase().includes('sftp') ||
+    product.provider === 'sftpgo';
+  const hasCustomConfig = Boolean(product.service_form_id);
 
   return (
     <div className="flex flex-col w-full pb-28 bg-[var(--bg)] text-[var(--fg)]">
@@ -255,7 +266,7 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => navigate(localePath(product.category === 'sftp' ? '/dashboard/sftp' : '/dashboard/vps'))}
+                  onClick={() => navigate(localePath(isStorageProduct ? '/dashboard/sftp' : '/dashboard/vps'))}
                   className="vs-btn-primary"
                 >
                   {locale === 'de' ? 'Zum Dashboard' : 'Open Dashboard'}
@@ -321,7 +332,7 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
                 </div>
 
                 {/* Storage Quota Information */}
-                {((product.category || '').toLowerCase().includes('storage') || (product.category || '').toLowerCase().includes('sftp') || product.provider === 'sftpgo') && (
+                {isStorageProduct && (
                   <div className="pt-4 mb-6 space-y-2.5">
                     <div className="flex items-center gap-2 text-xs font-semibold text-[var(--fg)] uppercase tracking-wider">
                       <HardDrive className="w-3.5 h-3.5 text-[var(--accent-bright)] shrink-0" />
@@ -443,18 +454,20 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <div>
-                          <label className="block text-xs font-mono uppercase tracking-wider text-[var(--fg-muted)] mb-1.5">
-                            {locale === 'de' ? 'Hostname (optional)' : 'Server Hostname (optional)'}
-                          </label>
-                          <input
-                            type="text"
-                            value={hostname}
-                            onChange={e => setHostname(e.target.value)}
-                            placeholder="e.g. cloud-node-01"
-                            className="vs-input"
-                          />
-                        </div>
+                        {hasCustomConfig && (
+                          <div>
+                            <label className="block text-xs font-mono uppercase tracking-wider text-[var(--fg-muted)] mb-1.5">
+                              {locale === 'de' ? 'Hostname (optional)' : 'Server Hostname (optional)'}
+                            </label>
+                            <input
+                              type="text"
+                              value={hostname}
+                              onChange={e => setHostname(e.target.value)}
+                              placeholder="e.g. cloud-node-01"
+                              className="vs-input"
+                            />
+                          </div>
+                        )}
 
                         <div className="py-3 text-xs text-[var(--fg-muted)] space-y-1.5">
                           <div className="flex justify-between">

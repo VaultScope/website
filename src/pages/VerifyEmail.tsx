@@ -5,7 +5,12 @@ import { Button } from '../components/Shared';
 import { useLanguage } from '../i18n';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'vaultscope.de' ||
+    window.location.hostname.endsWith('.vaultscope.de'))
+    ? '/api'
+    : import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export function VerifyEmail() {
   const [searchParams] = useSearchParams();

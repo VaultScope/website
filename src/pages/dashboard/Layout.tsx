@@ -55,6 +55,22 @@ export function DashboardLayout() {
     setUserMenuOpen(false);
   }, [location.pathname]);
 
+  // Eagerly warm dashboard route chunks once inside the dashboard so tab transitions (e.g. /dashboard/odp) never fail mid-navigation
+  useEffect(() => {
+    if (!token) return;
+    const timer = window.setTimeout(() => {
+      void import('./Overview').catch(() => {});
+      void import('./VpsList').catch(() => {});
+      void import('./DsList').catch(() => {});
+      void import('./OdpList').catch(() => {});
+      void import('./OdpDetail').catch(() => {});
+      void import('./SftpStorage').catch(() => {});
+      void import('./SupportList').catch(() => {});
+      void import('./NewService').catch(() => {});
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [token]);
+
   useEffect(() => {
     if (!userMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {

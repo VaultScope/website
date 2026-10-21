@@ -42,7 +42,7 @@ export const InfrastructureOverview = () => {
         ? 'Vorkonfigurierte Open-Source-Anwendungen auf isolierten Proxmox-Instanzen mit automatischem Reverse-Proxy und TLS.'
         : 'Pre-configured open-source applications deployed on isolated Proxmox instances with automated reverse proxy and TLS.',
       cta: isDe ? 'ODP ansehen' : 'Explore ODP',
-      href: '/infrastructure/odp/',
+      href: '/deploy',
       status: isDe ? 'Warteliste offen' : 'Waitlist Open',
       availableNow: false,
     },
