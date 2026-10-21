@@ -93,7 +93,7 @@ export const Privacy = () => {
                 <div className="mt-4 pt-4 border-t border-border">
                   <p>
                     <span className="text-foreground/40 uppercase tracking-widest text-xs mr-3">Email</span>
-                    <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">cptcr@proton.me</a>
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">administration@vaultscope.de</a>
                   </p>
                   <p className="mt-1">
                     <span className="text-foreground/40 uppercase tracking-widest text-xs mr-3">Support</span>
@@ -233,7 +233,7 @@ export const Privacy = () => {
                     <span className="text-foreground/50 font-medium">Legal basis:</span>{' '}
                     Consent (Art. 6(1)(a) GDPR). You may withdraw consent at any time by clicking
                     the unsubscribe link in any email, or by contacting us at{' '}
-                    <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">cptcr@proton.me</a>.
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">administration@vaultscope.de</a>.
                   </p>
                   <p className="text-sm">
                     <span className="text-foreground/50 font-medium">Retention:</span>{' '}
@@ -365,7 +365,7 @@ export const Privacy = () => {
               </div>
               <p className="text-sm mt-6">
                 To exercise any of these rights, contact us at{' '}
-                <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">cptcr@proton.me</a>.
+                <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">administration@vaultscope.de</a>.
                 We will respond within one month as required by Art. 12 GDPR. We may ask you to verify
                 your identity before processing your request.
               </p>

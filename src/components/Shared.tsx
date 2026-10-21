@@ -1859,7 +1859,6 @@ export const LegalDocumentLayout = ({ children }: { children: React.ReactNode })
                 <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg)]">
                   Regulatory Ledger
                 </span>
-                <span className="text-[10px] font-mono text-emerald-500">ACTIVE</span>
               </div>
               <dl className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
@@ -1872,7 +1871,7 @@ export const LegalDocumentLayout = ({ children }: { children: React.ReactNode })
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <dt className="font-mono text-[var(--fg-faint)]">Legal Contact</dt>
-                  <dd className="font-mono text-[var(--accent-bright)]">cptcr@proton.me</dd>
+                  <dd className="font-mono text-[var(--accent-bright)]">administration@vaultscope.de</dd>
                 </div>
               </dl>
             </div>

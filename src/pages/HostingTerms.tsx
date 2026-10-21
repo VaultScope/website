@@ -182,8 +182,8 @@ export const HostingTerms = () => {
                   <p>
                     The Customer may terminate any Service by submitting a cancellation request via
                     the customer portal or by email to{' '}
-                    <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                      cptcr@proton.me
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                      administration@vaultscope.de
                     </a>. Cancellation must be submitted at least 7 days before the next Billing
                     Period start date. Cancellation takes effect at the end of the current Billing
                     Period. No refunds are issued for unused time within a Billing Period.

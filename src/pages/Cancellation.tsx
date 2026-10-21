@@ -60,8 +60,8 @@ export const Cancellation = () => {
                   <p>Germany</p>
                   <p className="mt-3">
                     Email:{' '}
-                    <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                      cptcr@proton.me
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                      administration@vaultscope.de
                     </a>
                   </p>
                 </div>
@@ -163,8 +163,8 @@ export const Cancellation = () => {
                   <p>Gottlob-Spieß-Straße 2, 74343 Sachsenheim, Germany</p>
                   <p>
                     Email:{' '}
-                    <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                      cptcr@proton.me
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                      administration@vaultscope.de
                     </a>
                   </p>
                 </div>

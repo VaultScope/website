@@ -29,7 +29,7 @@ export const Terms = () => {
               </p>
               <p className="text-sm mt-4">
                 VaultScope is operated by Anton Schmidt (Einzelunternehmen), Gottlob-Spieß-Straße 2,
-                74343 Sachsenheim, Germany. Contact: <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">cptcr@proton.me</a>
+                74343 Sachsenheim, Germany. Contact: <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">administration@vaultscope.de</a>
               </p>
             </div>
 
@@ -229,8 +229,8 @@ export const Terms = () => {
               <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">11. Contact</h2>
               <p className="text-sm">
                 For questions regarding these Terms, contact VaultScope at{' '}
-                <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                  cptcr@proton.me
+                <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                  administration@vaultscope.de
                 </a>.
               </p>
             </div>

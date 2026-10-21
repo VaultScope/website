@@ -29,8 +29,8 @@ export const Imprint = () => {
                 <div className="mt-4 pt-4 border-t border-border flex flex-col gap-1.5">
                   <p>
                     <span className="text-foreground/40 uppercase tracking-widest text-xs mr-3">Email</span>
-                    <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                      cptcr@proton.me
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                      administration@vaultscope.de
                     </a>
                   </p>
                 </div>

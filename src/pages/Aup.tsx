@@ -219,8 +219,8 @@ export const Aup = () => {
               <p className="text-sm mb-4">
                 VaultScope respects intellectual property rights. If you believe content hosted on
                 VaultScope infrastructure infringes your copyright, send a notice to{' '}
-                <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                  cptcr@proton.me
+                <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                  administration@vaultscope.de
                 </a>{' '}
                 including:
               </p>
@@ -250,8 +250,8 @@ export const Aup = () => {
               <p className="text-sm">
                 To report abuse, spam, network attacks, or other AUP violations originating from
                 VaultScope infrastructure, contact{' '}
-                <a href="mailto:cptcr@proton.me" className="text-foreground hover:underline">
-                  cptcr@proton.me
+                <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                  administration@vaultscope.de
                 </a>{' '}
                 with as much detail as possible including relevant IP addresses, timestamps, and
                 evidence of the violation. VaultScope will investigate all credible reports and
