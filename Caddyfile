@@ -18,10 +18,19 @@
 		-Server
 	}
 
-	handle_path /api/listmonk/* {
+	handle /api/listmonk/api/public/subscription {
+		uri strip_prefix /api/listmonk
 		reverse_proxy https://sub.vaultscope.de {
 			header_up Host sub.vaultscope.de
 		}
+	}
+
+	handle /api/listmonk/* {
+		respond "Forbidden" 403
+	}
+
+	handle /api/* {
+		reverse_proxy vaultscope-api:3000
 	}
 
 	handle /assets/* {
