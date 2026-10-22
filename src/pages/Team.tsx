@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Globe, Mail, Code2, Server, Terminal } from 'lucide-react';
+import { ArrowUpRight, Globe, Mail, Code2, Server, Terminal, Cpu } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
 interface TeamMember {
@@ -16,68 +16,79 @@ interface TeamMember {
   icon: typeof Code2;
   accentGradient: string;
   github: string;
-  website: string;
-  websiteLabel: string;
+  website?: string;
+  websiteLabel?: string;
   email: string;
 }
 
 const TEAM_MEMBERS: TeamMember[] = [
   {
-    name: 'Toowake',
-    handle: '@Toowake',
-    initials: 'TW',
-    roleEn: 'Co-Founder & Lead Developer',
-    roleDe: 'Mitgründer & Lead Developer',
+    name: 'Anton Schmidt',
+    handle: '@semiconstructor',
+    initials: 'AS',
+    roleEn: 'Founder',
+    roleDe: 'Gründer',
     bioEn:
-      'Leads software development across VaultScope — building the Pegasus platform, the VAMOS backend, and the customer dashboard.',
+      'Founder of VaultScope — leads architecture and engineering across the Pegasus platform, VAMOS, CAMOS, and core infrastructure in Germany.',
     bioDe:
-      'Leitet die Softwareentwicklung bei VaultScope — entwickelt die Pegasus-Plattform, das VAMOS-Backend und das Kunden-Dashboard.',
-    focusEn: ['Software Architecture', 'Pegasus', 'VAMOS & Storefront'],
-    focusDe: ['Software-Architektur', 'Pegasus', 'VAMOS & Storefront'],
+      'Gründer von VaultScope — leitet Architektur und Entwicklung der Pegasus-Plattform, VAMOS, CAMOS sowie der Kerninfrastruktur in Deutschland.',
+    focusEn: ['Platform Architecture', 'Infrastructure', 'Pegasus & VAMOS'],
+    focusDe: ['Plattform-Architektur', 'Infrastruktur', 'Pegasus & VAMOS'],
     icon: Code2,
     accentGradient: 'from-[#56369C]/14 via-[#56369C]/5 to-transparent',
-    github: 'https://github.com/Toowake',
-    website: 'https://toowake.dev',
-    websiteLabel: 'toowake.dev',
-    email: 'toowake@vaultscope.de',
+    github: 'https://github.com/semiconstructor',
+    email: 'tony@vaultscope.de',
   },
   {
-    name: 'Nyxan.zip',
-    handle: '@Nyxanzip',
-    initials: 'NX',
-    roleEn: 'Co-Founder & Infrastructure Lead',
-    roleDe: 'Mitgründer & Infrastructure Lead',
+    name: 'Marek M.',
+    handle: '@veroxjs',
+    initials: 'MM',
+    roleEn: 'Systems & Infrastructure Engineer',
+    roleDe: 'Systems & Infrastructure Engineer',
     bioEn:
-      'Designs and operates VaultScope’s physical servers, Linux systems, networking, and encrypted SFTP storage infrastructure.',
+      'Designs and operates VaultScope’s physical servers, Linux systems, networking, and encrypted storage infrastructure.',
     bioDe:
-      'Plant und betreibt die physischen Server, Linux-Systeme, Netzwerke und die verschlüsselte SFTP-Speicherinfrastruktur von VaultScope.',
+      'Plant und betreibt die physischen Server, Linux-Systeme, Netzwerke und die verschlüsselte Speicherinfrastruktur von VaultScope.',
     focusEn: ['Server Hardware', 'Linux & Storage', 'Network Security'],
     focusDe: ['Server-Hardware', 'Linux & Speicher', 'Netzwerksicherheit'],
     icon: Server,
     accentGradient: 'from-[#4B328A]/14 via-[#56369C]/5 to-transparent',
-    github: 'https://github.com/Nyxanzip',
-    website: 'https://nyxan.xyz',
-    websiteLabel: 'nyxan.xyz',
-    email: 'nyxan@vaultscope.de',
+    github: 'https://github.com/veroxjs',
+    email: 'marek@vaultscope.de',
   },
   {
-    name: 'Benniboy',
-    handle: '@benniboy0609',
-    initials: 'BB',
-    roleEn: 'Developer',
-    roleDe: 'Entwickler',
+    name: 'Jason T.',
+    handle: '@altifyx',
+    initials: 'JT',
+    roleEn: 'Backend & Platform Developer',
+    roleDe: 'Backend- & Plattform-Entwickler',
     bioEn:
-      'Builds platform features, internal tools, and integrations across VaultScope’s web applications and services.',
+      'Develops backend services, APIs, and automation workflows across VAMOS, CAMOS, and VaultScope’s cloud provisioning stack.',
     bioDe:
-      'Entwickelt Plattform-Funktionen, interne Werkzeuge und Integrationen für die Web-Anwendungen und Dienste von VaultScope.',
+      'Entwickelt Backend-Dienste, APIs und Automatisierungs-Workflows für VAMOS, CAMOS und den Cloud-Provisioning-Stack von VaultScope.',
+    focusEn: ['Backend Systems', 'API Engineering', 'Automation'],
+    focusDe: ['Backend-Systeme', 'API-Entwicklung', 'Automatisierung'],
+    icon: Cpu,
+    accentGradient: 'from-[#5E3CA8]/12 via-[#56369C]/4 to-transparent',
+    github: 'https://github.com/altifyx',
+    email: 'jason@vaultscope.de',
+  },
+  {
+    name: 'Charlie P.',
+    handle: '@titsoujs',
+    initials: 'CP',
+    roleEn: 'Full-Stack Developer',
+    roleDe: 'Full-Stack-Entwickler',
+    bioEn:
+      'Builds platform features, internal tools, and integrations across VaultScope’s web applications and customer interfaces.',
+    bioDe:
+      'Entwickelt Plattform-Funktionen, interne Werkzeuge und Integrationen für die Web-Anwendungen und Kundenoberflächen von VaultScope.',
     focusEn: ['Web Applications', 'Platform Tooling', 'Integrations'],
     focusDe: ['Web-Anwendungen', 'Plattform-Tools', 'Integrationen'],
     icon: Terminal,
-    accentGradient: 'from-[#5E3CA8]/12 via-[#56369C]/4 to-transparent',
-    github: 'https://github.com/benniboy0609',
-    website: 'https://benni.vaultscope.de',
-    websiteLabel: 'benni.vaultscope.de',
-    email: 'benni@vaultscope.de',
+    accentGradient: 'from-[#56369C]/12 via-[#56369C]/4 to-transparent',
+    github: 'https://github.com/titsoujs',
+    email: 'charlie@vaultscope.de',
   },
 ];
 
@@ -113,7 +124,7 @@ export const Team = () => {
       {/* Team Profiles Grid */}
       <section className="py-12 lg:py-16">
         <div className="vs-container">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12">
             {TEAM_MEMBERS.map((member) => {
               const Icon = member.icon;
               const role = isDe ? member.roleDe : member.roleEn;
@@ -175,18 +186,20 @@ export const Team = () => {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-mono text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
                       >
-                        <span>GitHub</span>
+                        <span>GitHub ({member.handle})</span>
                         <ArrowUpRight className="w-3 h-3 text-[var(--accent-bright)]" />
                       </a>
-                      <a
-                        href={member.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-mono text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
-                      >
-                        <Globe className="w-3 h-3 text-[var(--accent-bright)]" />
-                        <span>{member.websiteLabel}</span>
-                      </a>
+                      {member.website && member.websiteLabel && (
+                        <a
+                          href={member.website}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-mono text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+                        >
+                          <Globe className="w-3 h-3 text-[var(--accent-bright)]" />
+                          <span>{member.websiteLabel}</span>
+                        </a>
+                      )}
                     </div>
 
                     <a
@@ -195,7 +208,7 @@ export const Team = () => {
                       className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--fg-muted)] hover:text-[var(--accent-bright)] transition-colors"
                     >
                       <Mail className="w-3.5 h-3.5" />
-                      <span className="sr-only sm:not-sr-only">{member.email}</span>
+                      <span>{member.email}</span>
                     </a>
                   </div>
                 </article>
