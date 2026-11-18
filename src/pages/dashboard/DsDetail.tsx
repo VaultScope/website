@@ -374,7 +374,7 @@ export function DsDetail() {
             <div className="flex items-center justify-between gap-4 py-3">
               <span className="text-xs text-[var(--fg-muted)]">Facility</span>
               <span className="text-xs font-mono text-[var(--fg)]">
-                {specs.location || 'Frankfurt (DE-FRA1)'}
+                {specs.location || (specs.datacenter === 'NL' ? 'Amsterdam, NL' : 'Frankfurt (DE-FRA1)')}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 pt-3">
@@ -410,12 +410,40 @@ export function DsDetail() {
             <div className="flex items-center justify-between gap-4 pt-3">
               <span className="text-xs text-[var(--fg-muted)]">Uplink</span>
               <span className="text-xs font-mono text-[var(--fg)]">
-                {specs.bandwidth || '1 Gbps / 10 Gbps'}
+                {specs.uplink || specs.bandwidth || '1 Gbps / 10 Gbps'}
               </span>
             </div>
           </div>
         </div>
       </div>
+
+      {Array.isArray(service.config?.quote_line_items) && service.config.quote_line_items.length > 0 && (
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--fg-faint)]">
+              Server Configuration & Add-ons
+            </h2>
+            {service.config?.raw_response?.orderId && (
+              <span className="text-xs font-mono text-[var(--fg-muted)]">
+                Provisioning Reference #{service.config.raw_response.orderId}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-xs">
+            {service.config.quote_line_items.map((item: any, idx: number) => (
+              <div
+                key={`${item.group_name}-${idx}`}
+                className="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--line)]"
+              >
+                <span className="text-[var(--fg-muted)]">{item.group_name}</span>
+                <span className="font-mono text-[var(--fg)] truncate max-w-[240px]">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showCancelModal && (

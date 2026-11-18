@@ -173,10 +173,45 @@ function CheckoutForm({
 function resolveCategoryTab(rawCat?: string, rawProvider?: string): 'vps' | 'ds' | 'odp' | 'storage' {
   const c = (rawCat || '').toLowerCase();
   const p = (rawProvider || '').toLowerCase();
-  if (c === 'ds' || c === 'dedicated' || c === 'bare-metal' || p === 'reliablesite') return 'ds';
+  if (
+    c === 'ds' ||
+    c === 'dedicated' ||
+    c === 'dedicated servers' ||
+    c === 'bare-metal' ||
+    p === 'vaultscope_dedicated' ||
+    p === 'reliablesite'
+  ) {
+    return 'ds';
+  }
   if (c === 'odp' || c === 'ocd' || c.includes('one click')) return 'odp';
   if (c === 'storage' || c === 'sftp' || p === 'sftpgo') return 'storage';
   return 'vps';
+}
+
+export function getDedicatedRateForCycle(
+  item: Record<string, any> | null | undefined,
+  cycle: string,
+): { recurring: number; setupFee: number; available: boolean } {
+  if (!item) return { recurring: 0, setupFee: 0, available: true };
+  const map: Record<string, [string, string]> = {
+    monthly: ['recurring_1_month', 'setup_1_month'],
+    quarterly: ['recurring_3_month', 'setup_3_month'],
+    semiannually: ['recurring_6_month', 'setup_6_month'],
+    annually: ['recurring_12_month', 'setup_12_month'],
+    biennially: ['recurring_24_month', 'setup_24_month'],
+    triennially: ['recurring_36_month', 'setup_36_month'],
+  };
+  const [recKey, setupKey] = map[cycle] || map.monthly;
+  const rec = Number.parseFloat(String(item[recKey] ?? '0'));
+  const setup = Number.parseFloat(String(item[setupKey] ?? '0'));
+  if (!Number.isFinite(rec) || rec < 0) {
+    return { recurring: 0, setupFee: 0, available: false };
+  }
+  return {
+    recurring: rec,
+    setupFee: Number.isFinite(setup) && setup > 0 ? setup : 0,
+    available: true,
+  };
 }
 
 export function NewService() {
@@ -192,6 +227,13 @@ export function NewService() {
   const [serviceForms, setServiceForms] = useState<any[]>([]);
   const [sshKeys, setSshKeys] = useState<any[]>([]);
   const [customConfig, setCustomConfig] = useState<Record<string, any>>({});
+  const [rsOptions, setRsOptions] = useState<any | null>(null);
+  const [rsLoading, setRsLoading] = useState(false);
+  const [rsBillingCycle, setRsBillingCycle] = useState('monthly');
+  const [rsConfigOptions, setRsConfigOptions] = useState<Record<string, number>>({});
+  const [rsHostname, setRsHostname] = useState('');
+  const [rsOrderNotes, setRsOrderNotes] = useState('');
+  const [rsQuote, setRsQuote] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -271,19 +313,96 @@ export function NewService() {
       null
     : selectedProduct?.service_form || null;
 
+  const isDedicatedConfigurable = Boolean(
+    selectedProduct?.specs?.configurable_options === true ||
+      selectedProduct?.provider === 'vaultscope_dedicated' ||
+      selectedProduct?.provider === 'reliablesite',
+  );
+
   const customFields: any[] = Array.isArray(activeServiceForm?.fields)
     ? activeServiceForm.fields
     : Array.isArray(selectedProduct?.custom_fields)
       ? selectedProduct.custom_fields
       : [];
 
-  const hasCustomConfig = Boolean(customFields.length > 0);
+  const hasCustomConfig = Boolean(customFields.length > 0 || isDedicatedConfigurable);
+
+  // Load white-label dedicated server groups/options when a configurable server is selected
+  useEffect(() => {
+    if (!selectedProduct || !isDedicatedConfigurable) {
+      setRsOptions(null);
+      setRsQuote(null);
+      setRsConfigOptions({});
+      setRsBillingCycle('monthly');
+      return;
+    }
+
+    let cancelled = false;
+    setRsLoading(true);
+    setRsQuote(null);
+    api
+      .get<any>(`/storefront/dedicated/products/${selectedProduct.id}/options`)
+      .then((data) => {
+        if (cancelled) return;
+        setRsOptions(data);
+        const cycles = Array.isArray(data?.available_cycles) ? data.available_cycles : [];
+        const initialCycle =
+          cycles.find((c: any) => c.billing_cycle === 'monthly')?.billing_cycle ||
+          cycles[0]?.billing_cycle ||
+          'monthly';
+        setRsBillingCycle(initialCycle);
+        const defaults: Record<string, number> = {};
+        if (data?.default_config_options && typeof data.default_config_options === 'object') {
+          for (const [k, v] of Object.entries(data.default_config_options)) {
+            defaults[String(k)] = Number(v);
+          }
+        }
+        setRsConfigOptions(defaults);
+      })
+      .catch(() => {
+        if (!cancelled) setRsOptions(null);
+      })
+      .finally(() => {
+        if (!cancelled) setRsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProduct?.id, isDedicatedConfigurable]);
+
+  // Fetch authoritative server-side quote whenever billing cycle or addon selections change
+  useEffect(() => {
+    if (
+      !selectedProduct ||
+      !isDedicatedConfigurable ||
+      !rsOptions ||
+      Object.keys(rsConfigOptions).length === 0
+    ) {
+      return;
+    }
+    let cancelled = false;
+    api
+      .post<any>(`/storefront/dedicated/products/${selectedProduct.id}/quote`, {
+        billing_cycle: rsBillingCycle,
+        config_options: rsConfigOptions,
+      })
+      .then((q) => {
+        if (!cancelled) setRsQuote(q);
+      })
+      .catch(() => {
+        if (!cancelled) setRsQuote(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProduct?.id, isDedicatedConfigurable, rsOptions, rsBillingCycle, rsConfigOptions]);
 
   // Initialize default values when the active service form changes
   useEffect(() => {
-    if (!hasCustomConfig) {
+    if (!customFields.length) {
       setCustomConfig({});
-      if (currentStep === 1) {
+      if (currentStep === 1 && !isDedicatedConfigurable) {
         setCurrentStep(0);
       }
       return;
@@ -329,6 +448,14 @@ export function NewService() {
       return;
     }
     if (currentStep === 1) {
+      if (isDedicatedConfigurable && Array.isArray(rsOptions?.groups)) {
+        for (const grp of rsOptions.groups) {
+          if (grp.required && !rsConfigOptions[String(grp.group_id)]) {
+            setError(`Please select an option for: ${grp.description}`);
+            return;
+          }
+        }
+      }
       for (const field of customFields) {
         const key = field.variable || field.id;
         if (field.required && field.type !== 'checkbox') {
@@ -354,9 +481,52 @@ export function NewService() {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const price = selectedProduct ? parseFloat(selectedProduct.price || '0') : 0;
-  const vat = price * 0.19;
-  const total = price + vat;
+  const fallbackDedicatedPricing = (() => {
+    if (!isDedicatedConfigurable) return null;
+    if (rsQuote) {
+      return {
+        recurring: parseFloat(rsQuote.recurring_net || '0'),
+        setupFee: parseFloat(rsQuote.setup_fee_net || '0'),
+        subtotal: parseFloat(rsQuote.subtotal_net || '0'),
+        vat: parseFloat(rsQuote.vat_amount || '0'),
+        total: parseFloat(rsQuote.total_gross || '0'),
+      };
+    }
+    if (rsOptions) {
+      const cycleEntry = (rsOptions.available_cycles || []).find(
+        (c: any) => c.billing_cycle === rsBillingCycle,
+      );
+      let recurring = cycleEntry
+        ? parseFloat(cycleEntry.recurring || '0')
+        : parseFloat(selectedProduct?.price || '0');
+      let setupFee = cycleEntry
+        ? parseFloat(cycleEntry.setup_fee || '0')
+        : parseFloat(selectedProduct?.setup_fee || '0');
+      for (const grp of rsOptions.groups || []) {
+        const selectedId = rsConfigOptions[String(grp.group_id)];
+        const opt = (grp.options || []).find((o: any) => Number(o.addon_id) === Number(selectedId));
+        if (opt) {
+          const r = getDedicatedRateForCycle(opt, rsBillingCycle);
+          recurring += r.recurring;
+          setupFee += r.setupFee;
+        }
+      }
+      const subtotal = recurring + setupFee;
+      const vatVal = subtotal * 0.19;
+      return { recurring, setupFee, subtotal, vat: vatVal, total: subtotal + vatVal };
+    }
+    return null;
+  })();
+
+  const recurringNet = fallbackDedicatedPricing
+    ? fallbackDedicatedPricing.recurring
+    : selectedProduct
+      ? parseFloat(selectedProduct.price || '0')
+      : 0;
+  const setupFeeNet = fallbackDedicatedPricing ? fallbackDedicatedPricing.setupFee : 0;
+  const price = fallbackDedicatedPricing ? fallbackDedicatedPricing.subtotal : recurringNet;
+  const vat = fallbackDedicatedPricing ? fallbackDedicatedPricing.vat : price * 0.19;
+  const total = fallbackDedicatedPricing ? fallbackDedicatedPricing.total : price + vat;
 
   const handleProceedToPayment = async () => {
     if (!selectedProduct) return;
@@ -373,6 +543,12 @@ export function NewService() {
         product_id: selectedProduct.id,
         amount: amountCents,
         currency: 'eur',
+        ...(isDedicatedConfigurable
+          ? {
+              billing_cycle: rsBillingCycle,
+              config_options: rsConfigOptions,
+            }
+          : {}),
       });
       const secret = res?.client_secret || res?.clientSecret || '';
       const piId =
@@ -395,9 +571,10 @@ export function NewService() {
     setError('');
     try {
       const configuredHostname =
-        typeof customConfig.hostname === 'string' && customConfig.hostname.trim()
+        (isDedicatedConfigurable && rsHostname.trim() ? rsHostname.trim() : undefined) ||
+        (typeof customConfig.hostname === 'string' && customConfig.hostname.trim()
           ? customConfig.hostname.trim()
-          : undefined;
+          : undefined);
       const effectivePaymentIntentId =
         confirmedPaymentIntentId ||
         paymentIntentId ||
@@ -407,8 +584,16 @@ export function NewService() {
         product_id: selectedProduct.id,
         hostname: configuredHostname,
         payment_intent_id: effectivePaymentIntentId || undefined,
-        billing_cycle: selectedProduct.billing_cycle || 'monthly',
-        config: hasCustomConfig ? customConfig : undefined,
+        billing_cycle: isDedicatedConfigurable
+          ? rsBillingCycle
+          : selectedProduct.billing_cycle || 'monthly',
+        ...(isDedicatedConfigurable
+          ? {
+              config_options: rsConfigOptions,
+              order_notes: rsOrderNotes.trim() || undefined,
+            }
+          : {}),
+        config: customFields.length > 0 ? customConfig : undefined,
       });
       setTimeout(() => {
         if (category === 'storage') {
@@ -577,6 +762,142 @@ export function NewService() {
 
           {currentStep === 1 && hasCustomConfig && (
             <div className="space-y-6">
+              {isDedicatedConfigurable && (
+                <div className="space-y-6">
+                  <div className="space-y-1 border-b border-[var(--line)] pb-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h2 className="text-base font-semibold text-[var(--fg)]">
+                        Dedicated Server Configuration ({rsOptions?.server?.data_center || 'NL'})
+                      </h2>
+                      {rsOptions?.server?.stock !== undefined && (
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--line)] text-[var(--fg-muted)]">
+                          Stock: {rsOptions.server.stock} available
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[var(--fg-muted)]">
+                      Select your billing cycle and hardware/software options for {selectedProduct?.name}.
+                    </p>
+                  </div>
+
+                  {rsLoading ? (
+                    <div className="py-6 text-xs font-mono text-[var(--fg-muted)]">
+                      Loading server configuration options...
+                    </div>
+                  ) : rsOptions ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="dedi-billing-cycle"
+                          className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5"
+                        >
+                          Billing Cycle <span className="text-[var(--err)]">*</span>
+                        </label>
+                        <select
+                          id="dedi-billing-cycle"
+                          value={rsBillingCycle}
+                          onChange={(e) => setRsBillingCycle(e.target.value)}
+                          className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                        >
+                          {(rsOptions.available_cycles || []).map((c: any) => (
+                            <option key={c.billing_cycle} value={c.billing_cycle}>
+                              {c.label} — €{parseFloat(c.recurring || '0').toFixed(2)}
+                              {parseFloat(c.setup_fee || '0') > 0
+                                ? ` (+ €${parseFloat(c.setup_fee).toFixed(2)} setup)`
+                                : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="dedi-hostname"
+                          className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5"
+                        >
+                          Server Hostname (optional)
+                        </label>
+                        <input
+                          id="dedi-hostname"
+                          type="text"
+                          value={rsHostname}
+                          onChange={(e) => setRsHostname(e.target.value)}
+                          placeholder="ams-node-01.vaultscope.de"
+                          className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(rsOptions.groups || []).map((grp: any) => {
+                          const gidKey = String(grp.group_id);
+                          const selectedAddon = rsConfigOptions[gidKey] ?? '';
+                          const selectId = `dedi-group-${gidKey}`;
+                          return (
+                            <div key={grp.group_id}>
+                              <label
+                                htmlFor={selectId}
+                                className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5"
+                              >
+                                {grp.description}
+                                {grp.required && <span className="text-[var(--err)] ml-1">*</span>}
+                              </label>
+                              <select
+                                id={selectId}
+                                value={selectedAddon}
+                                onChange={(e) =>
+                                  setRsConfigOptions((prev) => ({
+                                    ...prev,
+                                    [gidKey]: Number(e.target.value),
+                                  }))
+                                }
+                                className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-3 py-2.5 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                              >
+                                {(grp.options || []).map((opt: any) => {
+                                  const rate = getDedicatedRateForCycle(opt, rsBillingCycle);
+                                  if (!rate.available) return null;
+                                  const parts: string[] = [];
+                                  if (rate.recurring > 0) parts.push(`+€${rate.recurring.toFixed(2)}`);
+                                  if (rate.setupFee > 0) parts.push(`+€${rate.setupFee.toFixed(2)} setup`);
+                                  const suffix = parts.length > 0 ? ` (${parts.join(', ')})` : ' (Included)';
+                                  return (
+                                    <option key={opt.addon_id} value={opt.addon_id}>
+                                      {opt.addon_description}
+                                      {suffix}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="dedi-order-notes"
+                          className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5"
+                        >
+                          Order / Provisioning Notes (optional)
+                        </label>
+                        <textarea
+                          id="dedi-order-notes"
+                          rows={2}
+                          maxLength={2000}
+                          value={rsOrderNotes}
+                          onChange={(e) => setRsOrderNotes(e.target.value)}
+                          placeholder="Optional partitioning or provisioning instructions..."
+                          className="w-full rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--line)] px-4 py-2 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-4 text-xs text-[var(--err)]">
+                      Unable to load configuration options for this server.
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeServiceForm && (
                 <div className="space-y-1 border-b border-[var(--line)] pb-4">
                   <h2 className="text-base font-semibold text-[var(--fg)]">
@@ -720,7 +1041,36 @@ export function NewService() {
                     <span className="font-mono text-[var(--fg)]">{selectedProduct.quota_gb} GB</span>
                   </div>
                 ) : null}
-                {hasCustomConfig &&
+                {isDedicatedConfigurable && rsOptions?.groups && (
+                  <>
+                    <div className="flex justify-between py-3 gap-4">
+                      <span className="text-[var(--fg-muted)]">Billing Cycle</span>
+                      <span className="font-mono text-[var(--fg)] capitalize">{rsBillingCycle}</span>
+                    </div>
+                    {rsHostname.trim() && (
+                      <div className="flex justify-between py-3 gap-4">
+                        <span className="text-[var(--fg-muted)]">Hostname</span>
+                        <span className="font-mono text-[var(--fg)]">{rsHostname.trim()}</span>
+                      </div>
+                    )}
+                    {rsOptions.groups.map((grp: any) => {
+                      const addonId = rsConfigOptions[String(grp.group_id)];
+                      const opt = (grp.options || []).find(
+                        (o: any) => Number(o.addon_id) === Number(addonId),
+                      );
+                      if (!opt) return null;
+                      return (
+                        <div key={grp.group_id} className="flex justify-between py-2.5 gap-4">
+                          <span className="text-[var(--fg-muted)]">{grp.description}</span>
+                          <span className="font-mono text-[var(--fg)] truncate max-w-[260px]">
+                            {opt.addon_description}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+                {customFields.length > 0 &&
                   customFields.map((field: any) => {
                     const key = field.variable || field.id;
                     const val = customConfig[key];
@@ -741,15 +1091,25 @@ export function NewService() {
                     );
                   })}
                 <div className="flex justify-between py-3">
-                  <span className="text-[var(--fg-muted)]">Net Monthly</span>
-                  <span className="font-mono text-[var(--fg)]">€{price.toFixed(2)}</span>
+                  <span className="text-[var(--fg-muted)]">
+                    {isDedicatedConfigurable ? `Net Term (${rsBillingCycle})` : 'Net Monthly'}
+                  </span>
+                  <span className="font-mono text-[var(--fg)]">€{recurringNet.toFixed(2)}</span>
                 </div>
+                {setupFeeNet > 0 && (
+                  <div className="flex justify-between py-3">
+                    <span className="text-[var(--fg-muted)]">One-Time Setup Fee (Net)</span>
+                    <span className="font-mono text-[var(--fg)]">€{setupFeeNet.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-3">
                   <span className="text-[var(--fg-muted)]">19% German VAT</span>
                   <span className="font-mono text-[var(--fg)]">€{vat.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between pt-3 text-sm font-semibold">
-                  <span className="text-[var(--fg)]">Total Monthly (Gross)</span>
+                  <span className="text-[var(--fg)]">
+                    {isDedicatedConfigurable ? 'Total Due Today (Gross)' : 'Total Monthly (Gross)'}
+                  </span>
                   <span className="font-mono text-[var(--accent-bright)]">€{total.toFixed(2)}</span>
                 </div>
               </div>
@@ -865,7 +1225,32 @@ export function NewService() {
                     </span>
                   </div>
                 ))}
-            {hasCustomConfig &&
+            {isDedicatedConfigurable && rsOptions?.groups && (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[var(--fg-muted)]">Billing Cycle</span>
+                  <span className="font-mono text-[var(--fg)] capitalize">{rsBillingCycle}</span>
+                </div>
+                {rsOptions.groups.slice(0, 6).map((grp: any) => {
+                  const addonId = rsConfigOptions[String(grp.group_id)];
+                  const opt = (grp.options || []).find(
+                    (o: any) => Number(o.addon_id) === Number(addonId),
+                  );
+                  if (!opt) return null;
+                  return (
+                    <div key={grp.group_id} className="flex items-center justify-between gap-2">
+                      <span className="text-[var(--fg-muted)] truncate max-w-[120px]">
+                        {grp.description}
+                      </span>
+                      <span className="font-mono text-[var(--fg)] truncate max-w-[160px]">
+                        {opt.addon_description}
+                      </span>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+            {customFields.length > 0 &&
               customFields.map((field: any) => {
                 const key = field.variable || field.id;
                 const val = customConfig[key];
@@ -889,15 +1274,27 @@ export function NewService() {
 
           <div className="border-t border-[var(--line)] pt-4 space-y-2 text-xs">
             <div className="flex justify-between text-[var(--fg-muted)]">
-              <span>Net Monthly</span>
-              <span className="font-mono text-[var(--fg)]">€{price.toFixed(2)}</span>
+              <span>{isDedicatedConfigurable ? `Net (${rsBillingCycle})` : 'Net Monthly'}</span>
+              <span className="font-mono text-[var(--fg)]">€{recurringNet.toFixed(2)}</span>
             </div>
+            {setupFeeNet > 0 && (
+              <div className="flex justify-between text-[var(--fg-muted)]">
+                <span>Setup Fee (Net)</span>
+                <span className="font-mono text-[var(--fg)]">€{setupFeeNet.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-[var(--fg-muted)]">
               <span>19% German VAT</span>
               <span className="font-mono text-[var(--fg)]">€{vat.toFixed(2)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-[var(--line)] text-sm font-semibold">
-              <span className="text-[var(--fg)]">Total / mo</span>
+              <span className="text-[var(--fg)]">
+                {setupFeeNet > 0
+                  ? 'Total Due'
+                  : isDedicatedConfigurable
+                    ? `Total / ${rsBillingCycle}`
+                    : 'Total / mo'}
+              </span>
               <span className="font-mono text-[var(--accent-bright)]">€{total.toFixed(2)}</span>
             </div>
           </div>

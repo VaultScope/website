@@ -22,7 +22,17 @@ export function DsList() {
       if (Array.isArray(srvData)) {
         const filtered = srvData.filter((s: any) => {
           const prod = catMap[s.product_id];
-          return prod && (prod.category === 'ds' || prod.category === 'dedicated');
+          if (!prod) return false;
+          const cat = String(prod.category || '').toLowerCase();
+          const prov = String(prod.provider || '').toLowerCase();
+          return (
+            cat === 'ds' ||
+            cat === 'dedicated' ||
+            cat === 'dedicated servers' ||
+            cat === 'bare-metal' ||
+            prov === 'vaultscope_dedicated' ||
+            prov === 'reliablesite'
+          );
         });
         setServices(filtered);
       }

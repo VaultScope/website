@@ -33,7 +33,7 @@ const CRATE_ARCHITECTURE = [
     desc: 'Typed Rust clients integrating external and self-hosted infrastructure controllers with automatic retry and error normalization.',
     endpoints: [
       'Hetzner Cloud API (VPS lifecycle, metrics, VNC)',
-      'ReliableSite API (Bare-metal power, PXE, IPMI KVM)',
+      'Bare-Metal Provisioning API (Power, PXE, IPMI KVM)',
       'SFTPGo REST API (Storage quotas & SSH key rotation)',
       'Stripe & EU VIES SOAP/REST (Payments & VAT validation)',
     ],

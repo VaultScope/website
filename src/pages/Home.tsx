@@ -179,7 +179,7 @@ export const Home = () => {
             return cat === 'vps' || cat === 'cloud' || prov === 'hetzner' || prov === 'proxmox';
           }
           if (activeCategory === 'dedicated') {
-            return cat === 'dedicated' || cat === 'ds' || cat === 'bare-metal' || prov === 'reliablesite';
+            return cat === 'dedicated' || cat === 'ds' || cat === 'bare-metal' || prov === 'vaultscope_dedicated' || prov === 'reliablesite';
           }
           if (activeCategory === 'storage') {
             return cat === 'storage' || cat === 'sftp' || prov === 'sftpgo';

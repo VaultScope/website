@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { getDedicatedRateForCycle } from './NewService';
 
 describe('NewService payment flow logic', () => {
   it('calculates VAT correctly at 19%', () => {
@@ -45,5 +46,35 @@ describe('NewService payment flow logic', () => {
     expect(parseFloat('29.99')).toBe(29.99);
     expect(parseFloat('0.00')).toBe(0);
     expect(parseFloat('199.00')).toBe(199);
+  });
+
+  it('computes dedicated server cycle rates, setup fees, and unavailable cycles (-1)', () => {
+    const addon = {
+      addon_id: 2232,
+      recurring_1_month: '0.0000',
+      recurring_3_month: '-1.0000',
+      recurring_6_month: '564.3000',
+      recurring_12_month: '1069.2000',
+      recurring_24_month: '1900.8000',
+      recurring_36_month: '-1.0000',
+      setup_1_month: '29.0000',
+      setup_6_month: '29.0000',
+    };
+
+    expect(getDedicatedRateForCycle(addon, 'monthly')).toEqual({
+      recurring: 0,
+      setupFee: 29,
+      available: true,
+    });
+    expect(getDedicatedRateForCycle(addon, 'quarterly')).toEqual({
+      recurring: 0,
+      setupFee: 0,
+      available: false,
+    });
+    expect(getDedicatedRateForCycle(addon, 'semiannually')).toEqual({
+      recurring: 564.3,
+      setupFee: 29,
+      available: true,
+    });
   });
 });

@@ -77,6 +77,32 @@ describe('DsList', () => {
     });
   });
 
+  it('recognizes dedicated category variants including reliablesite provider', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/storefront/services') {
+        return Promise.resolve([
+          { id: 'svc-rs', hostname: 'ams-01', name: 'Epyc 4545P', status: 'running', product_id: 'prod-rs', ip: '185.1.1.1' },
+          { id: 'svc-vps', hostname: 'vps-01', name: 'CX22', status: 'running', product_id: 'prod-vps', ip: '10.0.0.1' },
+        ]);
+      }
+      if (path === '/storefront/catalog') {
+        return Promise.resolve([
+          { id: 'prod-rs', name: 'Rapid Deploy NL', category: 'Dedicated Servers', provider: 'reliablesite', specs: { location: 'Amsterdam, NL', ram: '128 GB' } },
+          { id: 'prod-vps', name: 'VPS Basic', category: 'vps', provider: 'hetzner_cloud', specs: {} },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('ams-01')).toBeDefined();
+      expect(screen.getByText('Amsterdam, NL')).toBeDefined();
+    });
+    expect(screen.queryByText('vps-01')).toBeNull();
+  });
+
   it('shows empty state when no DS services', async () => {
     mockGet.mockImplementation((path: string) => {
       if (path === '/storefront/services') return Promise.resolve([]);

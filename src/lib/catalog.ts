@@ -257,7 +257,7 @@ export function matchesProductCategory(
     case 'vps':
       return cat === 'vps' || cat === 'cloud' || prov === 'hetzner' || prov === 'proxmox';
     case 'dedicated':
-      return cat === 'dedicated' || cat === 'bare-metal' || cat === 'ds' || prov === 'reliablesite';
+      return cat === 'dedicated' || cat === 'bare-metal' || cat === 'ds' || prov === 'vaultscope_dedicated' || prov === 'reliablesite';
     case 'storage':
       return cat === 'sftp' || cat === 'storage' || prov === 'sftpgo';
     case 'odp':

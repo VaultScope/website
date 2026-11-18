@@ -215,7 +215,7 @@ export const Camos = () => {
                         <tr>
                           <td className="py-3.5 pr-4 text-[var(--accent-bright)] font-medium">reinstall_service</td>
                           <td className="py-3.5 px-4 text-[var(--text-secondary)]">POST /storefront/services/:id/reinstall</td>
-                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">Hetzner Cloud / ReliableSite</td>
+                          <td className="py-3.5 px-4 text-[var(--text-secondary)]">Bare-Metal & Hypervisor Controller</td>
                           <td className="py-3.5 pl-4 text-[var(--text-secondary)]">Triggers automated OS image rebuild or PXE installation</td>
                         </tr>
                       </tbody>
