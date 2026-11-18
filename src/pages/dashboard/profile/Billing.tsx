@@ -301,7 +301,12 @@ export function ProfileBilling() {
         api.get('/storefront/config'),
         api.post(`/storefront/invoices/${invoice.id}/create-payment-intent`),
       ]);
-      const pubKey = cfg?.stripe_publishable_key;
+      const pubKey =
+        cfg?.stripe_public_key ||
+        cfg?.stripe_publishable_key ||
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+        import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
+        '';
       const clientSecret = intent?.client_secret;
       const paymentIntentId = intent?.payment_intent_id;
       if (!pubKey || !clientSecret || !paymentIntentId) {

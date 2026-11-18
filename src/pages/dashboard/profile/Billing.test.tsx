@@ -256,7 +256,7 @@ describe('ProfileBilling', () => {
       }
       if (path === '/storefront/invoices') return Promise.resolve([openInvoice]);
       if (path === '/storefront/config') {
-        return Promise.resolve({ stripe_publishable_key: 'pk_test_123' });
+        return Promise.resolve({ stripe_public_key: 'pk_test_123' });
       }
       return Promise.resolve(null);
     });
