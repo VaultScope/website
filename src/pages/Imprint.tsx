@@ -67,25 +67,42 @@ export const Imprint = () => {
               </div>
             </div>
 
+            {/* Data Protection Officer */}
+            <div>
+              <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-6">
+                Data Protection Officer (Datenschutzbeauftragter)
+              </div>
+              <p className="text-sm mb-4">
+                Designated Data Protection Officer (Datenschutzbeauftragter) and point of contact for data protection inquiries:
+              </p>
+              <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
+                <p className="font-medium text-foreground">Anton Schmidt</p>
+                <p>Gottlob-Spieß-Straße 2</p>
+                <p>74343 Sachsenheim</p>
+                <p>Germany</p>
+                <div className="mt-3 pt-3 border-t border-border flex flex-col gap-1">
+                  <p>
+                    <span className="text-foreground/40 uppercase tracking-widest text-xs mr-3">Email</span>
+                    <a href="mailto:data@vaultscope.de" className="text-foreground hover:underline">
+                      data@vaultscope.de
+                    </a>
+                    {' / '}
+                    <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
+                      administration@vaultscope.de
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Dispute Resolution */}
             <div>
               <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-6">
-                Dispute Resolution
+                Dispute Resolution (§ 36 VSBG)
               </div>
-              <p className="text-sm mb-4">
-                The European Commission provides an online dispute resolution (ODR) platform for consumers:{' '}
-                <a
-                  href="https://ec.europa.eu/consumers/odr/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-foreground hover:underline"
-                >
-                  https://ec.europa.eu/consumers/odr/
-                </a>
-              </p>
               <p className="text-sm">
                 VaultScope is neither obligated nor willing to participate in dispute resolution proceedings
-                before a consumer arbitration board.
+                before a consumer arbitration board pursuant to § 36 VSBG (Verbraucherstreitbeilegungsgesetz).
               </p>
             </div>
 

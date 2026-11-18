@@ -212,8 +212,12 @@ export function BlogDetail() {
                 </div>
 
                 {article.image_url && (
-                  <div className="mt-6 w-full h-64 sm:h-96 overflow-hidden">
-                    <img src={article.image_url} alt={article.title} className="w-full h-full object-cover" />
+                  <div className="mt-6 w-full rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--line)]">
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-auto max-h-[460px] object-contain mx-auto block"
+                    />
                   </div>
                 )}
               </header>

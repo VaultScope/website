@@ -38,37 +38,37 @@ export const FORUM_CATEGORIES: ForumCategory[] = [
   {
     slug: 'storage',
     name: 'Storage Protocols',
-    description: 'Sovereign SFTP, Ceph distributed clusters, ZFS storage pools, and backup workflows.',
+    description: 'Sovereign SFTP, ZFS storage pools, Borg/Restic, and backup workflows.',
     icon: HardDrive,
-    topics: ['SFTP', 'Ceph', 'ZFS', 'Snapshots', 'POSIX Quotas'],
+    topics: ['SFTP', 'ZFS', 'BorgBackup', 'Restic', 'POSIX Quotas'],
   },
   {
     slug: 'networking',
     name: 'Networking & Routing',
-    description: 'BGP peering, IPv6 dual-stack allocation, DE-CIX Frankfurt, WireGuard, and transit routes.',
+    description: 'IPv4/IPv6 allocation, WireGuard, DNS configuration, and latency tuning.',
     icon: Network,
-    topics: ['BGP Peering', 'IPv6 /64', 'DE-CIX', 'Anycast', 'WireGuard'],
+    topics: ['IPv4', 'IPv6 /64', 'WireGuard', 'DNS', 'Firewall'],
   },
   {
     slug: 'operations',
     name: 'Operations & SRE',
-    description: 'Monitoring, Prometheus telemetry, backup retention, incident procedures, and automation.',
+    description: 'Monitoring, Uptime Kuma telemetry, backup retention, incident procedures, and automation.',
     icon: Cpu,
-    topics: ['Prometheus', 'Grafana', 'Backup Retention', 'SRE', 'Disaster Recovery'],
+    topics: ['Uptime Kuma', 'Backup Retention', 'Monitoring', 'Disaster Recovery'],
   },
   {
     slug: 'security',
     name: 'Security & Compliance',
-    description: 'GoBD audit trails, GDPR data protection, EU infrastructure sovereignty, and zero-trust access.',
+    description: 'Audit trails, GDPR data protection, EU infrastructure residency, and zero-trust access.',
     icon: ShieldCheck,
-    topics: ['GoBD', 'GDPR', 'Audit Logging', 'SSH Keys', 'Zero-Trust'],
+    topics: ['GDPR', 'Audit Logging', 'SSH Keys', 'Zero-Trust'],
   },
   {
     slug: 'automation',
     name: 'API & Automation',
-    description: 'Storefront REST API, Terraform provider, infrastructure-as-code, and webhook events.',
+    description: 'Storefront REST API, infrastructure automation scripts, and webhook events.',
     icon: Terminal,
-    topics: ['REST API', 'Terraform', 'Webhooks', 'CLI', 'Rust Axum'],
+    topics: ['REST API', 'Automation', 'Webhooks', 'CLI', 'Rust Axum'],
   },
   {
     slug: 'feedback',
@@ -96,7 +96,7 @@ export function ForumList() {
     <>
       <SeoHead
         title="Community Forum & Systems Exchange"
-        description="Connect with VaultScope engineers, infrastructure architects, and system operators. Technical discussions on VPS, sovereign SFTP, BGP routing, and security."
+        description="Connect with VaultScope engineers, infrastructure architects, and system operators. Technical discussions on VPS, sovereign SFTP, WireGuard routing, and security."
         path="/resources/forum"
       />
 
@@ -151,7 +151,7 @@ export function ForumList() {
                 <Headphones className="w-3.5 h-3.5 text-[var(--text-faint)] group-hover:text-[var(--accent-bright)] transition-colors" />
               </div>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Direct tickets for billing, hardware diagnostics, and enterprise SLAs.
+                Direct tickets for billing, service diagnostics, and technical support.
               </p>
             </LocaleLink>
 
@@ -166,7 +166,7 @@ export function ForumList() {
                 <Activity className="w-3.5 h-3.5 text-[var(--text-faint)] group-hover:text-[var(--accent-bright)] transition-colors" />
               </div>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Real-time uptime metrics for Frankfurt and Nuremberg datacenters.
+                Real-time service and infrastructure availability status via Uptime Kuma.
               </p>
             </a>
           </div>

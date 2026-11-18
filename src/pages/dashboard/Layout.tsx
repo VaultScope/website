@@ -201,7 +201,7 @@ export function DashboardLayout() {
           <div className="flex items-center gap-1.5 shrink-0">
             <Link
               to="/dashboard/new"
-              className="h-8 px-3 rounded-lg inline-flex items-center gap-1.5 text-[12.5px] font-sans font-medium vs-btn-primary shrink-0"
+              className="h-8 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-[12.5px] font-sans font-medium text-[var(--fg)] bg-transparent border border-transparent hover:bg-[var(--accent)] hover:text-white transition-colors duration-150 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Deploy</span>

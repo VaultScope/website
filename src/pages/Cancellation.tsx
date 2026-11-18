@@ -135,7 +135,7 @@ export const Cancellation = () => {
               <ul className="flex flex-col gap-3 text-sm">
                 {[
                   'Services are contracted on a minimum 1-month term.',
-                  'To cancel, submit notice at least 7 days before the next billing date.',
+                  'To cancel, submit notice at any time before the next billing date via the 1-click dashboard cancellation control or by email.',
                   'Cancellation takes effect at the end of the current billing period.',
                   'No refunds are issued for unused time within a billing period after the withdrawal period has expired.',
                 ].map((item, i) => (

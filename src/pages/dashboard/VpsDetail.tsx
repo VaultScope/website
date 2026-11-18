@@ -147,8 +147,17 @@ export function VpsDetail() {
 
   if (loading) {
     return (
-      <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
-        Loading...
+      <div className="space-y-8">
+        <Link
+          to="/dashboard/vps"
+          className="inline-flex items-center gap-1.5 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Virtual Private Servers
+        </Link>
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
+          Loading...
+        </div>
       </div>
     );
   }

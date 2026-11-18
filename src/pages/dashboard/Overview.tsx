@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ArrowUpRight, Server, HardDrive, Cpu, FolderLock, SlidersHorizontal } from 'lucide-react';
+import {
+  Plus,
+  ArrowUpRight,
+  Server,
+  HardDrive,
+  Cpu,
+  FolderLock,
+  SlidersHorizontal,
+  AlertTriangle,
+  Clock,
+} from 'lucide-react';
 import { api } from '../../lib/api';
 import { getQuickNavItems, type QuickNavItem } from '../../lib/quickNav';
 
@@ -29,6 +39,7 @@ interface CatalogProduct {
 export function DashboardOverview() {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [catalog, setCatalog] = useState<Record<string, CatalogProduct>>({});
+  const [billingInfo, setBillingInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quickNavItems, setQuickNavItems] = useState<QuickNavItem[]>(() => getQuickNavItems());
 
@@ -36,7 +47,8 @@ export function DashboardOverview() {
     Promise.all([
       api.get('/storefront/services').catch(() => []),
       api.get('/storefront/catalog').catch(() => []),
-    ]).then(([srvData, catData]) => {
+      api.get('/storefront/billing').catch(() => null),
+    ]).then(([srvData, catData, billData]) => {
       setServices(Array.isArray(srvData) ? srvData : []);
       const map: Record<string, CatalogProduct> = {};
       if (Array.isArray(catData)) {
@@ -45,6 +57,9 @@ export function DashboardOverview() {
         }
       }
       setCatalog(map);
+      if (billData && !Array.isArray(billData)) {
+        setBillingInfo(billData);
+      }
       setLoading(false);
     });
   }, []);
@@ -74,6 +89,10 @@ export function DashboardOverview() {
 
   const monthlyGross = monthlyNet * (1 + VAT_RATE);
 
+  const hasOverdueInvoices = Boolean(billingInfo?.has_overdue_invoices);
+  const hasUnpaidInvoices = Boolean(billingInfo?.has_unpaid_invoices);
+  const upcomingRenewalsCount = Number(billingInfo?.upcoming_renewals_count || 0);
+
   const isSftpService = (service: ServiceItem, cat: string) =>
     service.provider_type === 'sftp' ||
     cat === 'storage' ||
@@ -89,37 +108,78 @@ export function DashboardOverview() {
   };
 
   return (
-    <div className="space-y-12">
-      {/* Minimal Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          {!loading && !allOperational && (
-            <div className="inline-flex items-center gap-2 text-xs font-mono text-[var(--warn)]">
-              <span className="w-2 h-2 rounded-full bg-[var(--warn)]" />
-              <span>Some services need attention</span>
-            </div>
-          )}
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--fg)]">
+    <div className="space-y-8">
+      {/* Unified Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)]">
             Overview
           </h1>
+          <p className="text-xs text-[var(--fg-muted)]">
+            Infrastructure health, active run rate, and deployed services.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <Link
             to="/dashboard/support"
-            className="vs-btn-secondary px-4 py-2 text-xs font-medium"
+            className="vs-btn-secondary"
           >
             View tickets
           </Link>
           <Link
             to="/dashboard/new"
-            className="vs-btn-primary px-4 py-2 text-xs font-medium"
+            className="vs-btn-primary"
           >
             <Plus className="w-3.5 h-3.5" />
             Order New
           </Link>
         </div>
       </div>
+
+      {/* Status & Payment Warnings */}
+      {!loading && !allOperational && (
+        <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 px-4 py-3 flex items-center gap-2.5 text-xs font-mono text-[var(--warn)]">
+          <span className="w-2 h-2 rounded-full bg-[var(--warn)] shrink-0" />
+          <span>Some services need attention</span>
+        </div>
+      )}
+
+      {!loading && (hasOverdueInvoices || hasUnpaidInvoices || upcomingRenewalsCount > 0) && (
+        <div
+          role={hasOverdueInvoices ? 'alert' : 'status'}
+          className={`rounded-xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            hasOverdueInvoices
+              ? 'bg-rose-500/10 border-rose-500/30 text-[var(--err)]'
+              : 'bg-amber-500/10 border-amber-500/30 text-[var(--warn)]'
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            {hasOverdueInvoices || hasUnpaidInvoices ? (
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            ) : (
+              <Clock className="w-4 h-4 shrink-0 mt-0.5" />
+            )}
+            <div className="space-y-0.5 text-xs">
+              <div className="font-semibold">
+                {hasOverdueInvoices
+                  ? 'Overdue Invoice Payment Required'
+                  : hasUnpaidInvoices
+                    ? 'Open Invoice Awaiting Payment'
+                    : 'Upcoming Payment Required Within 7 Days'}
+              </div>
+              <p className="text-[var(--fg-muted)]">
+                {hasOverdueInvoices || hasUnpaidInvoices
+                  ? `Outstanding amount: ${billingInfo?.balance || '€0.00'} (${billingInfo?.status || 'open invoice'}).`
+                  : `${upcomingRenewalsCount} subscription renewal(s) scheduled within the next 7 days.`}
+              </p>
+            </div>
+          </div>
+          <Link to="/dashboard/profile/billing" className="vs-btn-primary shrink-0">
+            {hasOverdueInvoices || hasUnpaidInvoices ? 'Pay Invoice' : 'Review Billing'}
+          </Link>
+        </div>
+      )}
 
       {/* Whisper-quiet Metric & Quick Nav Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -205,7 +265,7 @@ export function DashboardOverview() {
             <div>
               <Link
                 to="/dashboard/new"
-                className="vs-btn-primary px-4 py-2 text-xs font-medium"
+                className="vs-btn-primary"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Deploy First Service

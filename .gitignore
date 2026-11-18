@@ -33,3 +33,7 @@ authentik-config/*token*
 *.secret
 qa-state.json
 ANTIGRAVITY.md
+
+# Local LLM documentation
+local-llm/
+/local-llm

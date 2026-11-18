@@ -35,8 +35,8 @@ export const Hosting = () => {
           isolation: 'Chroot-Verzeichnis + ZFS-Dataset',
           storage: 'Redundante ZFS-Prüfsummen-Pools',
           network: 'DE / AT · SSH / SFTP / rsync',
-          status: 'In Vorbereitung (Warteliste)',
-          availableNow: false,
+          status: 'Jetzt verfügbar',
+          availableNow: true,
         },
         {
           product: 'Managed Infrastructure',
@@ -73,8 +73,8 @@ export const Hosting = () => {
           isolation: 'Chroot Directory + ZFS Dataset',
           storage: 'Redundant ZFS Checksum Pools',
           network: 'DE / AT · SSH / SFTP / rsync',
-          status: 'In Preparation (Waitlist)',
-          availableNow: false,
+          status: 'Available Now',
+          availableNow: true,
         },
         {
           product: 'Managed Infrastructure',

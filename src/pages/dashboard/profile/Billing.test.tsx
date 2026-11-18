@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { ProfileBilling } from './Billing';
@@ -8,8 +9,21 @@ vi.mock('../../../lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
 
+vi.mock('@stripe/stripe-js', () => ({
+  loadStripe: vi.fn(() => Promise.resolve({} as any)),
+}));
+
+vi.mock('@stripe/react-stripe-js', () => ({
+  Elements: ({ children }: { children: ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
+  PaymentElement: () => <div data-testid="stripe-payment-element" />,
+  ExpressCheckoutElement: () => <div data-testid="stripe-express-element" />,
+  useStripe: () => null,
+  useElements: () => null,
+}));
+
 import { api } from '../../../lib/api';
 const mockGet = vi.mocked(api.get);
+const mockPost = vi.mocked(api.post);
 
 const mockBillingInfo = {
   balance: '€45.99',
@@ -48,6 +62,7 @@ function renderComponent() {
 describe('ProfileBilling', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockPost.mockReset();
   });
 
   it('calls both billing and invoices endpoints', async () => {
@@ -74,7 +89,7 @@ describe('ProfileBilling', () => {
     });
   });
 
-  it('renders card last 4 digits', async () => {
+  it('renders Stripe Checkout payment method', async () => {
     mockGet.mockImplementation((path: string) => {
       if (path === '/storefront/billing') return Promise.resolve(mockBillingInfo);
       if (path === '/storefront/invoices') return Promise.resolve([]);
@@ -84,8 +99,9 @@ describe('ProfileBilling', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('•••• 4242')).toBeDefined();
-      expect(screen.getByText('Exp 12/28')).toBeDefined();
+      expect(screen.getByText('Stripe Checkout')).toBeDefined();
+      expect(screen.getByText(/Cards, Apple Pay, Google Pay, PayPal, Klarna/)).toBeDefined();
+      expect(screen.getByText('No outstanding invoices')).toBeDefined();
     });
   });
 
@@ -181,25 +197,86 @@ describe('ProfileBilling', () => {
 
     await waitFor(() => {
       expect(screen.getByText('€0.00')).toBeDefined();
-      expect(screen.getByText('•••• ----')).toBeDefined();
-      expect(screen.getByText('Exp --/--')).toBeDefined();
+      expect(screen.getByText('Outstanding Balance')).toBeDefined();
+      expect(screen.getByText('No outstanding invoices')).toBeDefined();
+      expect(screen.getByText('Stripe Checkout')).toBeDefined();
+      expect(screen.getByText('Processed securely per invoice via Stripe')).toBeDefined();
     });
   });
 
-  it('has disabled Update and Remove buttons', async () => {
+  it('renders open and overdue invoice payment warnings and Pay Now buttons', async () => {
+    const unpaidInvoices = [
+      { id: 'inv-open', invoice_number: 'INV-OPEN1', issue_date: '2026-08-10', due_date: '2026-08-24', total: '29.99', status: 'pending' },
+      { id: 'inv-over', invoice_number: 'INV-OVER1', issue_date: '2026-07-10', due_date: '2026-07-24', total: '15.00', status: 'overdue' },
+    ];
     mockGet.mockImplementation((path: string) => {
-      if (path === '/storefront/billing') return Promise.resolve(mockBillingInfo);
-      if (path === '/storefront/invoices') return Promise.resolve([]);
+      if (path === '/storefront/billing') {
+        return Promise.resolve({
+          ...mockBillingInfo,
+          balance: '€44.99',
+          status: '1 overdue invoice requiring immediate payment',
+          has_unpaid_invoices: true,
+          has_overdue_invoices: true,
+          overdue_invoices_count: 1,
+          open_invoices_count: 2,
+        });
+      }
+      if (path === '/storefront/invoices') return Promise.resolve(unpaidInvoices);
       return Promise.resolve(null);
     });
 
     renderComponent();
 
     await waitFor(() => {
-      const updateBtn = screen.getByText('Update');
-      const removeBtn = screen.getByText('Remove');
-      expect(updateBtn.closest('button')?.disabled).toBe(true);
-      expect(removeBtn.closest('button')?.disabled).toBe(true);
+      expect(screen.getByText('Overdue Payment Required')).toBeDefined();
+      expect(screen.getByText('Open Invoice Balance')).toBeDefined();
+      expect(screen.getByText('Pay Overdue Invoice')).toBeDefined();
+      expect(screen.getByText('Due 2026-08-24')).toBeDefined();
+      expect(screen.getAllByText('Pay Now').length).toBe(2);
+    });
+  });
+
+  it('requests Stripe config and payment intent when clicking Pay Now', async () => {
+    const openInvoice = {
+      id: 'inv-open',
+      invoice_number: 'INV-OPEN1',
+      issue_date: '2026-08-10',
+      due_date: '2026-08-24',
+      total: '29.99',
+      status: 'pending',
+    };
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/storefront/billing') {
+        return Promise.resolve({
+          ...mockBillingInfo,
+          balance: '€29.99',
+          has_unpaid_invoices: true,
+          open_invoices_count: 1,
+        });
+      }
+      if (path === '/storefront/invoices') return Promise.resolve([openInvoice]);
+      if (path === '/storefront/config') {
+        return Promise.resolve({ stripe_publishable_key: 'pk_test_123' });
+      }
+      return Promise.resolve(null);
+    });
+    mockPost.mockResolvedValueOnce({
+      client_secret: 'pi_test_secret_123',
+      payment_intent_id: 'pi_test_123',
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Pay Now')).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText('Pay Now'));
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith('/storefront/config');
+      expect(mockPost).toHaveBeenCalledWith('/storefront/invoices/inv-open/create-payment-intent');
+      expect(screen.getByText('Pay Invoice INV-OPEN1')).toBeDefined();
     });
   });
 });

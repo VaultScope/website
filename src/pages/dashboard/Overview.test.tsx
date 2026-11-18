@@ -152,4 +152,56 @@ describe('DashboardOverview', () => {
     });
     expect(screen.queryByText('VPS')).toBeNull();
   });
+
+  it('renders open invoice payment warning banner from billing endpoint', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/storefront/services') return Promise.resolve(mockServices);
+      if (path === '/storefront/billing') {
+        return Promise.resolve({
+          balance: '€29.99',
+          status: '1 open invoice awaiting payment',
+          has_unpaid_invoices: true,
+          has_overdue_invoices: false,
+          upcoming_renewals_count: 0,
+        });
+      }
+      return Promise.resolve(null);
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Open Invoice Awaiting Payment')).toBeDefined();
+      expect(screen.getByText(/Outstanding amount: €29.99/)).toBeDefined();
+    });
+
+    const payLink = screen.getByText('Pay Invoice').closest('a');
+    expect(payLink?.getAttribute('href')).toBe('/dashboard/profile/billing');
+  });
+
+  it('renders 7-day upcoming renewal warning banner when upcoming_renewals_count > 0', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/storefront/services') return Promise.resolve(mockServices);
+      if (path === '/storefront/billing') {
+        return Promise.resolve({
+          balance: '€0.00',
+          status: 'No outstanding balance',
+          has_unpaid_invoices: false,
+          has_overdue_invoices: false,
+          upcoming_renewals_count: 2,
+        });
+      }
+      return Promise.resolve(null);
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Upcoming Payment Required Within 7 Days')).toBeDefined();
+      expect(screen.getByText('2 subscription renewal(s) scheduled within the next 7 days.')).toBeDefined();
+    });
+
+    const reviewLink = screen.getByText('Review Billing').closest('a');
+    expect(reviewLink?.getAttribute('href')).toBe('/dashboard/profile/billing');
+  });
 });

@@ -6,16 +6,16 @@ import { HelpCircle, MessageSquare, AlertTriangle, Image, Clock, Mail } from 'lu
 
 const TOC = [
   { id: 'submitting-tickets', label: 'Opening a Support Ticket' },
-  { id: 'priority-slas', label: 'Priority Levels & Response SLAs' },
+  { id: 'priority-slas', label: 'Priority Levels & Target Response Times' },
   { id: 'realtime-updates', label: 'Real-Time Messaging & Updates' },
   { id: 'file-attachments', label: 'Diagnostic File Attachments (10MB)' },
   { id: 'smtp-alerts', label: 'Automated Email Notifications' },
-  { id: 'outage-escalation', label: 'Emergency Production Escalation' },
+  { id: 'outage-escalation', label: 'Outage Status & Escalation' },
 ];
 
 export const SupportGuide = () => {
   useEffect(() => {
-    document.title = 'Support Desk & SLAs — VaultScope Customer Docs';
+    document.title = 'Support Desk Guide — VaultScope Customer Docs';
   }, []);
 
   return (
@@ -23,11 +23,11 @@ export const SupportGuide = () => {
       <DocHeader
         breadcrumbs={[
           { label: 'Customer Guides', path: '/docs' },
-          { label: 'Support Desk & SLAs' },
+          { label: 'Support Desk' },
         ]}
-        title="Support Desk & SLAs Guide"
+        title="Support Desk Guide"
         badge={{ label: 'Customer Support', variant: 'blue' }}
-        description="Comprehensive handbook for engaging VaultScope engineering support, understanding priority response SLAs, utilizing real-time live ticket updates, and attaching diagnostic screenshots up to 10MB."
+        description="Handbook for contacting VaultScope support, understanding priority target response times, utilizing live ticket updates, and attaching diagnostic screenshots up to 10MB."
         tocItems={TOC}
       />
 
@@ -39,7 +39,7 @@ export const SupportGuide = () => {
             <span>Opening a Support Ticket</span>
           </h2>
           <p className="text-foreground/80">
-            VaultScope provides in-house technical support staffed exclusively by system administrators, Linux kernel engineers, and cloud architects &mdash; never outsourced first-tier call centers.
+            VaultScope provides direct technical support without outsourced first-tier call centers or automated chatbots.
           </p>
           <p className="text-foreground/80">
             To submit a request, navigate to <strong>Dashboard &rarr; Support Desk &rarr; Open New Ticket</strong>:
@@ -67,14 +67,14 @@ export const SupportGuide = () => {
           </div>
         </section>
 
-        {/* Priority Levels & SLAs */}
+        {/* Priority Levels & Target Response Times */}
         <section id="priority-slas" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Clock className="w-5 h-5 text-amber-400" />
-            <span>Priority Levels & Service Level Agreements (SLAs)</span>
+            <span>Priority Levels &amp; Target Response Times (Non-Binding)</span>
           </h2>
           <p className="text-foreground/80">
-            Tickets are triaged according to business impact:
+            Tickets are triaged according to impact. Listed response times are non-binding target windows rather than contractual SLA guarantees:
           </p>
 
           <div className="border border-border rounded-lg overflow-hidden not-prose my-3">
@@ -82,30 +82,30 @@ export const SupportGuide = () => {
               <thead className="bg-foreground/5 text-foreground/70 font-mono border-b border-border text-left">
                 <tr>
                   <th className="p-3">Severity</th>
-                  <th className="p-3">Target First Response</th>
-                  <th className="p-3">Definition & Typical Scope</th>
+                  <th className="p-3">Target Response Window</th>
+                  <th className="p-3">Definition &amp; Typical Scope</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 <tr>
-                  <td className="p-3 font-semibold text-rose-500">Critical (P1)</td>
-                  <td className="p-3 font-mono font-bold text-foreground">&lt; 15 Minutes (24/7)</td>
-                  <td className="p-3 text-foreground/70">Total production outage, hardware failure, unbootable bare-metal cluster, or hypervisor host disruption.</td>
+                  <td className="p-3 font-semibold text-rose-500">Urgent</td>
+                  <td className="p-3 font-mono font-bold text-foreground">Best-effort priority</td>
+                  <td className="p-3 text-foreground/70">Total service outage, unbootable instance, or unreachable node.</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-amber-500">High (P2)</td>
-                  <td className="p-3 font-mono font-medium text-foreground">&lt; 1 Hour</td>
-                  <td className="p-3 text-foreground/70">Severe performance degradation, degraded RAID array, packet loss on primary network uplink.</td>
+                  <td className="p-3 font-semibold text-amber-500">High</td>
+                  <td className="p-3 font-mono font-medium text-foreground">Same day target</td>
+                  <td className="p-3 text-foreground/70">Severe performance degradation or connectivity issues.</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-[var(--text)]">Normal (P3)</td>
-                  <td className="p-3 font-mono text-foreground">&lt; 4 Hours</td>
-                  <td className="p-3 text-foreground/70">Standard operational requests, reverse DNS updates, ISO mounting assistance, sub-account setup.</td>
+                  <td className="p-3 font-semibold text-[var(--text)]">Normal</td>
+                  <td className="p-3 font-mono text-foreground">Within 24 hours</td>
+                  <td className="p-3 text-foreground/70">Standard operational requests, technical questions, and configuration help.</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-foreground/60">Low (P4)</td>
-                  <td className="p-3 font-mono text-foreground">&lt; 12 Hours</td>
-                  <td className="p-3 text-foreground/70">General product inquiries, billing questions, feature suggestions, or documentation feedback.</td>
+                  <td className="p-3 font-semibold text-foreground/60">Low</td>
+                  <td className="p-3 font-mono text-foreground">Within 48 hours</td>
+                  <td className="p-3 text-foreground/70">General product inquiries, billing questions, or documentation feedback.</td>
                 </tr>
               </tbody>
             </table>
@@ -116,10 +116,10 @@ export const SupportGuide = () => {
         <section id="realtime-updates" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-emerald-400" />
-            <span>Real-Time Messaging & Updates</span>
+            <span>Real-Time Messaging &amp; Updates</span>
           </h2>
           <p className="text-foreground/80">
-            VaultScope's support desk incorporates real-time polling and WebSocket streaming. When chatting with our engineering staff:
+            VaultScope's support desk uses Server-Sent Events (SSE) live streaming for ticket updates:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-foreground/80 text-xs">
             <li><strong>Zero Manual Page Reloads:</strong> Incoming staff responses appear instantaneously in the conversation stream.</li>
@@ -158,19 +158,19 @@ export const SupportGuide = () => {
           </p>
         </section>
 
-        {/* Emergency Production Escalation */}
+        {/* Outage Status & Escalation */}
         <section id="outage-escalation" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-rose-400" />
-            <span>Emergency 24/7 Production Escalation</span>
+            <span>Outage Status &amp; Escalation</span>
           </h2>
           <p className="text-foreground/80">
-            For catastrophic production events affecting multiple dedicated physical machines or critical enterprise clusters:
+            For urgent infrastructure incidents affecting active services:
           </p>
           <ol className="list-decimal pl-5 space-y-1.5 text-foreground/80 text-xs">
-            <li>Open a ticket marked with <strong>Critical (P1)</strong> priority.</li>
-            <li>Our automated PagerDuty / Opsgenie dispatch immediately awakens on-call datacenter site reliability engineers in Nuremberg.</li>
-            <li>Real-time status updates are simultaneously published to our independent status portal at <a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="underline hover:text-foreground">status.vaultscope.de</a>.</li>
+            <li>Open a ticket marked with <strong>Urgent</strong> priority in your Support Dashboard or email <code className="font-mono bg-foreground/5 px-1 py-0.5 rounded">support@vaultscope.de</code>.</li>
+            <li>Include the affected Service ID, IP/hostname, and relevant error outputs so we can investigate and coordinate with the upstream datacenter provider if hardware intervention is required.</li>
+            <li>Service status notices are published on our status portal at <a href="https://status.vaultscope.de/status/vs" target="_blank" rel="noreferrer" className="underline hover:text-foreground">status.vaultscope.de</a>.</li>
           </ol>
         </section>
 

@@ -30,9 +30,9 @@ export const hosting = {
   },
   pricingNote: 'Detaillierte Spezifikationen und Preise werden zum Start veröffentlicht.',
   facts: [
-    { label: 'Infrastruktur', value: 'Enterprise-Hardware', note: 'Moderne Server-Hardware in zertifizierten EU-Rechenzentren.' },
-    { label: 'Standorte', value: 'Europäische Union', note: 'Betrieb in erstklassigen europäischen Rechenzentren mit starker Anbindung.' },
-    { label: 'Datenschutz', value: 'DSGVO-konform', note: 'Volle europäische Datenhoheit ohne Drittland-Transfer.' },
+    { label: 'Infrastruktur', value: 'Enterprise-Hardware', note: 'Moderne Server-Hardware in etablierten Partner-Rechenzentren innerhalb der EU.' },
+    { label: 'Standorte', value: 'Europäische Union', note: 'Betrieb in ausgewählten Rechenzentren in Deutschland und der Europäischen Union.' },
+    { label: 'Datenschutz', value: 'Datenhaltung nach DSGVO', note: 'Kein Drittland-Transfer für europäische Server- und Speicher-Infrastruktur.' },
   ],
   waitlist: {
     title: 'Als Erste informiert werden.',

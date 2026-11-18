@@ -113,6 +113,10 @@
   --status-warn: #F59E0B;
   --status-err: #F87171;
   --status-danger: #F87171;
+  --ok-bg: rgba(16, 185, 129, 0.12);
+  --warn-bg: rgba(245, 158, 11, 0.12);
+  --err-bg: rgba(248, 113, 113, 0.12);
+  --line-bright: #3F3F4A;
 
   /* Typography & High-Contrast Scale */
   --font-display: 'Pixelify Sans', 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -204,6 +208,10 @@ html:not(.dark),
   --status-warn: #B45309;
   --status-err: #B91C1C;
   --status-danger: #B91C1C;
+  --ok-bg: rgba(4, 120, 87, 0.10);
+  --warn-bg: rgba(180, 83, 9, 0.10);
+  --err-bg: rgba(185, 28, 28, 0.10);
+  --line-bright: rgba(78, 48, 145, 0.40);
 
   --background: var(--bg);
   --foreground: var(--fg);
@@ -243,6 +251,7 @@ html:not(.dark),
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
+    scrollbar-gutter: stable;
   }
 
   html:not(.dark),
@@ -806,22 +815,24 @@ html:not(.dark),
     background-color: #FFFFFF;
     color: #090A0F;
   }
+}
 
+@layer components {
   /* Solid Committed Brand Accent Primary CTA & Flat Secondary CTA */
   .vs-btn-primary,
   .btn-primary {
-    height: 2.5rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    font-size: 13.5px;
+    height: 2rem;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    font-size: 0.75rem;
     font-family: var(--font-sans);
     font-weight: 500;
     letter-spacing: -0.005em;
-    border-radius: 6px;
+    border-radius: 0.5rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
     cursor: pointer;
     user-select: none;
     transition: background-color 160ms var(--ease-ui), border-color 160ms var(--ease-ui), transform 160ms var(--ease-ui);
@@ -841,18 +852,18 @@ html:not(.dark),
 
   .vs-btn-secondary,
   .btn-secondary {
-    height: 2.5rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    font-size: 13.5px;
+    height: 2rem;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    font-size: 0.75rem;
     font-family: var(--font-sans);
     font-weight: 500;
     letter-spacing: -0.005em;
-    border-radius: 6px;
+    border-radius: 0.5rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
     cursor: pointer;
     user-select: none;
     transition: background-color 160ms var(--ease-ui), border-color 160ms var(--ease-ui);
@@ -875,6 +886,9 @@ html:not(.dark),
     background-color: var(--bg-subtle);
     color: var(--fg);
   }
+}
+
+@layer utilities {
 
   .docs-light .btn-vs-primary {
     background-color: var(--accent);

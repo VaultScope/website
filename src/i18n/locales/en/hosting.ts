@@ -30,9 +30,9 @@ export const hosting = {
   },
   pricingNote: 'Specifications and pricing will be published at launch.',
   facts: [
-    { label: 'Infrastructure', value: 'Enterprise Hardware', note: 'Premium EU datacentres.' },
-    { label: 'Locations', value: 'European Union', note: 'All servers hosted in premium EU-based datacentres across NL, DE, FR, IT, and UK.' },
-    { label: 'Legal', value: 'GDPR compliant', note: 'No data transfer outside the EEA for server infrastructure.' },
+    { label: 'Infrastructure', value: 'Enterprise Hardware', note: 'Established EU partner datacentres.' },
+    { label: 'Locations', value: 'European Union', note: 'Servers hosted in partner datacentres in Germany and the European Union.' },
+    { label: 'Legal', value: 'EU Data Protection (GDPR)', note: 'No data transfer outside the EEA for European server infrastructure.' },
   ],
   waitlist: {
     title: 'Be the first to know.',

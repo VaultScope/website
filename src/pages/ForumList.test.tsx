@@ -28,7 +28,7 @@ describe('ForumList', () => {
   it('filters categories by search query', () => {
     renderComponent();
     const searchInput = screen.getByPlaceholderText(/Search categories/i);
-    fireEvent.change(searchInput, { target: { value: 'BGP' } });
+    fireEvent.change(searchInput, { target: { value: 'WireGuard' } });
 
     expect(screen.getByText('Networking & Routing')).toBeDefined();
     expect(screen.queryByText('Storage Protocols')).toBeNull();

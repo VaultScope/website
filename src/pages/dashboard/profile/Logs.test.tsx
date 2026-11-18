@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { ProfileLogs } from './Logs';
@@ -121,6 +121,77 @@ describe('ProfileLogs', () => {
 
     await waitFor(() => {
       expect(screen.getByText('No activity logs found')).toBeDefined();
+    });
+  });
+
+  it('renders category badges and filters via search, category pills, and pagination controls', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path.includes('category=security')) {
+        return Promise.resolve({
+          items: [mockLogs[1]],
+          total: 1,
+          page: 1,
+          per_page: 25,
+          total_pages: 1,
+          max_per_page: 100,
+        });
+      }
+      if (path.includes('search=vps-prod')) {
+        return Promise.resolve({
+          items: [mockLogs[0]],
+          total: 1,
+          page: 1,
+          per_page: 100,
+          total_pages: 1,
+          max_per_page: 100,
+        });
+      }
+      return Promise.resolve(mockLogs);
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('service')).toBeDefined();
+      expect(screen.getByText('security')).toBeDefined();
+      expect(screen.getByText('auth')).toBeDefined();
+      expect(screen.getByText('Per page (max 100):')).toBeDefined();
+    });
+
+    const perPageSelect = screen.getByLabelText('Entries per page') as HTMLSelectElement;
+    fireEvent.change(perPageSelect, { target: { value: '100' } });
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('per_page=100'));
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Security' }));
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('category=security'));
+      expect(screen.getByText('Password changed')).toBeDefined();
+      expect(screen.queryByText('Service started')).toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
+
+    const searchInput = screen.getByPlaceholderText('Search action, target, or details...');
+    fireEvent.change(searchInput, { target: { value: 'vps-prod' } });
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('search=vps-prod'));
+      expect(screen.getByText('Service started')).toBeDefined();
+    });
+
+    expect(screen.getByText('Page 1 of 1 (1 total)')).toBeDefined();
+    expect((screen.getByRole('button', { name: /Previous/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: /Next/ }) as HTMLButtonElement).disabled).toBe(true);
+
+    const paginateCheckbox = screen.getByRole('checkbox');
+    fireEvent.click(paginateCheckbox);
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Entries per page')).toBeNull();
     });
   });
 });

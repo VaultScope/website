@@ -262,15 +262,17 @@ export function BlogList() {
               {featuredPost && (
                 <div className="py-8 group">
                   <div className="grid md:grid-cols-12 gap-8 lg:gap-12 items-center">
-                    <div className="md:col-span-6 relative aspect-[16/10] overflow-hidden bg-[var(--bg-elevated)]">
+                    <div className="md:col-span-6 relative rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--line)] flex items-center justify-center">
                       {featuredPost.image_url ? (
                         <img
                           src={featuredPost.image_url}
                           alt={featuredPost.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-auto max-h-[360px] object-contain block"
                         />
                       ) : (
-                        <ArticleCoverFallback title={featuredPost.title} tags={featuredPost.tags} />
+                        <div className="w-full aspect-[16/10]">
+                          <ArticleCoverFallback title={featuredPost.title} tags={featuredPost.tags} />
+                        </div>
                       )}
                     </div>
 
@@ -359,9 +361,9 @@ export function BlogList() {
                       key={post.id}
                       className="pt-2 transition-colors flex flex-col justify-between group overflow-hidden"
                     >
-                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--bg-elevated)] mb-5">
+                      <div className="relative aspect-[16/9] w-full rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--line)] mb-5 flex items-center justify-center">
                         {post.image_url ? (
-                          <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+                          <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
                         ) : (
                           <ArticleCoverFallback title={post.title} tags={post.tags} />
                         )}

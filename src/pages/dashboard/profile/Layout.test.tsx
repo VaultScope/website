@@ -48,10 +48,22 @@ describe('ProfileLayout', () => {
     expect(link?.getAttribute('href')).toBe('/dashboard/profile/billing');
   });
 
-  it('Activity tab links to /dashboard/profile/logs', () => {
+  it('Activity tab links to /dashboard/profile/activity', () => {
     renderComponent();
     const link = screen.getByText('Activity').closest('a');
-    expect(link?.getAttribute('href')).toBe('/dashboard/profile/logs');
+    expect(link?.getAttribute('href')).toBe('/dashboard/profile/activity');
+  });
+
+  it('applies active styling to Activity tab on /dashboard/profile/activity', () => {
+    renderComponent('/dashboard/profile/activity');
+    const link = screen.getByText('Activity').closest('a');
+    expect(link?.className).toContain('border-foreground');
+  });
+
+  it('applies active styling to Activity tab on /dashboard/profile/logs alias', () => {
+    renderComponent('/dashboard/profile/logs');
+    const link = screen.getByText('Activity').closest('a');
+    expect(link?.className).toContain('border-foreground');
   });
 
   it('applies active styling to Account tab when on profile route', () => {

@@ -57,7 +57,7 @@ export const ALL_QUICK_NAV_ITEMS: QuickNavItem[] = [
   {
     id: 'logs',
     label: 'Activity Logs',
-    path: '/dashboard/profile/logs',
+    path: '/dashboard/profile/activity',
     description: 'Audit trail & session history',
   },
 ];

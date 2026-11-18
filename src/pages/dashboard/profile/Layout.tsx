@@ -5,18 +5,32 @@ const profileTabs = [
   { name: 'Account', path: '/dashboard/profile', icon: User },
   { name: 'Security', path: '/dashboard/profile/mfa', icon: Shield },
   { name: 'Billing', path: '/dashboard/profile/billing', icon: CreditCard },
-  { name: 'Activity', path: '/dashboard/profile/logs', icon: Activity },
+  { name: 'Activity', path: '/dashboard/profile/activity', icon: Activity },
 ];
 
 export function ProfileLayout() {
   const location = useLocation();
 
+  const isTabActive = (tabPath: string) => {
+    const p = location.pathname;
+    if (tabPath === '/dashboard/profile') {
+      return p === '/dashboard/profile' || p === '/dashboard/profile/account';
+    }
+    if (tabPath === '/dashboard/profile/mfa') {
+      return p === '/dashboard/profile/mfa' || p === '/dashboard/profile/security';
+    }
+    if (tabPath === '/dashboard/profile/activity') {
+      return p === '/dashboard/profile/activity' || p === '/dashboard/profile/logs';
+    }
+    return p === tabPath;
+  };
+
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)]">
-            Profile & Settings
+            Profile &amp; Settings
           </h1>
           <p className="text-xs text-[var(--fg-muted)]">
             Account, security, and billing.
@@ -26,10 +40,7 @@ export function ProfileLayout() {
         {/* Minimal Horizontal Pill Sub-Nav */}
         <nav aria-label="Profile sections" className="flex flex-wrap items-center gap-1 p-1 rounded-full bg-[var(--bg-card)] border border-[var(--line)] self-start sm:self-auto">
           {profileTabs.map((tab) => {
-            const active =
-              location.pathname === tab.path ||
-              (tab.path === '/dashboard/profile' &&
-                location.pathname === '/dashboard/profile/account');
+            const active = isTabActive(tab.path);
             const Icon = tab.icon;
             return (
               <Link

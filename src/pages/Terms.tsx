@@ -85,16 +85,17 @@ export const Terms = () => {
 
             {/* 3. Hosting Services */}
             <div>
-              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">3. Hosting Services</h2>
+              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">3. Hosting &amp; Infrastructure Services</h2>
               <p className="text-sm mb-4">
-                VaultScope is preparing Cloud VPS and Dedicated Server hosting services. These services are
-                not currently available for purchase. When hosting services launch:
+                VaultScope offers SFTP Storage, Cloud VPS, Dedicated Server, and One-Click Deploy (OCD)
+                services subject to plan availability. All paid and trial infrastructure orders are governed
+                by these Terms together with the supplementary Hosting Terms:
               </p>
               <ul className="flex flex-col gap-3 text-sm">
                 {[
-                  'Service-specific terms, acceptable use policies, and service level descriptions will be provided at the point of order and will form part of the contract between you and VaultScope.',
-                  'Payment terms, billing cycles, cancellation rights, and refund policies will be set out in those service-specific terms.',
-                  'VaultScope reserves the right to refuse or terminate service to any customer at its reasonable discretion, including for violations of its acceptable use policy.',
+                  'Service-specific terms, acceptable use policies, and technical specifications provided at the point of order form part of the contract between you and VaultScope.',
+                  'Payment terms, monthly billing cycles, statutory consumer withdrawal rights, and cancellation rules are set out in the Hosting Terms and Cancellation Policy.',
+                  'VaultScope reserves the right to refuse or terminate service for valid cause, including violations of its Acceptable Use Policy or non-payment after reminder.',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="w-px h-4 bg-foreground/20 block shrink-0 mt-0.5" />
@@ -205,22 +206,10 @@ export const Terms = () => {
 
             {/* 10. Dispute Resolution */}
             <div>
-              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">10. Dispute Resolution</h2>
-              <p className="text-sm mb-4">
-                The European Commission provides a platform for online dispute resolution (ODR) for consumers
-                at:{' '}
-                <a
-                  href="https://ec.europa.eu/consumers/odr/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-foreground hover:underline"
-                >
-                  https://ec.europa.eu/consumers/odr/
-                </a>
-              </p>
+              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">10. Dispute Resolution (§ 36 VSBG)</h2>
               <p className="text-sm">
-                VaultScope is not obligated to participate in dispute resolution proceedings before a consumer
-                arbitration board and does not currently do so.
+                VaultScope is neither obligated nor willing to participate in dispute resolution proceedings
+                before a consumer arbitration board pursuant to § 36 VSBG (Verbraucherstreitbeilegungsgesetz).
               </p>
             </div>
 

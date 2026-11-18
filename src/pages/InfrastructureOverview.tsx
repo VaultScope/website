@@ -33,8 +33,8 @@ export const InfrastructureOverview = () => {
         : 'Chroot-isolated network storage backed by redundant ZFS pools for automated offsite backups via BorgBackup, Restic, rsync, and rclone.',
       cta: isDe ? 'Speicher ansehen' : 'Explore Storage',
       href: '/infrastructure/storage/',
-      status: isDe ? 'Warteliste offen' : 'Waitlist Open',
-      availableNow: false,
+      status: isDe ? 'Jetzt verfügbar' : 'Available Now',
+      availableNow: true,
     },
     {
       title: isDe ? 'One-Click Deploy (ODP)' : 'One-Click Deploy (ODP)',

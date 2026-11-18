@@ -139,15 +139,32 @@ function CheckoutForm({
       {error && (
         <div role="alert" className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[var(--err)] text-xs">{error}</div>
       )}
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={!stripe || processing}
-          className="vs-btn-primary px-6 py-2.5 text-xs font-medium disabled:opacity-50"
-        >
-          <Lock className="w-3.5 h-3.5" />
-          {processing ? 'Processing...' : `Pay €${totalGross.toFixed(2)} & Deploy`}
-        </button>
+      <div className="flex flex-col gap-2">
+        <p className="text-[11px] text-[var(--fg-muted)]">
+          By completing this order, you agree to the{' '}
+          <a href="/legal/terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+            Terms of Service
+          </a>
+          ,{' '}
+          <a href="/legal/hosting-terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+            Hosting Terms
+          </a>
+          , and{' '}
+          <a href="/legal/cancellation" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+            Cancellation Policy
+          </a>
+          .
+        </p>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={!stripe || processing}
+            className="vs-btn-primary disabled:opacity-50"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            {processing ? 'Processing...' : `Order with obligation to pay (€${totalGross.toFixed(2)})`}
+          </button>
+        </div>
       </div>
     </form>
   );

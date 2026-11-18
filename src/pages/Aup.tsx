@@ -21,13 +21,13 @@ export const Aup = () => {
               <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">Version</div>
               <p className="text-sm text-foreground/50">Last updated: August 2026</p>
               <p className="text-sm mt-4">
-                This Acceptable Use Policy ("AUP") applies to all customers using VaultScope hosting
-                services, including Cloud VPS and Dedicated Server products. It forms part of the
-                contract between you and VaultScope. By using VaultScope services, you agree to this AUP.
+                This Acceptable Use Policy ("AUP") applies to all customers using VaultScope infrastructure
+                services, including Cloud VPS, Dedicated Server, SFTP Storage, and One-Click Deploy (OCD)
+                products. It forms part of the contract between you and VaultScope. By using VaultScope services, you agree to this AUP.
               </p>
               <p className="text-sm mt-3">
-                VaultScope's infrastructure is provided via OVH SAS. Your use must comply with both
-                this AUP and OVH's own acceptable use policies, which are incorporated by reference.
+                VaultScope's infrastructure is operated on European upstream partners (including Hetzner Online GmbH and OVH SAS).
+                Your use must comply with both this AUP and the applicable upstream provider acceptable use policies.
                 In the event of conflict, the more restrictive policy applies.
               </p>
             </div>
@@ -213,12 +213,14 @@ export const Aup = () => {
               </ul>
             </div>
 
-            {/* 5. Copyright and DMCA */}
+            {/* 5. Copyright & Illegal Content Notices (DSA Art. 16 / UrhG / DMCA) */}
             <div>
-              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">5. Copyright and Takedown Notices</h2>
+              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">5. Copyright &amp; Notice-and-Action (DSA Art. 16 / UrhG)</h2>
               <p className="text-sm mb-4">
-                VaultScope respects intellectual property rights. If you believe content hosted on
-                VaultScope infrastructure infringes your copyright, send a notice to{' '}
+                VaultScope respects intellectual property rights and processes notices of allegedly illegal
+                or copyright-infringing content pursuant to Art. 16 of the EU Digital Services Act (DSA)
+                and German copyright law (UrhG). If you believe content hosted on VaultScope infrastructure
+                infringes your rights, send a notice to{' '}
                 <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
                   administration@vaultscope.de
                 </a>{' '}
@@ -226,11 +228,10 @@ export const Aup = () => {
               </p>
               <ul className="flex flex-col gap-3 text-sm mb-4">
                 {[
-                  'Identification of the copyrighted work claimed to be infringed',
-                  'Identification of the infringing material and its location (URL or IP address)',
+                  'A sufficiently substantiated explanation of why the content is allegedly unlawful or infringes your copyright',
+                  'Clear identification of the exact electronic location (URL, IP address, or timestamp)',
                   'Your contact information (name, address, email)',
-                  'A statement that you have a good-faith belief that the use is not authorised by the copyright owner, its agent, or the law',
-                  'A statement that the information in the notice is accurate and, under penalty of perjury, that you are authorised to act on behalf of the copyright owner',
+                  'A statement confirming your bona fide (good-faith) belief that the information and allegations contained in the notice are accurate and complete (Art. 16(2)(d) DSA)',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="w-px h-4 bg-foreground/20 block shrink-0 mt-0.5" />

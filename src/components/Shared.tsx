@@ -1807,10 +1807,10 @@ export const CTABlock = ({
 // ─── LegalDocumentLayout (Open Editorial Legal & Compliance Layout) ───────────
 
 const LEGAL_DOC_LINKS = [
-  { href: '/legal/imprint', label: 'Imprint (Impressum)', code: 'TMG §5' },
+  { href: '/legal/imprint', label: 'Imprint (Impressum)', code: 'DDG §5' },
   { href: '/legal/privacy', label: 'Privacy Policy', code: 'GDPR' },
   { href: '/legal/terms', label: 'Terms of Service', code: 'AGB' },
-  { href: '/legal/hosting-terms', label: 'Hosting Terms', code: 'SLA/KVM' },
+  { href: '/legal/hosting-terms', label: 'Hosting Terms', code: 'AGB-Host' },
   { href: '/legal/aup', label: 'Acceptable Use Policy', code: 'AUP' },
   { href: '/legal/dpa', label: 'Data Processing Agreement', code: 'Art. 28' },
   { href: '/legal/cancellation', label: 'Cancellation Policy', code: 'Widerruf' },
@@ -1868,6 +1868,14 @@ export const LegalDocumentLayout = ({ children }: { children: React.ReactNode })
                 <div className="flex items-center justify-between gap-2">
                   <dt className="font-mono text-[var(--fg-faint)]">Entity</dt>
                   <dd className="font-mono text-[var(--fg)]">Anton Schmidt</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="font-mono text-[var(--fg-faint)]">Datenschutzbeauftragter</dt>
+                  <dd className="font-mono text-[var(--fg)]">Anton Schmidt</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="font-mono text-[var(--fg-faint)]">Privacy Contact</dt>
+                  <dd className="font-mono text-[var(--accent-bright)]">data@vaultscope.de</dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <dt className="font-mono text-[var(--fg-faint)]">Legal Contact</dt>

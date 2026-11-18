@@ -8,10 +8,10 @@ import { Server, Monitor, Cpu, HardDrive, RefreshCw, Activity } from 'lucide-rea
 const TOC = [
   { id: 'hardware-specs', label: 'Bare-Metal Architecture' },
   { id: 'ipmi-kvm', label: 'Out-of-Band IPMI / KVM Access' },
-  { id: 'automated-pxe', label: 'Automated PXE Reinstallation' },
-  { id: 'power-cycles', label: 'Hardware Power & PDU Control' },
-  { id: 'hardware-diagnostics', label: 'Diagnostics & Rescue System' },
-  { id: 'network-uplinks', label: 'Uplinks, VLANs & Secondary IPs' },
+  { id: 'automated-pxe', label: 'OS Reinstallation' },
+  { id: 'power-cycles', label: 'Power Controls' },
+  { id: 'hardware-diagnostics', label: 'Hardware Diagnostics' },
+  { id: 'network-uplinks', label: 'Network & IP Allocation' },
 ];
 
 export const DedicatedGuide = () => {
@@ -47,19 +47,19 @@ export const DedicatedGuide = () => {
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
               <h3 className="text-sm font-semibold text-foreground mb-1">100% Dedicated Compute</h3>
               <p className="text-xs text-foreground/60">
-                Full physical cores from AMD EPYC 9004 or Intel Xeon Scalable processors with uninterrupted AVX-512 instructions.
+                Dedicated physical processor cores according to the model and specification listed on the selected product tier.
               </p>
             </div>
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-              <h3 className="text-sm font-semibold text-foreground mb-1">ECC Memory Subsystems</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-1">Dedicated Memory</h3>
               <p className="text-xs text-foreground/60">
-                Multi-channel Error-Correcting Code (ECC) DDR4/DDR5 RAM protecting databases against bit-flips and silent memory corruption.
+                Unshared physical RAM (DDR4/DDR5 ECC or non-ECC depending on the selected server tier).
               </p>
             </div>
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-              <h3 className="text-sm font-semibold text-foreground mb-1">Hardware & Software RAID</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-1">Dedicated Storage</h3>
               <p className="text-xs text-foreground/60">
-                Datacenter-grade NVMe PCIe Gen4/Gen5 SSD arrays pre-configured with RAID 1 mirroring or ZFS pool configurations.
+                Physical NVMe/SSD drives provisioned according to your chosen bare-metal product specification.
               </p>
             </div>
           </div>
@@ -90,56 +90,48 @@ export const DedicatedGuide = () => {
           </Callout>
         </section>
 
-        {/* Automated PXE Reinstall */}
+        {/* OS Reinstallation */}
         <section id="automated-pxe" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <RefreshCw className="w-5 h-5 text-amber-400" />
-            <span>Automated PXE Reinstallation</span>
+            <span>OS Reinstallation</span>
           </h2>
           <p className="text-foreground/80">
-            For rapid turnaround, VaultScope provides an automated Preboot Execution Environment (PXE) network installation system. You can re-image a physical server within 8 to 15 minutes without manual IPMI intervention.
+            You can trigger an automated OS reinstallation directly from your Dedicated Server detail page:
           </p>
 
-          <h3 className="text-base font-semibold text-foreground pt-1">PXE Installation Workflow:</h3>
+          <h3 className="text-base font-semibold text-foreground pt-1">Reinstallation Workflow:</h3>
           <ol className="list-decimal pl-5 space-y-2 text-foreground/80 text-xs">
-            <li>Click <strong>Reinstall Operating System</strong> in your dedicated server management view.</li>
-            <li>Select your target operating system:
-              <ul className="list-disc pl-5 mt-1 space-y-0.5 text-foreground/60">
-                <li>Ubuntu 24.04 / 22.04 LTS</li>
-                <li>Debian 12 Bookworm</li>
-                <li>Proxmox VE 8.2 (Enterprise Hypervisor)</li>
-                <li>AlmaLinux 9 / Rocky Linux 9</li>
-              </ul>
-            </li>
-            <li>Select your RAID configuration (RAID 1 Mirroring recommended for twin NVMe drives, or RAID 0 Striping for maximum capacity).</li>
-            <li>Provide your public SSH key for automated root deployment.</li>
-            <li>Click <strong>Trigger Automated PXE Install</strong>. The server is power-cycled, boots into the network PXE installer, partitions the physical drives, applies the OS image, and reboots into your fresh installation.</li>
+            <li>Open <strong>Dashboard &rarr; Dedicated &rarr; [Your Server]</strong> and click <strong>Reinstall OS</strong>.</li>
+            <li>Confirm the reinstallation job in the dialog. Our background provisioning runner dispatches the reinstall task to the upstream provider API using your configured OS template.</li>
+            <li>For custom partitioning, RAID layouts, or custom ISO installations, use the <strong>IPMI / KVM</strong> console or open a support ticket.</li>
           </ol>
         </section>
 
-        {/* Hardware Power Cycles */}
+        {/* Power Controls */}
         <section id="power-cycles" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Server className="w-5 h-5 text-rose-400" />
-            <span>Hardware Power & PDU Control</span>
+            <span>Power Controls</span>
           </h2>
           <p className="text-foreground/80">
-            Dedicated servers are wired to dual switched Power Distribution Units (PDUs) in our datacenters. In addition to ACPI soft signals, you can trigger true hardware electrical power cuts to reboot frozen hardware:
+            From your Dedicated Server detail page, you can trigger upstream power actions:
           </p>
           <ul className="list-disc pl-5 space-y-1 text-foreground/80 text-xs">
-            <li><strong>Chassis Power On / Off:</strong> Relays IPMI power state commands directly to the motherboard.</li>
-            <li><strong>Cold PDU Power Cycle:</strong> Electrically cuts power to the chassis power supplies for 10 seconds before restoring power, forcing a complete electrical discharge and hardware cold reboot.</li>
+            <li><strong>Boot / Start:</strong> Powers on a stopped server via the provider API.</li>
+            <li><strong>Hardware Reboot:</strong> Sends a reboot command to restart the machine.</li>
+            <li><strong>Power Off:</strong> Sends a power-off command to shut down the machine.</li>
           </ul>
         </section>
 
-        {/* Diagnostics & Rescue System */}
+        {/* Hardware Diagnostics */}
         <section id="hardware-diagnostics" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Activity className="w-5 h-5 text-emerald-400" />
-            <span>Hardware Diagnostics & Linux Rescue System</span>
+            <span>Hardware Diagnostics</span>
           </h2>
           <p className="text-foreground/80">
-            If you suspect hardware degradation (e.g. failing NVMe sectors or memory bit-errors), boot the server into the VaultScope RAM-based Linux Rescue environment to execute comprehensive hardware benchmarks:
+            If you suspect hardware degradation (e.g. failing NVMe sectors or memory errors), run diagnostics via SSH or IPMI/KVM and attach the output to a support ticket:
           </p>
 
           <CodeBlock
@@ -159,19 +151,18 @@ dmesg | grep -i -E "edac|mce|error"`}
           />
         </section>
 
-        {/* Network Uplinks */}
+        {/* Network & IP Allocation */}
         <section id="network-uplinks" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <HardDrive className="w-5 h-5 text-[var(--text-muted)]" />
-            <span>Network Uplinks, VLANs & Secondary IPs</span>
+            <span>Network &amp; IP Allocation</span>
           </h2>
           <p className="text-foreground/80">
-            VaultScope dedicated servers include 1 Gbps or 10 Gbps unmetered uplinks connected to our redundant Juniper backbone routers with direct peering at DE-CIX Frankfurt:
+            Dedicated servers are provisioned with upstream network uplinks and IP assignments specified on the respective product tier:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-foreground/80">
-            <li><strong>Native IPv6 /64:</strong> Every dedicated server includes a dedicated routed <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">/64</code> IPv6 subnet.</li>
-            <li><strong>Secondary IPv4 Subnets:</strong> Additional IPv4 addresses (<code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">/29</code>, <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">/28</code>) can be routed to your server's primary MAC or configured on virtual bridge interfaces for virtualization (Proxmox/KVM).</li>
-            <li><strong>vSwitch Private VLANs:</strong> Interconnect multiple dedicated servers and Cloud VPS instances across private layer-2 VLANs with zero public internet traversal.</li>
+            <li><strong>Primary IP Assignment:</strong> Your server&apos;s IPv4 address and hostname are displayed in the dashboard once provisioning completes.</li>
+            <li><strong>Additional Networking Requests:</strong> For additional IP blocks, reverse DNS (PTR) changes, or custom routing requests, open a ticket in <strong>Dashboard &rarr; Support</strong>.</li>
           </ul>
         </section>
 

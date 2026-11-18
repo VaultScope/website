@@ -51,8 +51,8 @@ export const HostingTerms = () => {
                   { term: '"VaultScope"', def: 'Anton Schmidt, operating as VaultScope (Einzelunternehmen), Gottlob-Spieß-Straße 2, 74343 Sachsenheim, Germany.' },
                   { term: '"Customer"', def: 'The natural or legal person who concludes a contract with VaultScope for hosting services.' },
                   { term: '"Consumer"', def: 'A Customer who is a natural person acting for purposes outside their trade, business, craft, or profession (§ 13 BGB).' },
-                  { term: '"Services"', def: 'Cloud VPS and Dedicated Server products provided by VaultScope.' },
-                  { term: '"Infrastructure Provider"', def: 'OVH SAS, whose infrastructure VaultScope uses to deliver the Services.' },
+                  { term: '"Services"', def: 'Cloud VPS, Dedicated Server, SFTP Storage, and One-Click Deploy (OCD) products provided by VaultScope.' },
+                  { term: '"Infrastructure Provider"', def: 'Upstream European infrastructure operators (such as Hetzner Online GmbH and OVH SAS) whose facilities VaultScope uses to deliver the Services.' },
                   { term: '"Billing Period"', def: 'The monthly period for which Services are invoiced, beginning on the activation date.' },
                 ].map((item) => (
                   <div key={item.term} className="flex items-start gap-4">
@@ -67,22 +67,26 @@ export const HostingTerms = () => {
             <div>
               <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">2. Services</h2>
               <p className="text-sm mb-4">
-                VaultScope provides the following hosting services via the OVH reseller programme:
+                VaultScope provides the following infrastructure and storage services on European partner hardware:
               </p>
               <div className="flex flex-col gap-5">
                 <div className="border-l border-foreground/10 pl-6">
-                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">Cloud VPS</h3>
+                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">Cloud VPS &amp; One-Click Deploy (OCD)</h3>
                   <p className="text-sm">
-                    Virtual private server instances providing isolated virtual compute resources.
-                    Servers are hosted in OVH datacentres located within the European Union.
+                    Virtual private server instances and pre-configured container applications providing isolated compute resources hosted in datacentres within the European Union.
                   </p>
                 </div>
                 <div className="border-l border-foreground/10 pl-6">
                   <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">Dedicated Servers</h3>
                   <p className="text-sm">
                     Physical server hardware allocated exclusively to a single customer, providing
-                    full resource isolation. Servers are hosted in OVH datacentres located within
-                    the European Union.
+                    full resource isolation in European datacentres.
+                  </p>
+                </div>
+                <div className="border-l border-foreground/10 pl-6">
+                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">SFTP Storage</h3>
+                  <p className="text-sm">
+                    Chroot-isolated SFTP storage vaults operated on redundant ZFS storage nodes in European datacentres.
                   </p>
                 </div>
               </div>
@@ -127,9 +131,10 @@ export const HostingTerms = () => {
                 <div className="border-l border-foreground/10 pl-6">
                   <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">Prices</h3>
                   <p>
-                    All prices are displayed in the currency shown at checkout. Prices are exclusive
-                    of applicable taxes unless stated otherwise. Where the Customer is a Consumer
-                    resident in Germany, prices include applicable VAT.
+                    All prices are displayed in EUR (€) at checkout, including both net price and
+                    applicable statutory VAT before order submission. Pursuant to § 3 PAngV, the final
+                    gross total inclusive of applicable VAT is clearly itemized for consumers prior to
+                    completing any paid order.
                   </p>
                 </div>
 
@@ -180,13 +185,12 @@ export const HostingTerms = () => {
                 <div className="border-l border-foreground/10 pl-6">
                   <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">Ordinary Termination by Customer</h3>
                   <p>
-                    The Customer may terminate any Service by submitting a cancellation request via
-                    the customer portal or by email to{' '}
+                    The Customer may terminate any Service at any time prior to the end of the current
+                    Billing Period via the 1-click cancellation option in the customer portal or by email to{' '}
                     <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
                       administration@vaultscope.de
-                    </a>. Cancellation must be submitted at least 7 days before the next Billing
-                    Period start date. Cancellation takes effect at the end of the current Billing
-                    Period. No refunds are issued for unused time within a Billing Period.
+                    </a>. Cancellation takes effect at the end of the current Billing Period.
+                    No refunds are issued for unused time within an active Billing Period after any statutory withdrawal period has expired.
                   </p>
                 </div>
 
@@ -289,15 +293,16 @@ export const HostingTerms = () => {
             <div>
               <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">9. Sub-contractors and Infrastructure</h2>
               <p className="text-sm mb-4">
-                VaultScope provides its hosting services using infrastructure operated by OVH SAS,
-                2 rue Kellermann, 59100 Roubaix, France. OVH datacentres used for VaultScope
-                services are located within the European Union.
+                VaultScope provides its hosting and storage services using infrastructure operated by
+                European upstream partners including Hetzner Online GmbH (Industriestr. 25, 91710 Gunzenhausen,
+                Germany) and OVH SAS (2 rue Kellermann, 59100 Roubaix, France). Datacentres used for
+                VaultScope services are located within the European Union.
               </p>
               <p className="text-sm">
-                The Customer acknowledges that their server infrastructure is ultimately hosted
-                on OVH hardware and that OVH's acceptable use policies apply in addition to
+                The Customer acknowledges that their server infrastructure is hosted on upstream partner
+                hardware and that the applicable upstream acceptable use policies apply in addition to
                 VaultScope's. VaultScope acts as the Customer's contractual counterparty; the
-                Customer does not have a direct contractual relationship with OVH.
+                Customer does not have a direct contractual relationship with the upstream infrastructure provider.
               </p>
             </div>
 
@@ -349,16 +354,16 @@ export const HostingTerms = () => {
             <div>
               <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">12. Changes to These Terms</h2>
               <p className="text-sm mb-4">
-                VaultScope may modify these Hosting Terms. Customers will be notified of changes
-                by email to the address registered on their account at least 30 days before the
-                changes take effect. If a Customer does not object to the changes within 30 days
-                of notification, the changes are deemed accepted. The right to object and the
-                consequence that the contract continues under the current terms until its
-                natural end will be clearly communicated in the notification.
+                VaultScope may propose modifications to these Hosting Terms where legally permitted.
+                Customers will be notified of proposed changes by email to the address registered on
+                their account at least 30 days before the proposed effective date. For minor, non-essential
+                amendments (not affecting main performance obligations or pricing), changes take effect if
+                the Customer does not object within 30 days, provided this consequence was clearly highlighted
+                in the notice (§ 308 Nr. 5 BGB). Material changes to pricing or core service obligations
+                for Consumers always require explicit consent.
               </p>
               <p className="text-sm">
-                Where changes are required by law or are necessary to address security issues,
-                shorter notice periods may apply.
+                Where changes are required by statutory law or binding regulatory order, shorter notice periods may apply.
               </p>
             </div>
 

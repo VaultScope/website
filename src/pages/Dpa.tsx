@@ -20,20 +20,20 @@ export const Dpa = () => {
 
             <div>
               <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">Version</div>
-              <p className="text-sm text-foreground/50">Last updated: August 2026</p>
+              <p className="text-sm text-foreground/50">Last updated: November 2026</p>
               <p className="text-sm mt-4">
                 This Data Processing Agreement ("DPA") is entered into between VaultScope
-                (as Processor) and each customer using VaultScope hosting services who processes
+                (as Processor) and each customer using VaultScope infrastructure services who processes
                 personal data on VaultScope infrastructure (as Controller), pursuant to
                 Art. 28 of the General Data Protection Regulation (GDPR) (EU) 2016/679.
               </p>
               <p className="text-sm mt-3">
-                By using VaultScope hosting services, the Customer accepts this DPA as part
+                By using VaultScope infrastructure services, the Customer accepts this DPA as part
                 of the contract as described in the{' '}
                 <Link to="/legal/hosting-terms/" className="text-foreground hover:underline">
                   Hosting Terms
                 </Link>
-                . This DPA takes effect on the date the hosting service commences.
+                . This DPA takes effect on the date the service commences.
               </p>
               <div className="border border-border p-6 mt-5 text-sm">
                 <p className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-4">
@@ -46,7 +46,14 @@ export const Dpa = () => {
                     <p>VaultScope (Einzelunternehmen)</p>
                     <p>Gottlob-Spieß-Straße 2</p>
                     <p>74343 Sachsenheim, Germany</p>
-                    <p className="mt-2">
+                    <p className="mt-2 text-foreground/80">
+                      Data Protection Officer (Datenschutzbeauftragter): Anton Schmidt
+                    </p>
+                    <p className="mt-1">
+                      <a href="mailto:data@vaultscope.de" className="text-foreground hover:underline">
+                        data@vaultscope.de
+                      </a>
+                      {' / '}
                       <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">
                         administration@vaultscope.de
                       </a>
@@ -67,9 +74,9 @@ export const Dpa = () => {
               </h2>
               <p className="text-sm mb-4">
                 VaultScope processes personal data on behalf of the Customer solely in connection
-                with the provision of Cloud VPS and Dedicated Server hosting services. The DPA
-                remains in force for the duration of the hosting service contract and terminates
-                automatically when all services under the contract have ended.
+                with the provision of Cloud VPS, Dedicated Server, SFTP Storage, and One-Click Deploy (OCD)
+                services. The DPA remains in force for the duration of the hosting service contract and
+                terminates automatically when all services under the contract have ended.
               </p>
               <p className="text-sm">
                 VaultScope processes personal data only on documented instructions from the
@@ -84,10 +91,11 @@ export const Dpa = () => {
                 2. Nature and Purpose of Processing
               </h2>
               <p className="text-sm mb-4">
-                The nature and purpose of the processing is the provision of server infrastructure
-                (virtual and physical) on which the Controller may store, transmit, and process
-                data of their choice. VaultScope does not access, inspect, or process the content
-                of data stored on customer servers except:
+                The nature and purpose of the processing is the provision of server and storage
+                infrastructure (virtual servers, physical servers, encrypted SFTP storage, and managed
+                container deployments) on which the Controller may store, transmit, and process data of
+                their choice. VaultScope does not access, inspect, or process the content of data stored
+                on customer instances except:
               </p>
               <ul className="flex flex-col gap-3 text-sm">
                 {[
@@ -166,14 +174,19 @@ export const Dpa = () => {
                   <div className="px-5 py-3 text-xs font-medium text-foreground/40 uppercase tracking-widest border-l border-border">Location</div>
                 </div>
                 <div className="grid grid-cols-3 border-b border-border">
+                  <div className="px-5 py-4 text-sm text-foreground/70">Hetzner Online GmbH</div>
+                  <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">Server &amp; SFTP storage infrastructure hosting</div>
+                  <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">Germany / Finland (EU)</div>
+                </div>
+                <div className="grid grid-cols-3 border-b border-border">
                   <div className="px-5 py-4 text-sm text-foreground/70">OVH SAS</div>
                   <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">Server infrastructure and hosting</div>
                   <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">European Union</div>
                 </div>
                 <div className="grid grid-cols-3">
-                  <div className="px-5 py-4 text-sm text-foreground/70">Stripe, Inc.</div>
+                  <div className="px-5 py-4 text-sm text-foreground/70">Stripe, Inc. / Stripe Payments Europe</div>
                   <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">Payment processing (billing data only)</div>
-                  <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">USA (SCCs / EU-US DPF)</div>
+                  <div className="px-5 py-4 text-sm text-foreground/70 border-l border-border">EEA / USA (SCCs / EU-US DPF)</div>
                 </div>
               </div>
               <p className="text-sm mt-5">
@@ -191,8 +204,9 @@ export const Dpa = () => {
                 6. International Data Transfers
               </h2>
               <p className="text-sm mb-4">
-                Server infrastructure (OVH) is located within the European Union. No transfer of
-                data stored on customer servers to countries outside the EEA occurs through OVH.
+                European server and storage infrastructure (Hetzner Online GmbH and OVH SAS) is operated
+                within the European Economic Area (EEA). No transfer of data stored on European customer
+                instances to countries outside the EEA occurs through these upstream infrastructure operators.
               </p>
               <p className="text-sm">
                 Stripe is located in the United States. Payment processing data (billing records)
@@ -234,7 +248,7 @@ export const Dpa = () => {
               </p>
               <ul className="flex flex-col gap-3 text-sm">
                 {[
-                  'Physical security of server infrastructure is maintained by OVH in accordance with OVH\'s security certifications.',
+                  'Physical security of datacenter facilities is maintained by our respective upstream infrastructure operators (such as Hetzner Online GmbH and OVH SAS) under their own datacenter security controls; VaultScope itself does not hold independent ISO or GDPR certifications.',
                   'Network-level isolation between customer instances.',
                   'Access to customer server environments is restricted; VaultScope staff do not access customer data except in the circumstances described in section 2.',
                   'Internal access to management systems is limited to authorised personnel.',
@@ -265,7 +279,12 @@ export const Dpa = () => {
                 a breach. Notification will be sent to the email address registered on the
                 Customer's account and will include, to the extent known, the nature of the breach,
                 categories and approximate number of individuals concerned, likely consequences,
-                and measures taken or proposed.
+                and measures taken or proposed. Data protection inquiries may be directed to our Data
+                Protection Officer (Datenschutzbeauftragter), Anton Schmidt, at{' '}
+                <a href="mailto:data@vaultscope.de" className="text-foreground hover:underline">
+                  data@vaultscope.de
+                </a>
+                .
               </p>
             </div>
 

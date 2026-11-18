@@ -12,9 +12,9 @@ function renderComponent() {
 }
 
 describe('ReportDmca', () => {
-  it('renders DMCA form heading', () => {
+  it('renders copyright takedown form heading', () => {
     renderComponent();
-    expect(screen.getByText('DMCA Takedown Notice')).toBeDefined();
+    expect(screen.getByText('Copyright & Takedown Notice (DSA Art. 16 / UrhG)')).toBeDefined();
   });
 
   it('renders name/company label', () => {
@@ -37,20 +37,20 @@ describe('ReportDmca', () => {
     expect(screen.getByText('Original Work URL(s) or Evidence')).toBeDefined();
   });
 
-  it('renders perjury checkbox', () => {
+  it('renders good-faith DSA declaration checkbox', () => {
     renderComponent();
-    expect(screen.getByText(/penalty of perjury/)).toBeDefined();
+    expect(screen.getByText(/Art\. 16\(2\)\(d\) DSA/)).toBeDefined();
   });
 
-  it('renders Submit DMCA Notice button', () => {
+  it('renders Submit Copyright Notice button', () => {
     renderComponent();
-    expect(screen.getByText('Submit DMCA Notice')).toBeDefined();
+    expect(screen.getByText('Submit Copyright Notice')).toBeDefined();
   });
 
   it('shows success message after submission', () => {
     renderComponent();
-    const form = screen.getByText('Submit DMCA Notice').closest('form')!;
+    const form = screen.getByText('Submit Copyright Notice').closest('form')!;
     fireEvent.submit(form);
-    expect(screen.getByText(/DMCA takedown request has been submitted/)).toBeDefined();
+    expect(screen.getByText(/Your copyright takedown notice has been prepared/)).toBeDefined();
   });
 });

@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import { Shield, Smartphone, Key, CheckCircle2, Copy, Check } from 'lucide-react';
 import { api } from '../../../lib/api';
 
+interface MfaSetupData {
+  secret: string;
+  qr_url?: string;
+  qr_base64?: string;
+  url?: string;
+}
+
 export function ProfileMfa() {
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [setupData, setSetupData] = useState<{ secret: string; qr_url: string } | null>(null);
+  const [setupData, setSetupData] = useState<MfaSetupData | null>(null);
   const [code, setCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [showDisablePrompt, setShowDisablePrompt] = useState(false);
@@ -88,6 +95,14 @@ export function ProfileMfa() {
     setTimeout(() => setCopiedRecovery(false), 2000);
   };
 
+  const qrSrc =
+    setupData?.qr_url ||
+    (setupData?.qr_base64
+      ? setupData.qr_base64.startsWith('data:')
+        ? setupData.qr_base64
+        : `data:image/png;base64,${setupData.qr_base64}`
+      : '');
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-6 sm:p-8 space-y-6">
@@ -124,7 +139,7 @@ export function ProfileMfa() {
                   type="button"
                   onClick={() => setShowDisablePrompt((v) => !v)}
                   disabled={submitting}
-                  className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-500/15 border border-rose-500/25 text-[var(--err)] hover:bg-rose-500 hover:text-white transition-colors"
+                  className="h-8 px-3.5 rounded-lg text-xs font-medium bg-rose-500/15 border border-rose-500/25 text-[var(--err)] hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
                 >
                   Disable 2FA
                 </button>
@@ -133,7 +148,7 @@ export function ProfileMfa() {
                   type="button"
                   onClick={handleStartSetup}
                   disabled={submitting}
-                  className="vs-btn-primary !px-5 !py-2 !text-xs"
+                  className="vs-btn-primary"
                 >
                   {submitting ? 'Preparing...' : 'Set up 2FA'}
                 </button>
@@ -147,37 +162,42 @@ export function ProfileMfa() {
         )}
 
         {showDisablePrompt && mfaEnabled && (
-          <div className="pt-5 border-t border-[var(--line)] space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleDisable();
+            }}
+            className="pt-5 border-t border-[var(--line)] space-y-4"
+          >
             <p className="text-xs text-[var(--fg-muted)]">
               Enter your current 6-digit TOTP code or a recovery code to disable 2FA:
             </p>
-            <div className="flex flex-wrap gap-2 max-w-md">
+            <div className="flex flex-wrap items-center gap-2 max-w-md">
               <input
                 type="text"
                 aria-label="Current 6-digit TOTP or recovery code"
                 value={disableCode}
                 onChange={(e) => setDisableCode(e.target.value)}
-                placeholder="000000"
-                className="flex-1 rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
+                placeholder="000000 or XXXX-XXXX"
+                className="flex-1 h-8 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
               />
               <button
-                type="button"
-                onClick={handleDisable}
+                type="submit"
                 disabled={submitting}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                className="h-8 px-3.5 rounded-lg text-xs font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors cursor-pointer"
               >
                 {submitting ? 'Disabling...' : 'Confirm Disable'}
               </button>
             </div>
-          </div>
+          </form>
         )}
 
         {setupData && (
           <div className="pt-6 border-t border-[var(--line)] space-y-5">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              {setupData.qr_url && (
+              {qrSrc && (
                 <div className="p-3 bg-white rounded-xl shrink-0">
-                  <img src={setupData.qr_url} alt="TOTP QR Code" className="w-36 h-36" />
+                  <img src={qrSrc} alt="TOTP QR Code" className="w-36 h-36" />
                 </div>
               )}
               <div className="space-y-3 flex-1">
@@ -187,25 +207,41 @@ export function ProfileMfa() {
                 <div className="inline-block rounded-lg bg-[var(--bg-subtle)] px-3 py-1.5 font-mono text-xs text-[var(--accent-bright)]">
                   {setupData.secret}
                 </div>
-                <div className="flex flex-wrap gap-2 pt-2 max-w-sm">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleEnable();
+                  }}
+                  className="flex flex-wrap items-center gap-2 pt-2 max-w-md"
+                >
                   <input
                     type="text"
                     aria-label="6-digit authenticator verification code"
                     maxLength={6}
                     value={code}
-                    onChange={(e) => setCode(e.target.value)}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                     placeholder="6-digit code"
-                    className="flex-1 rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
+                    className="flex-1 h-8 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
                   />
                   <button
-                    type="button"
-                    onClick={handleEnable}
+                    type="submit"
                     disabled={submitting}
-                    className="vs-btn-primary !px-5 !py-2 !text-xs"
+                    className="vs-btn-primary"
                   >
                     {submitting ? 'Verifying...' : 'Verify & Enable'}
                   </button>
-                </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSetupData(null);
+                      setCode('');
+                      setError('');
+                    }}
+                    className="vs-btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </form>
               </div>
             </div>
           </div>
@@ -227,7 +263,7 @@ export function ProfileMfa() {
                 {copiedRecovery ? 'Copied' : 'Copy All'}
               </button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-xs text-[var(--fg)]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs text-[var(--fg)]">
               {recoveryCodes.map((rc) => (
                 <div key={rc} className="rounded-lg bg-[var(--bg-card)] border border-[var(--line)] px-3 py-2 text-center">
                   {rc}
@@ -246,11 +282,15 @@ export function ProfileMfa() {
             <div className="text-[11px] text-[var(--fg-faint)]">Hardware FIDO2 keys (Planned)</div>
           </div>
         </div>
-        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-5 flex items-center gap-3.5 opacity-60">
-          <Shield className="w-4 h-4 text-[var(--fg-faint)]" />
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-5 flex items-center gap-3.5">
+          <Shield className="w-4 h-4 text-[var(--accent-bright)]" />
           <div>
-            <div className="text-xs font-medium text-[var(--fg)]">Backup Recovery Key</div>
-            <div className="text-[11px] text-[var(--fg-faint)]">Generated upon TOTP enrollment</div>
+            <div className="text-xs font-medium text-[var(--fg)]">Backup Recovery Codes</div>
+            <div className="text-[11px] text-[var(--fg-faint)]">
+              {mfaEnabled
+                ? 'Active — single-use emergency codes supported at sign-in'
+                : 'Generated automatically upon TOTP enrollment'}
+            </div>
           </div>
         </div>
       </div>

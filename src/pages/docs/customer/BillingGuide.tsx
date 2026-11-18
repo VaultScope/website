@@ -44,21 +44,21 @@ export const BillingGuide = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 not-prose my-4">
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-              <h3 className="text-sm font-semibold text-foreground mb-1">Immutable Invoice Numbers</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-1">Unique Invoice Numbers</h3>
               <p className="text-xs text-foreground/60">
-                Invoices follow gapless sequential numbering (<code className="font-mono bg-foreground/5 px-1 py-0.5 rounded">VS-INV-YYYY-XXXXX</code>) ensuring compliance during tax audits.
+                Invoices are issued with unique sequential identifiers (<code className="font-mono bg-foreground/5 px-1 py-0.5 rounded">INV-...</code>) tracked in PostgreSQL.
               </p>
             </div>
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-              <h3 className="text-sm font-semibold text-foreground mb-1">SHA-256 Audit Hashes</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-1">SHA-256 Document Checksum</h3>
               <p className="text-xs text-foreground/60">
-                Each finalized invoice generates a cryptographic SHA-256 digest embedded in the database and PDF metadata to guarantee non-repudiation and tamper resistance.
+                Each generated PDF invoice embeds a deterministic SHA-256 checksum over its core invoice fields for reference verification.
               </p>
             </div>
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-              <h3 className="text-sm font-semibold text-foreground mb-1">10-Year Archival Obligation</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-1">Statutory Retention (§ 147 AO)</h3>
               <p className="text-xs text-foreground/60">
-                Invoices are preserved securely on encrypted, read-only object storage fulfilling the statutory German commercial archival period (&sect; 147 AO).
+                Billing and invoice records are maintained in the database for statutory retention periods pursuant to German commercial and tax law (&sect; 147 AO / &sect; 14b UStG).
               </p>
             </div>
           </div>
@@ -68,48 +68,38 @@ export const BillingGuide = () => {
         <section id="vat-taxation" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Building className="w-5 h-5 text-[var(--text-muted)]" />
-            <span>German 19% VAT & EU B2B Reverse Charge</span>
+            <span>German 19% VAT &amp; EU VIES Validation</span>
           </h2>
           <p className="text-foreground/80">
-            Tax rates are determined based on your billing address and customer classification:
+            Checkout and renewal invoices currently apply standard 19% German VAT (MwSt.). You can verify and store your EU VAT Identification Number on your billing profile:
           </p>
 
           <div className="border border-border rounded-lg overflow-hidden not-prose my-3">
             <table className="w-full text-xs">
               <thead className="bg-foreground/5 text-foreground/70 font-mono border-b border-border text-left">
                 <tr>
-                  <th className="p-3">Customer Type & Region</th>
-                  <th className="p-3">VAT Applied</th>
-                  <th className="p-3">Requirements</th>
+                  <th className="p-3">Customer Type</th>
+                  <th className="p-3">Tax Rate at Checkout</th>
+                  <th className="p-3">Notes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 <tr>
-                  <td className="p-3 font-medium text-foreground">Germany (B2C & B2B)</td>
+                  <td className="p-3 font-medium text-foreground">Standard Checkout &amp; Renewals</td>
                   <td className="p-3 font-semibold text-amber-500">19% MwSt. (USt.)</td>
-                  <td className="p-3 text-foreground/60">Standard German statutory value-added tax applied to all domestic customers.</td>
+                  <td className="p-3 text-foreground/60">Standard 19% German VAT itemized clearly on order summaries and PDF invoices.</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-medium text-foreground">European Union B2B (Outside DE)</td>
-                  <td className="p-3 font-semibold text-emerald-500">0% (Reverse Charge)</td>
-                  <td className="p-3 text-foreground/60">Valid EU VAT ID verified real-time via the European Commission VIES database.</td>
-                </tr>
-                <tr>
-                  <td className="p-3 font-medium text-foreground">European Union B2C Consumers</td>
-                  <td className="p-3 font-semibold text-foreground">Local Country VAT (OSS)</td>
-                  <td className="p-3 text-foreground/60">Tax applied based on customer destination EU member state.</td>
-                </tr>
-                <tr>
-                  <td className="p-3 font-medium text-foreground">International / Non-EU (US, UK, CH, etc.)</td>
-                  <td className="p-3 font-semibold text-emerald-500">0% (Export of Services)</td>
-                  <td className="p-3 text-foreground/60">Tax-exempt international export transaction.</td>
+                  <td className="p-3 font-medium text-foreground">EU Business VAT ID</td>
+                  <td className="p-3 font-semibold text-foreground">Verified on Profile</td>
+                  <td className="p-3 text-foreground/60">Validate your EU VAT ID via the European Commission VIES service in Account Settings so it appears on invoices.</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <Callout type="tip" title="VIES VAT ID Validation">
-            EU businesses can enter their VAT Identification Number (e.g. <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">FR12345678901</code>) under <strong>Profile &rarr; Billing</strong>. Once validated against the European VIES gateway, subsequent invoices will automatically display your VAT ID and the mandatory statutory Reverse Charge notice (&sect; 13b UStG / Art. 196 EU VAT Directive).
+            EU businesses can enter their VAT Identification Number (e.g. <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">DE123456789</code>) under <strong>Dashboard &rarr; Profile &rarr; Account</strong> and click <strong>Verify</strong> to validate it against the European Commission VIES registry so it is printed on generated PDF invoices.
           </Callout>
         </section>
 
@@ -120,16 +110,16 @@ export const BillingGuide = () => {
             <span>Downloading Vector PDF Invoices</span>
           </h2>
           <p className="text-foreground/80">
-            Every paid or finalized invoice is compiled dynamically using our native Rust vector PDF rendering engine. Invoices feature:
+            Every finalized invoice is compiled dynamically using our native Rust PDF rendering engine. Invoices feature:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-foreground/80 text-xs">
-            <li>High-resolution vector typography with crisp corporate DIN 5008 alignment.</li>
-            <li>Detailed itemized breakdowns showing service IDs, billing period dates, net amounts, 19% VAT rate, and gross totals in EUR (&euro;).</li>
-            <li>VaultScope fiscal details: Tax office registration, Handelsregister HRB number, USt-IdNr., and SEPA IBAN/BIC banking credentials.</li>
-            <li>Cryptographic verification barcode & SHA-256 integrity stamp.</li>
+            <li>Vector typography with clean DIN 5008 alignment.</li>
+            <li>Itemized breakdowns showing descriptions, net amounts, 19% VAT, and gross totals in EUR (&euro;).</li>
+            <li>VaultScope provider details (Anton Schmidt, Einzelunternehmen, Sachsenheim, Germany).</li>
+            <li>Document reference ID and SHA-256 verification checksum.</li>
           </ul>
           <p className="text-foreground/80">
-            Download your invoices directly by clicking the <strong>Download PDF</strong> button in <strong>Dashboard &rarr; Profile &rarr; Invoices</strong>.
+            Download your invoices directly by clicking the <strong>PDF</strong> button in <strong>Dashboard &rarr; Profile &rarr; Billing</strong>, and pay open invoices online using the <strong>Pay Now</strong> button.
           </p>
         </section>
 
@@ -137,23 +127,23 @@ export const BillingGuide = () => {
         <section id="payment-methods" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-amber-400" />
-            <span>Payment Methods & Billing Cycles</span>
+            <span>Payment Methods &amp; Billing Cycles</span>
           </h2>
           <p className="text-foreground/80">
-            VaultScope supports modern automated payment methods for convenience:
+            VaultScope processes payments securely via Stripe Checkout / Stripe Payment Element for both initial orders and open renewal invoices:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 not-prose my-3 text-xs">
             <div className="p-3 border border-border rounded">
-              <span className="font-semibold block text-foreground mb-1">Credit & Debit Cards</span>
-              <p className="text-foreground/60">Visa, Mastercard, and American Express processed securely via PCI-DSS Level 1 tokenized Stripe Elements.</p>
+              <span className="font-semibold block text-foreground mb-1">Credit &amp; Debit Cards</span>
+              <p className="text-foreground/60">Visa, Mastercard, and major cards processed directly via Stripe.</p>
+            </div>
+            <div className="p-3 border border-border rounded">
+              <span className="font-semibold block text-foreground mb-1">Wallets &amp; Instant Methods</span>
+              <p className="text-foreground/60">Apple Pay, Google Pay, PayPal, and Klarna presented through Stripe Payment Element.</p>
             </div>
             <div className="p-3 border border-border rounded">
               <span className="font-semibold block text-foreground mb-1">SEPA Direct Debit</span>
-              <p className="text-foreground/60">Automated recurring debit mandate for European bank accounts across the SEPA zone.</p>
-            </div>
-            <div className="p-3 border border-border rounded">
-              <span className="font-semibold block text-foreground mb-1">Bank Wire Transfer</span>
-              <p className="text-foreground/60">Direct bank transfer for enterprise annual contracts with payment terms up to 14 days net.</p>
+              <p className="text-foreground/60">Supported SEPA bank payment options through Stripe.</p>
             </div>
           </div>
         </section>

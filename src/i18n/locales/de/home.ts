@@ -13,7 +13,7 @@ export const home = {
     ctaSecondary: 'Konto erstellen',
     stats: [
       { value: 'DE', label: 'Gehostet in Deutschland' },
-      { value: '100%', label: 'DSGVO-konform' },
+      { value: 'DE / EU', label: 'Datenhaltung (DSGVO)' },
       { value: 'NVMe', label: 'Schneller Speicher' },
       { value: '24/7', label: 'Monitoring' },
     ],
@@ -77,7 +77,7 @@ export const home = {
         title: 'Pegasus',
         badge: 'Community-Plattform',
         desc: 'Unsere umfassende Discord-Plattform für Server-Moderation, Support-Tickets, Gewinnspiele und Community-Verwaltung.',
-        tech: ['Python', 'Next.js', 'PostgreSQL', 'Docker'],
+        tech: ['TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
         href: '/software/pegasus/',
         cta: 'Pegasus entdecken',
       },

@@ -133,8 +133,17 @@ export function DsDetail() {
 
   if (loading) {
     return (
-      <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
-        Loading...
+      <div className="space-y-8">
+        <Link
+          to="/dashboard/ds"
+          className="inline-flex items-center gap-1.5 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Dedicated Servers
+        </Link>
+        <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-12 text-center text-sm text-[var(--fg-muted)] font-mono">
+          Loading...
+        </div>
       </div>
     );
   }
@@ -383,13 +392,13 @@ export function DsDetail() {
             <div className="flex items-center justify-between gap-4 pb-3">
               <span className="text-xs text-[var(--fg-muted)]">Processor</span>
               <span className="text-xs font-mono text-[var(--fg)]">
-                {specs.cpu || specs.server_type || 'AMD EPYC™'}
+                {specs.cpu || specs.server_type || 'Dedicated CPU'}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 py-3">
               <span className="text-xs text-[var(--fg-muted)]">ECC Memory</span>
               <span className="text-xs font-mono text-[var(--fg)]">
-                {specs.ram || 'DDR5 ECC REG'}
+                {specs.ram || 'ECC RAM'}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 py-3">
@@ -401,7 +410,7 @@ export function DsDetail() {
             <div className="flex items-center justify-between gap-4 pt-3">
               <span className="text-xs text-[var(--fg-muted)]">Uplink</span>
               <span className="text-xs font-mono text-[var(--fg)]">
-                {specs.bandwidth || '10 Gbps Unmetered'}
+                {specs.bandwidth || '1 Gbps / 10 Gbps'}
               </span>
             </div>
           </div>

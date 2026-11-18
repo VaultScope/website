@@ -15,7 +15,7 @@ export const pricing = {
   },
   software: {
     title: 'Software',
-    pegasusSelfHosted: { title: 'Pegasus Self-Hosted', desc: 'Kostenlos und Open Source.' },
+    pegasusSelfHosted: { title: 'Pegasus Self-Hosted', desc: 'Kostenlos für nicht-kommerzielles Self-Hosting (quelloffen).' },
     pegasusCloud: { title: 'Pegasus Cloud', desc: 'Demnächst verfügbar.' },
     pegasusEnterprise: { title: 'Pegasus Enterprise', desc: 'Individuelle Preisgestaltung.' },
   },

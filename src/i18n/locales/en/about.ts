@@ -19,7 +19,7 @@ export const about = {
     engineering: { title: 'Engineering', desc: 'Every decision is an engineering decision. No marketing-driven features, no growth hacks, no complexity without purpose.' },
     transparency: { title: 'Transparency', desc: 'Open-source tooling, public infrastructure choices, honest communication about what we can and cannot do.' },
     control: { title: 'Control', desc: 'You own your data, your configuration, your infrastructure. No vendor lock-in, no proprietary formats.' },
-    service: { title: 'Personal Service', desc: 'Direct access to the engineers who build and operate your infrastructure. No ticket queues, no chatbots.' },
+    service: { title: 'Personal Service', desc: 'Direct access to the engineers who build and operate your infrastructure. No outsourced call centers, no chatbots.' },
   },
   cta: 'Get in Touch',
 };
@@ -43,6 +43,6 @@ export const aboutPage = {
     { title: 'Engineering', desc: 'Infrastructure designed deliberately instead of assembled from layers of abstraction. Every component has purpose.' },
     { title: 'Transparency', desc: 'Infrastructure should be understandable, observable, and controllable. We use only open technologies we can inspect.' },
     { title: 'Control', desc: 'Your infrastructure should behave like your infrastructure. Full root access, complete control, no vendor lock-in.' },
-    { title: 'Personal Service', desc: 'Direct engineering support from the people who build and operate the infrastructure. No ticket queues, no generic responses.' },
+    { title: 'Personal Service', desc: 'Direct engineering support from the people who build and operate the infrastructure. No outsourced call centers, no generic responses.' },
   ],
 };

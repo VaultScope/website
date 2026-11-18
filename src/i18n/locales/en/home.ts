@@ -13,7 +13,7 @@ export const home = {
     ctaSecondary: 'Create Account',
     stats: [
       { value: 'DE', label: 'Hosted in Germany' },
-      { value: '100%', label: 'GDPR Compliant' },
+      { value: 'DE / EU', label: 'Data Residency (GDPR)' },
       { value: 'NVMe', label: 'Fast Storage' },
       { value: '24/7', label: 'Monitoring' },
     ],
@@ -77,7 +77,7 @@ export const home = {
         title: 'Pegasus',
         badge: 'Community Platform',
         desc: 'A comprehensive Discord platform for server moderation, support tickets, giveaways, and community management.',
-        tech: ['Python', 'Next.js', 'PostgreSQL', 'Docker'],
+        tech: ['TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
         href: '/software/pegasus/',
         cta: 'Explore Pegasus',
       },

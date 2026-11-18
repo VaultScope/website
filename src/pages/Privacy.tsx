@@ -34,15 +34,21 @@ const GDPR_RIGHTS = [
 
 const SUB_PROCESSORS = [
   {
+    name: 'Hetzner Online GmbH',
+    role: 'Server infrastructure & storage — hosting of Cloud VPS, Dedicated Servers, and SFTP storage nodes',
+    location: 'Germany / Finland (EU)',
+    transfer: 'No third-country transfer',
+  },
+  {
     name: 'OVH SAS',
-    role: 'Server infrastructure — hosting of customer VPS and Dedicated Server services',
+    role: 'Server infrastructure — hosting of Cloud VPS and Dedicated Server services',
     location: 'European Union',
     transfer: 'No third-country transfer',
   },
   {
-    name: 'Stripe, Inc.',
-    role: 'Payment processing — billing and subscription management',
-    location: 'USA',
+    name: 'Stripe, Inc. / Stripe Payments Europe, Ltd.',
+    role: 'Payment processing — billing, checkout, and invoice settlement',
+    location: 'EEA / USA',
     transfer: 'Standard Contractual Clauses / EU-US Data Privacy Framework',
   },
 ];
@@ -66,23 +72,23 @@ export const Privacy = () => {
             {/* Intro */}
             <div>
               <div className="text-xs font-medium text-foreground/30 uppercase tracking-widest mb-3">Version</div>
-              <p className="text-sm text-foreground/50">Last updated: August 2026</p>
+              <p className="text-sm text-foreground/50">Last updated: November 2026</p>
               <p className="text-sm mt-4">
                 This Privacy Policy describes how VaultScope (Anton Schmidt, Einzelunternehmen) processes
                 personal data in connection with the websites{' '}
                 <strong className="text-foreground/70 font-medium">vaultscope.de</strong> and{' '}
                 <strong className="text-foreground/70 font-medium">pegasusbot.app</strong>, the
-                VaultScope customer portal, and VaultScope hosting services (Cloud VPS and Dedicated
-                Servers). VaultScope is subject to the General Data Protection Regulation (GDPR) and
-                applicable German data protection law.
+                VaultScope customer portal, and VaultScope infrastructure services (SFTP Storage, Cloud VPS,
+                Dedicated Servers, and One-Click Deploy). VaultScope is subject to the General Data Protection
+                Regulation (GDPR), the German Federal Data Protection Act (BDSG), and the TDDDG.
               </p>
             </div>
 
-            {/* 1. Controller */}
+            {/* 1. Controller & Data Protection Officer */}
             <div>
-              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">1. Data Controller</h2>
+              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">1. Data Controller &amp; Data Protection Officer</h2>
               <p className="text-sm mb-5">
-                The data controller for the processing described in this policy is:
+                1.1 The data controller for the processing described in this policy is:
               </p>
               <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
                 <p className="font-medium text-foreground">Anton Schmidt</p>
@@ -100,6 +106,21 @@ export const Privacy = () => {
                     <a href="mailto:support@vaultscope.de" className="text-foreground hover:underline">support@vaultscope.de</a>
                   </p>
                 </div>
+              </div>
+
+              <p className="text-sm mt-6 mb-4">
+                1.2 The designated Data Protection Officer (Datenschutzbeauftragter) is:
+              </p>
+              <div className="border-l-2 border-[var(--accent)] pl-6 py-1 text-sm leading-7">
+                <p className="font-medium text-foreground">Anton Schmidt (Datenschutzbeauftragter)</p>
+                <p>Gottlob-Spieß-Straße 2</p>
+                <p>74343 Sachsenheim, Germany</p>
+                <p className="mt-2">
+                  <span className="text-foreground/40 uppercase tracking-widest text-xs mr-3">Privacy Email</span>
+                  <a href="mailto:data@vaultscope.de" className="text-foreground hover:underline">data@vaultscope.de</a>
+                  {' / '}
+                  <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">administration@vaultscope.de</a>
+                </p>
               </div>
             </div>
 
@@ -141,7 +162,8 @@ export const Privacy = () => {
                   <p className="text-sm">
                     <span className="text-foreground/50 font-medium">Retention:</span>{' '}
                     For the duration of the customer relationship and as required by applicable
-                    statutory retention obligations (e.g. accounting records for 10 years per § 147 AO).
+                    statutory retention obligations (e.g. accounting vouchers and invoices for 8 to 10 years
+                    pursuant to § 147 AO and § 14b UStG / BEG IV).
                     Account data not subject to statutory retention is deleted promptly following
                     account closure.
                   </p>
@@ -150,10 +172,10 @@ export const Privacy = () => {
                 <div className="border-l border-foreground/10 pl-6">
                   <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">2.3 Payment Processing (Stripe)</h3>
                   <p className="text-sm mb-2">
-                    Payment for hosting services is processed by Stripe, Inc. During checkout, you provide
+                    Payment for hosting services is processed by Stripe (Stripe Payments Europe, Ltd. / Stripe, Inc.). During checkout, you provide
                     payment details directly to Stripe. VaultScope does not store your card number, CVV,
                     or full payment card details. VaultScope receives from Stripe: payment confirmation,
-                    last four digits of the card used, card type, billing address, and a Stripe customer ID.
+                    PaymentIntent ID, billing address, and payment status.
                     This data is used to manage billing, issue invoices, and reconcile payments.
                   </p>
                   <p className="text-sm mb-1">
@@ -163,7 +185,7 @@ export const Privacy = () => {
                   </p>
                   <p className="text-sm mb-2">
                     <span className="text-foreground/50 font-medium">Retention:</span>{' '}
-                    Billing records retained for 10 years per § 147 AO (German tax law).
+                    Billing and invoice records retained for 8 to 10 years per § 147 AO and § 14b UStG (German tax law).
                   </p>
                   <p className="text-sm">
                     Stripe acts as an independent data controller for payment processing. Stripe's
@@ -217,14 +239,31 @@ export const Privacy = () => {
                 </div>
 
                 <div className="border-l border-foreground/10 pl-6">
-                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">2.7 Launch Waitlist</h3>
+                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">2.6 Address Autocomplete &amp; EU VIES VAT Verification</h3>
                   <p className="text-sm mb-2">
-                    If you subscribe to the VaultScope launch waitlist, we process your email address
-                    for the purpose of notifying you when hosting services become available.
+                    During registration, typing into the address input optionally queries OpenStreetMap Nominatim
+                    (<code className="font-mono text-xs">nominatim.openstreetmap.org</code>) and Komoot Photon
+                    (<code className="font-mono text-xs">photon.komoot.io</code>) with the partial address query and your
+                    IP address to suggest matching street addresses. If you verify an EU VAT ID in your profile, our backend
+                    queries the European Commission VIES REST API (<code className="font-mono text-xs">ec.europa.eu</code>)
+                    with the entered VAT number.
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-foreground/50 font-medium">Legal basis:</span>{' '}
+                    Pre-contractual measures and contract performance (Art. 6(1)(b) GDPR) as well as legitimate interest in
+                    accurate billing data (Art. 6(1)(f) GDPR).
+                  </p>
+                </div>
+
+                <div className="border-l border-foreground/10 pl-6">
+                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">2.7 Newsletter &amp; Launch Waitlist</h3>
+                  <p className="text-sm mb-2">
+                    If you subscribe to the VaultScope waitlist or newsletter, we process your name (optional) and email address
+                    for the purpose of notifying you about service availability and product updates.
                     Subscriptions are managed using Listmonk, a self-hosted mailing list platform
                     operated by VaultScope at{' '}
-                    <a href="https://subscribe.vaultscope.de" target="_blank" rel="noreferrer" className="text-foreground hover:underline">
-                      subscribe.vaultscope.de
+                    <a href="https://sub.vaultscope.de" target="_blank" rel="noreferrer" className="text-foreground hover:underline">
+                      sub.vaultscope.de
                     </a>
                     . Subscription uses double opt-in: you must confirm your email address before
                     being added to the list.
@@ -242,13 +281,20 @@ export const Privacy = () => {
                 </div>
 
                 <div className="border-l border-foreground/10 pl-6">
-                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">2.8 Theme Preference (Local Storage)</h3>
-                  <p className="text-sm">
-                    Our websites store a single UI preference — your colour scheme choice — in browser
-                    local storage under the key{' '}
-                    <code className="font-mono bg-foreground/5 px-1.5 py-0.5 text-xs text-foreground/70">vs-theme</code>.
-                    This is stored locally on your device only; it is not transmitted to our servers
-                    and contains no personally identifiable information.
+                  <h3 className="text-sm font-medium text-foreground uppercase tracking-tight mb-2">2.8 Portal Authentication &amp; Browser Storage (Local / Session Storage)</h3>
+                  <p className="text-sm mb-2">
+                    Our websites and customer portal use technically necessary browser storage (<code className="font-mono bg-foreground/5 px-1.5 py-0.5 text-xs text-foreground/70">localStorage</code> and{' '}
+                    <code className="font-mono bg-foreground/5 px-1.5 py-0.5 text-xs text-foreground/70">sessionStorage</code>) for UI preferences and authenticated portal sessions:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-foreground/70">
+                    <li><code className="font-mono text-xs">vs-theme</code> (<code className="font-mono text-xs">localStorage</code>): stores your dark/light theme preference locally.</li>
+                    <li><code className="font-mono text-xs">vs_token</code>, <code className="font-mono text-xs">vs_claims</code>, <code className="font-mono text-xs">vs_user_name</code>, <code className="font-mono text-xs">vs_username</code> (<code className="font-mono text-xs">localStorage</code>): store your authenticated session JWT and basic display identity when you log into the customer portal, and <code className="font-mono text-xs">vs_token</code> is sent with API requests to authenticate your session.</li>
+                    <li><code className="font-mono text-xs">vs_quick_nav</code> (<code className="font-mono text-xs">localStorage</code>): stores your customized dashboard quick-navigation shortcuts.</li>
+                    <li><code className="font-mono text-xs">vs_redirect</code> &amp; <code className="font-mono text-xs">chunk_reload_triggered</code> (<code className="font-mono text-xs">sessionStorage</code>): preserve post-login navigation targets and asset reload protection during your browser tab session.</li>
+                  </ul>
+                  <p className="text-sm mt-2">
+                    <span className="text-foreground/50 font-medium">Legal basis:</span>{' '}
+                    Strictly necessary for the requested service (§ 25 Abs. 2 Nr. 2 TDDDG; Art. 6(1)(b) and Art. 6(1)(f) GDPR).
                   </p>
                 </div>
 
@@ -267,16 +313,16 @@ export const Privacy = () => {
 
             {/* 4. Cookies */}
             <div>
-              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">4. Cookies</h2>
+              <h2 className="text-lg font-medium text-foreground tracking-tight mb-5">4. Cookies &amp; Technically Necessary Storage</h2>
               <p className="text-sm mb-4">
-                The public-facing VaultScope websites (vaultscope.de, pegasusbot.app) do not set cookies.
-                The colour scheme preference is stored in browser local storage (see section 2.8).
+                The public-facing VaultScope websites (vaultscope.de, pegasusbot.app) do not set marketing or analytics cookies.
+                UI theme preferences are stored in browser local storage (see section 2.8).
               </p>
               <p className="text-sm">
-                The VaultScope customer portal uses technically necessary session cookies to maintain your
-                authenticated session after login. These cookies are essential to the operation of the
-                portal and do not require separate consent under applicable law. They are deleted when you
-                log out or when your session expires.
+                When interacting with the API or logging into the VaultScope customer portal, technically necessary CSRF protection
+                tokens/cookies and browser storage entries (section 2.8) are used exclusively to secure requests and maintain
+                your authenticated session. These strictly necessary mechanisms do not require prior cookie consent under § 25 Abs. 2 Nr. 2 TDDDG
+                and are cleared when you sign out or when your session expires.
               </p>
             </div>
 
@@ -337,7 +383,7 @@ export const Privacy = () => {
               <ul className="flex flex-col gap-3 text-sm">
                 {[
                   'Account data: retained for the duration of the customer relationship and deleted promptly after account closure, subject to statutory retention requirements.',
-                  'Billing and invoice records: retained for 10 years per § 147 AO (German fiscal retention obligation).',
+                  'Billing and invoice records: retained for 8 to 10 years pursuant to § 147 AO and § 14b UStG (German fiscal retention obligations under BEG IV).',
                   'Server and access logs: short period for operational security; subsequently deleted or anonymised.',
                   'Support tickets: retained for a reasonable period after resolution; deleted when no longer necessary.',
                 ].map((item, i) => (
@@ -364,7 +410,9 @@ export const Privacy = () => {
                 ))}
               </div>
               <p className="text-sm mt-6">
-                To exercise any of these rights, contact us at{' '}
+                To exercise any of these rights, contact our Data Protection Officer (Anton Schmidt) at{' '}
+                <a href="mailto:data@vaultscope.de" className="text-foreground hover:underline">data@vaultscope.de</a>{' '}
+                or{' '}
                 <a href="mailto:administration@vaultscope.de" className="text-foreground hover:underline">administration@vaultscope.de</a>.
                 We will respond within one month as required by Art. 12 GDPR. We may ask you to verify
                 your identity before processing your request.

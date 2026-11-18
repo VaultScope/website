@@ -43,7 +43,7 @@ export const aboutPage = {
     { title: 'Transparenz', desc: 'Infrastruktur muss nachvollziehbar, überprüfbar und beherrschbar sein. Wir setzen auf offene Technologien, klare Spezifikationen und ehrliche Kommunikation ohne Blackboxen.' },
     { title: 'Community', desc: 'Wir entwickeln unsere Plattform im engen Austausch mit den Entwicklern und Teams, die täglich darauf arbeiten – mit offenen Repositories und direktem Feedback.' },
     { title: 'Vertrauen & Kontrolle', desc: 'Partnerschaft auf Augenhöhe: voller Root-Zugriff, klare Zusagen, DSGVO-konforme Datenhaltung in Europa und kein künstlicher Vendor-Lock-in.' },
-    { title: 'Direkter Engineering-Support', desc: 'Persönliche Unterstützung direkt durch die Ingenieure, die unsere Systeme entwickeln und betreiben – ohne anonyme Ticket-Warteschlangen.' },
+    { title: 'Direkter Engineering-Support', desc: 'Persönliche Unterstützung direkt durch die Ingenieure, die unsere Systeme entwickeln und betreiben – ohne ausgelagerte Callcenter oder Chatbot-Schleifen.' },
   ],
 };
 

@@ -182,7 +182,9 @@ const PAGE_ROUTES: RouteConfig[] = [
         children: [
           { path: '', element: <ProfileAccount /> },
           { path: 'mfa', element: <ProfileMfa /> },
+          { path: 'security', element: <ProfileMfa /> },
           { path: 'billing', element: <ProfileBilling /> },
+          { path: 'activity', element: <ProfileLogs /> },
           { path: 'logs', element: <ProfileLogs /> },
         ]
       },
@@ -332,7 +334,7 @@ function AppContent() {
       </a>
       {!isDashboard && <Navbar />}
       <main id="main-content" className="flex-1 flex flex-col">
-        <ErrorBoundary key={location.pathname}>
+        <ErrorBoundary resetKey={location.pathname}>
           <Suspense fallback={
             <div className="flex-1 flex items-center justify-center min-h-[40vh] p-8">
               <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">

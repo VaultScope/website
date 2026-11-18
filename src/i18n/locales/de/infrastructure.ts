@@ -21,9 +21,9 @@ export const infrastructureOverview = {
     cta: 'Mehr erfahren',
   },
   facts: {
-    infrastructure: { label: 'Infrastruktur', value: 'Enterprise-Hardware', note: 'Zertifizierte Rechenzentren in der EU.' },
-    locations: { label: 'Standorte', value: 'Europäische Union', note: 'Betrieb in erstklassigen europäischen Rechenzentren.' },
-    legal: { label: 'Datenschutz', value: 'DSGVO-konform', note: 'Kein Datentransfer außerhalb des Europäischen Wirtschaftsraums.' },
+    infrastructure: { label: 'Infrastruktur', value: 'Enterprise-Hardware', note: 'Moderne Server-Hardware in etablierten Partner-Rechenzentren in der EU.' },
+    locations: { label: 'Standorte', value: 'Europäische Union', note: 'Betrieb in ausgewählten Rechenzentren in Deutschland und der EU.' },
+    legal: { label: 'Datenschutz', value: 'Datenschutz nach DSGVO', note: 'Kein Datentransfer außerhalb des Europäischen Wirtschaftsraums für EU-Server.' },
   },
   technology: {
     eyebrow: 'Technologie-Fundament',
@@ -103,7 +103,7 @@ export const infrastructureDedicated = {
   },
   technical: [
     { label: 'Betriebssystem', value: 'Debian', note: 'Stabile, produktionsreife Linux-Distribution.' },
-    { label: 'Standort', value: 'Europäische Union', note: 'Europäische Rechenzentren, vollständig DSGVO-konform.' },
+    { label: 'Standort', value: 'Europäische Union', note: 'Europäische Partner-Rechenzentren im Geltungsbereich der DSGVO.' },
     { label: 'Infrastruktur', value: 'Enterprise-Hardware', note: 'Dedizierte Server-Hardware für den Dauerbetrieb.' },
   ],
   pricing: 'Detaillierte Spezifikationen und Preise werden zum Start veröffentlicht.',
@@ -128,7 +128,7 @@ export const infrastructureManaged = {
       { title: 'Bereitstellung & Härtung', desc: 'Vollständige Einrichtung, Grundkonfiguration und Sicherheits-Härtung aller Server- und Netzwerkkomponenten.' },
       { title: 'Deployment-Pipelines', desc: 'Einrichtung und Pflege automatisierter CI/CD- und Container-Deployments ohne Ausfallzeiten.' },
       { title: '24/7-Monitoring', desc: 'Durchgehende Überwachung von Systemlast, Diensten und Erreichbarkeit mit Uptime Kuma und Beszel.' },
-      { title: 'Störungsbehebung', desc: 'Proaktive Reaktion im Fehlerfall direkt durch unsere Ingenieure – mit kurzen Wegen statt Ticket-Warteschlangen.' },
+      { title: 'Störungsbehebung', desc: 'Proaktive Reaktion im Fehlerfall direkt durch unsere Ingenieure – mit kurzen Wegen statt anonymer Callcenter.' },
       { title: 'Wartung & Updates', desc: 'Regelmäßige Sicherheits-Patches, Betriebssystem-Updates und Backup-Prüfungen im laufenden Betrieb.' },
     ],
   },

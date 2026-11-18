@@ -9,9 +9,9 @@ export function ReportDmca() {
   const [prepared, setPrepared] = useState(false);
 
   const mailtoHref = `mailto:info@vaultscope.de?subject=${encodeURIComponent(
-    `[DMCA Notice] ${name || 'Copyright Infringement Notice'}`
+    `[Copyright / DSA Art. 16 Notice] ${name || 'Infringement Report'}`
   )}&body=${encodeURIComponent(
-    `Claimant / Authorized Representative: ${name}\nContact Email: ${email}\n\nInfringing URL(s):\n${infringingUrls}\n\nOriginal Work / Evidence:\n${originalWork}\n\nSworn Statement: I state under penalty of perjury that I am the owner or authorized to act on behalf of the owner of an exclusive right that is allegedly infringed.`
+    `Claimant / Authorized Representative: ${name}\nContact Email: ${email}\n\nInfringing URL(s):\n${infringingUrls}\n\nOriginal Work / Evidence:\n${originalWork}\n\nGood-Faith Declaration (Art. 16(2)(d) DSA): I confirm in good faith that the information and allegations contained in this notice are accurate and complete and that I am authorized to report this infringement.`
   )}`;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,16 +23,16 @@ export function ReportDmca() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight text-foreground mb-1">DMCA Takedown Notice</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-foreground mb-1">Copyright &amp; Takedown Notice (DSA Art. 16 / UrhG)</h2>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Provide complete identification of the copyrighted work and the allegedly infringing material hosted on VaultScope infrastructure.
+          Provide complete identification of the protected work and the exact electronic location of allegedly infringing material pursuant to Art. 16 EU Digital Services Act (DSA) and German UrhG.
         </p>
       </div>
 
       {prepared && (
         <div className="p-4 border border-[var(--line-strong)] bg-[var(--bg-elevated)] space-y-2 text-xs">
           <p className="font-medium text-foreground">
-            Your DMCA takedown request has been submitted and prepared for <span className="font-mono">info@vaultscope.de</span>.
+            Your copyright takedown notice has been prepared for <span className="font-mono">info@vaultscope.de</span>.
           </p>
           <p className="text-muted-foreground">
             If your email client did not open automatically,{' '}
@@ -103,7 +103,7 @@ export function ReportDmca() {
         <label className="flex items-start gap-2.5 cursor-pointer">
           <input type="checkbox" required className="mt-1" />
           <span className="text-xs text-muted-foreground leading-relaxed">
-            I state under penalty of perjury that I am the owner or authorized to act on behalf of the owner of an exclusive right that is allegedly infringed.
+            I confirm in good faith (Art. 16(2)(d) DSA) that the information and allegations in this notice are accurate and complete, and that I am the rights holder or authorized to act on their behalf.
           </span>
         </label>
         <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -111,7 +111,7 @@ export function ReportDmca() {
             type="submit"
             className="vs-btn-primary px-5 py-2.5 text-xs font-mono uppercase tracking-[0.06em] font-medium cursor-pointer"
           >
-            Submit DMCA Notice
+            Submit Copyright Notice
           </button>
           <LocaleLink
             to="/dashboard/support"

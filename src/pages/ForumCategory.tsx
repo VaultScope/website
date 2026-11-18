@@ -39,28 +39,28 @@ export const CATEGORY_INFO: Record<string, { name: string; description: string; 
   },
   storage: {
     name: 'Storage Protocols',
-    description: 'Sovereign SFTP, Ceph distributed clusters, ZFS storage pools, and backup workflows.',
-    topics: ['SFTP', 'Ceph', 'ZFS', 'Snapshots', 'POSIX Quotas'],
+    description: 'Sovereign SFTP, ZFS storage pools, Borg/Restic, and backup workflows.',
+    topics: ['SFTP', 'ZFS', 'BorgBackup', 'Restic', 'POSIX Quotas'],
   },
   networking: {
     name: 'Networking & Routing',
-    description: 'BGP peering, IPv6 dual-stack allocation, DE-CIX Frankfurt, WireGuard, and transit routes.',
-    topics: ['BGP Peering', 'IPv6 /64', 'DE-CIX', 'Anycast', 'WireGuard'],
+    description: 'IPv4/IPv6 allocation, WireGuard, DNS configuration, and latency tuning.',
+    topics: ['IPv4', 'IPv6 /64', 'WireGuard', 'DNS'],
   },
   operations: {
     name: 'Operations & SRE',
-    description: 'Monitoring, Prometheus telemetry, backup retention, incident procedures, and automation.',
-    topics: ['Prometheus', 'Grafana', 'Backup Retention', 'SRE'],
+    description: 'Monitoring, Uptime Kuma telemetry, backup retention, incident procedures, and automation.',
+    topics: ['Uptime Kuma', 'Backup Retention', 'Monitoring'],
   },
   security: {
     name: 'Security & Compliance',
-    description: 'GoBD audit trails, GDPR data protection, EU infrastructure sovereignty, and zero-trust access.',
-    topics: ['GoBD', 'GDPR', 'Audit Logging', 'SSH Keys'],
+    description: 'Audit trails, GDPR data protection, EU infrastructure residency, and zero-trust access.',
+    topics: ['GDPR', 'Audit Logging', 'SSH Keys'],
   },
   automation: {
     name: 'API & Automation',
-    description: 'Storefront REST API, Terraform provider, infrastructure-as-code, and webhook events.',
-    topics: ['REST API', 'Terraform', 'Webhooks', 'CLI'],
+    description: 'Storefront REST API, infrastructure automation scripts, and webhook events.',
+    topics: ['REST API', 'Automation', 'Webhooks', 'CLI'],
   },
   feedback: {
     name: 'Community Feedback & RFCs',

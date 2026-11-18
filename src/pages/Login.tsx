@@ -54,11 +54,11 @@ export function Login() {
       setError(isDe ? 'Passwort ist erforderlich.' : 'Password is required.');
       return;
     }
-    if (mfaRequired && (!totpCode || totpCode.trim().length !== 6)) {
+    if (mfaRequired && (!totpCode || totpCode.trim().length < 6)) {
       setError(
         isDe
-          ? 'Bitte geben Sie Ihren 6-stelligen Authentifizierungscode ein.'
-          : 'Please enter your 6-digit authenticator code.',
+          ? 'Bitte geben Sie Ihren 6-stelligen Authentifizierungscode oder einen Wiederherstellungscode ein.'
+          : 'Please enter your 6-digit authenticator code or a recovery code.',
       );
       return;
     }
@@ -256,20 +256,20 @@ export function Login() {
                   ) : (
                     <div>
                       <label htmlFor="login-totp" className={labelCls}>
-                        {isDe ? '6-stelliger Authenticator-Code' : '6-Digit Authenticator Code'}
+                        {isDe
+                          ? '6-stelliger Authenticator-Code oder Wiederherstellungscode'
+                          : '6-Digit Authenticator Code or Recovery Code'}
                       </label>
                       <input
                         id="login-totp"
                         type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={6}
+                        maxLength={16}
                         value={totpCode}
                         onChange={(e) => {
-                          setTotpCode(e.target.value.replace(/\D/g, ''));
+                          setTotpCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase());
                           if (error) setError('');
                         }}
-                        placeholder="123456"
+                        placeholder="123456 or A1B2-C3D4"
                         autoFocus
                         className="w-full rounded-[6px] border border-[var(--line)] bg-[var(--bg-subtle)] text-[var(--fg)] px-4 py-3 text-center text-xl font-mono tracking-widest focus:outline-none focus:border-[var(--accent-bright)] transition-colors"
                       />

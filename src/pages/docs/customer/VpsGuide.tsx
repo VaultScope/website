@@ -81,74 +81,54 @@ export const VpsGuide = () => {
         <section id="power-management" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Power className="w-5 h-5 text-emerald-400" />
-            <span>Power & Lifecycle Actions</span>
+            <span>Power &amp; Lifecycle Actions</span>
           </h2>
           <p className="text-foreground/80">
-            Inside your server detail view (<strong>Dashboard &rarr; Cloud VPS &rarr; [Server Name]</strong>), the power control center provides four primary actions:
+            Inside your server detail view (<strong>Dashboard &rarr; VPS &rarr; [Server Name]</strong>), the action bar provides the following power controls:
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 not-prose my-4">
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
               <div className="flex items-center gap-2 font-semibold text-foreground text-sm mb-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span>Soft Reboot (ACPI)</span>
+                <span>Start</span>
               </div>
               <p className="text-xs text-foreground/70">
-                Sends a standard ACPI reboot signal to the operating system, allowing running database processes and background services to shut down gracefully and sync dirty pages to disk.
+                Boots a stopped virtual server instance via the provisioning job queue.
               </p>
             </div>
 
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
               <div className="flex items-center gap-2 font-semibold text-foreground text-sm mb-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <span>Graceful Shutdown</span>
+                <span>Restart</span>
               </div>
               <p className="text-xs text-foreground/70">
-                Sends an ACPI shutdown command. Ideal before taking manual filesystem snapshots or modifying hardware spec configurations.
+                Sends a reboot action to restart the running virtual server cleanly.
               </p>
             </div>
 
             <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
               <div className="flex items-center gap-2 font-semibold text-foreground text-sm mb-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <span>Force Stop (Power Cut)</span>
+                <span>Stop</span>
               </div>
               <p className="text-xs text-foreground/70">
-                Immediately terminates the KVM virtualization process. Use when the kernel is completely unresponsive or locked in a kernel panic.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-lg border border-border bg-foreground/[0.01]">
-              <div className="flex items-center gap-2 font-semibold text-foreground text-sm mb-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-white" />
-                <span>Hardware Reset</span>
-              </div>
-              <p className="text-xs text-foreground/70">
-                Simulates pressing the physical chassis reset button. The instance is immediately restarted at the hypervisor level without waiting for OS shutdown hooks.
+                Powers down the virtual machine when you need to take an instance offline.
               </p>
             </div>
           </div>
         </section>
 
-        {/* In-Browser noVNC Console */}
+        {/* In-Browser Console */}
         <section id="web-console" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Monitor className="w-5 h-5 text-[var(--text-muted)]" />
-            <span>Interactive In-Browser noVNC Console</span>
+            <span>Out-of-Band Web Console</span>
           </h2>
           <p className="text-foreground/80">
-            If your server becomes unreachable over SSH due to a firewall misconfiguration, corrupted network configuration, or bootloader failure, the out-of-band HTML5 noVNC console provides direct graphical screen and keyboard access to the virtual monitor.
+            If your server becomes unreachable over SSH due to a firewall misconfiguration, corrupted network configuration, or bootloader failure, click the <strong>Console</strong> button in your VPS detail view to launch a secure out-of-band console session provided by the upstream hypervisor in a new browser tab.
           </p>
-
-          <div className="border border-border rounded-lg p-5 bg-foreground/[0.01] space-y-3">
-            <h4 className="font-semibold text-foreground text-sm">Key Features of the VaultScope Web Console:</h4>
-            <ul className="list-disc pl-5 space-y-1.5 text-xs text-foreground/80">
-              <li><strong>Dedicated Virtual Key Bar:</strong> Instant one-click triggers for special keystrokes that browsers usually trap: <kbd className="px-1.5 py-0.5 bg-foreground/10 border border-border rounded font-mono">Ctrl+Alt+Del</kbd>, <kbd className="px-1.5 py-0.5 bg-foreground/10 border border-border rounded font-mono">Esc</kbd>, <kbd className="px-1.5 py-0.5 bg-foreground/10 border border-border rounded font-mono">Tab</kbd>, and function keys <kbd className="px-1.5 py-0.5 bg-foreground/10 border border-border rounded font-mono">F1</kbd>-<kbd className="px-1.5 py-0.5 bg-foreground/10 border border-border rounded font-mono">F12</kbd>.</li>
-              <li><strong>Clipboard Injection Drawer:</strong> Paste long scripts, public SSH keys, or complex database connection strings directly into the active terminal buffer without typing keystroke by keystroke.</li>
-              <li><strong>Real-Time Latency Telemetry:</strong> Continuous WebSocket ping monitoring shows roundtrip milliseconds between your browser and the hypervisor host.</li>
-              <li><strong>Zero Plugin Requirement:</strong> Pure HTML5 Canvas & WebSockets &mdash; no Java, Flash, or browser extensions needed.</li>
-            </ul>
-          </div>
         </section>
 
         {/* Operating System Reinstall */}
@@ -184,59 +164,26 @@ export const VpsGuide = () => {
           </Callout>
         </section>
 
-        {/* Rescue Mode */}
+        {/* Recovery & Support */}
         <section id="rescue-mode" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Shield className="w-5 h-5 text-rose-400" />
-            <span>Rescue Environment & Root Password Recovery</span>
+            <span>Recovery &amp; Single-User Troubleshooting</span>
           </h2>
           <p className="text-foreground/80">
-            If an operating system fails to boot after a kernel update or the root filesystem becomes corrupted, activate <strong>Rescue Mode</strong> from your server dashboard:
+            If an operating system fails to boot after a kernel update or you lose SSH access, use the out-of-band <strong>Console</strong> button in your VPS detail page to access the boot menu / single-user mode, or contact support via <strong>Dashboard &rarr; Support</strong> if you need rescue environment assistance.
           </p>
-          <ol className="list-decimal pl-5 space-y-2 text-foreground/80">
-            <li>Click <strong>Enable Rescue Mode</strong> in the server actions menu and select Linux 64-bit rescue image.</li>
-            <li>Reboot the server. The VM will boot into an in-memory Debian RAM disk.</li>
-            <li>Connect via SSH using the temporary root credentials provided in the rescue dialog.</li>
-            <li>Mount your disk and chroot to repair configuration files or reset the root password:</li>
-          </ol>
-          <CodeBlock
-            language="bash"
-            code={`# Locate your root partition (e.g. /dev/vda1 or /dev/sda1)
-lsblk
-
-# Mount root partition and system pseudofilesystems
-mount /dev/vda1 /mnt
-mount --bind /dev /mnt/dev
-mount --bind /proc /mnt/proc
-mount --bind /sys /mnt/sys
-
-# Enter chroot environment
-chroot /mnt
-
-# Reset root password or edit /etc/ssh/sshd_config
-passwd root
-
-# Exit chroot and unmount
-exit
-umount -R /mnt
-reboot`}
-          />
         </section>
 
         {/* Reverse DNS (PTR) */}
         <section id="networking" className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <Network className="w-5 h-5 text-[var(--text-muted)]" />
-            <span>Reverse DNS (PTR) & Network Setup</span>
+            <span>Reverse DNS (PTR) &amp; Network Setup</span>
           </h2>
           <p className="text-foreground/80">
-            For mail servers (SMTP) and enterprise services requiring bidirectional hostname verification, configure your IP's Reverse DNS (PTR) record directly in the <strong>Networking</strong> tab of your VPS detail view.
+            For mail servers (SMTP) or services requiring custom Reverse DNS (PTR) records, ensure your domain has a matching forward <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">A</code> / <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">AAAA</code> record pointing to your server IP, then open a ticket in <strong>Dashboard &rarr; Support</strong> with your desired hostname so our team can configure the PTR entry.
           </p>
-          <ul className="list-disc pl-5 space-y-1.5 text-foreground/80">
-            <li>Enter your Fully Qualified Domain Name (FQDN), e.g. <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">mail.yourdomain.de</code>.</li>
-            <li>Ensure that your domain's authoritative DNS has a corresponding forward <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">A</code> (and <code className="text-xs font-mono bg-foreground/5 px-1 py-0.5 rounded">AAAA</code> for IPv6) record pointing to your server's IP.</li>
-            <li>PTR record updates propagate worldwide across global DNS caches within 15 to 30 minutes.</li>
-          </ul>
         </section>
 
         <DocPagination

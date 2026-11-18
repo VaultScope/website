@@ -240,7 +240,7 @@ export function ProfileAccount() {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="vs-btn-secondary !px-4 !py-1.5 !text-xs"
+              className="vs-btn-secondary"
             >
               Edit
             </button>
@@ -249,7 +249,7 @@ export function ProfileAccount() {
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="vs-btn-secondary !px-3.5 !py-1.5 !text-xs"
+                className="vs-btn-secondary"
               >
                 Cancel
               </button>
@@ -257,7 +257,7 @@ export function ProfileAccount() {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="vs-btn-primary !px-4 !py-1.5 !text-xs disabled:opacity-50"
+                className="vs-btn-primary disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -387,7 +387,7 @@ export function ProfileAccount() {
                   type="button"
                   onClick={handleVerifyVat}
                   disabled={verifyingVat}
-                  className="vs-btn-secondary !px-3.5 !py-2 !text-xs"
+                  className="vs-btn-secondary"
                 >
                   {verifyingVat ? '...' : 'Verify'}
                 </button>
@@ -457,7 +457,7 @@ export function ProfileAccount() {
           <button
             type="button"
             onClick={handleResetQuickNav}
-            className="vs-btn-secondary !px-3.5 !py-1.5 !text-xs inline-flex items-center gap-1.5 self-start sm:self-auto"
+            className="vs-btn-secondary self-start sm:self-auto"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Reset Defaults
@@ -569,20 +569,20 @@ export function ProfileAccount() {
           </div>
         )}
 
-        <div className="flex gap-2 max-w-md">
+        <div className="flex items-center gap-2 max-w-md">
           <input
             type="email"
             aria-label="Additional invoice email address"
             value={newBillingEmail}
             onChange={(e) => setNewBillingEmail(e.target.value)}
             placeholder="accounting@company.de"
-            className="flex-1 rounded-xl bg-[var(--bg)] border border-[var(--line)] px-4 py-2 text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] focus:ring-1 focus:ring-[var(--accent-bright)]"
+            className="flex-1 h-8 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)] focus:ring-1 focus:ring-[var(--accent-bright)]"
           />
           <button
             type="button"
             onClick={handleAddBillingEmail}
             disabled={addingEmail}
-            className="vs-btn-secondary !px-4 !py-2 !text-xs inline-flex items-center gap-1.5"
+            className="vs-btn-secondary"
           >
             <Plus className="w-3.5 h-3.5" />
             Add
@@ -601,7 +601,7 @@ export function ProfileAccount() {
         <button
           type="button"
           onClick={() => setShowDeleteModal(true)}
-          className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-500/15 border border-rose-500/25 text-[var(--err)] hover:bg-rose-500 hover:text-white transition-colors self-start sm:self-auto shrink-0"
+          className="h-8 px-3.5 rounded-lg text-xs font-medium bg-rose-500/15 border border-rose-500/25 text-[var(--err)] hover:bg-rose-500 hover:text-white transition-colors self-start sm:self-auto shrink-0 cursor-pointer"
         >
           Delete Account
         </button>
@@ -635,7 +635,7 @@ export function ProfileAccount() {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="vs-btn-secondary !px-4 !py-2 !text-xs"
+                className="vs-btn-secondary"
               >
                 Cancel
               </button>
@@ -643,7 +643,7 @@ export function ProfileAccount() {
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleting}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                className="h-8 px-3.5 rounded-lg text-xs font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors cursor-pointer"
               >
                 {deleting ? 'Deleting...' : 'Delete Permanently'}
               </button>
