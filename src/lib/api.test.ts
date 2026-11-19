@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -87,6 +87,39 @@ describe('ApiClient', () => {
       await api.get('/storefront/services');
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
+
+    it('never falls back to hardcoded vs-csrf-client when CSRF endpoint fails', async () => {
+      mockFetch
+        .mockRejectedValueOnce(new Error('Network down'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ id: 'ok' }),
+        });
+
+      await api.post('/storefront/orders', { product_id: 'p1' });
+
+      const postCall = mockFetch.mock.calls[1];
+      expect(postCall[1].headers['x-csrf-token']).toBeUndefined();
+      expect(JSON.stringify(postCall[1].headers)).not.toContain('vs-csrf-client');
+    });
+
+    it('never falls back to hardcoded vs-csrf-client when CSRF response omits token', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: () => Promise.resolve({}),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ id: 'ok' }),
+        });
+
+      await api.post('/storefront/orders', { product_id: 'p1' });
+
+      const postCall = mockFetch.mock.calls[1];
+      expect(postCall[1].headers['x-csrf-token']).toBeUndefined();
+    });
   });
 
   describe('error handling', () => {
@@ -112,9 +145,12 @@ describe('ApiClient', () => {
       await expect(api.get('/storefront/services')).rejects.toThrow('Internal Server Error');
     });
 
-    it('clears auth and throws on 401', async () => {
+    it('clears all auth keys and throws on 401', async () => {
       localStorage.setItem('vs_token', 'old-token');
       localStorage.setItem('vs_claims', '{}');
+      localStorage.setItem('vs_user_name', 'User');
+      localStorage.setItem('vs_username', 'user');
+      localStorage.setItem('vs_preview_mode', '1');
 
       mockFetch.mockResolvedValue({
         ok: false,
@@ -125,6 +161,9 @@ describe('ApiClient', () => {
       await expect(api.get('/storefront/services')).rejects.toThrow('Unauthorized');
       expect(localStorage.getItem('vs_token')).toBeNull();
       expect(localStorage.getItem('vs_claims')).toBeNull();
+      expect(localStorage.getItem('vs_user_name')).toBeNull();
+      expect(localStorage.getItem('vs_username')).toBeNull();
+      expect(localStorage.getItem('vs_preview_mode')).toBeNull();
     });
   });
 

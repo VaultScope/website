@@ -1,3 +1,5 @@
+import { clearAuthStorage, sanitizeRedirectPath } from './auth';
+
 function resolveApiBase(): string {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
@@ -27,15 +29,15 @@ class ApiClient {
   private async fetchCsrfToken() {
     if (this.csrfPromise) return this.csrfPromise;
     this.csrfPromise = fetch(`${API_BASE}/csrf`, { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => {
-        this.csrfToken = data?.token || 'vs-csrf-client';
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json().catch(() => null);
+        if (data && typeof data.token === 'string' && data.token.trim()) {
+          this.csrfToken = data.token;
+        }
       })
       .catch((err) => {
         console.error(err);
-        if (!this.csrfToken) {
-          this.csrfToken = 'vs-csrf-client';
-        }
       })
       .finally(() => {
         this.csrfPromise = null;
@@ -102,12 +104,15 @@ class ApiClient {
     }
 
     if (res.status === 401) {
-      localStorage.removeItem('vs_token');
-      localStorage.removeItem('vs_claims');
+      clearAuthStorage();
       if (typeof window !== 'undefined' && !path.startsWith('/storefront/auth/')) {
         const isDe = window.location.pathname === '/de' || window.location.pathname.startsWith('/de/');
         const loginBase = isDe ? '/de/login' : '/login';
-        const currentTarget = window.location.pathname + window.location.search;
+        const defaultDashboard = isDe ? '/de/dashboard' : '/dashboard';
+        const currentTarget = sanitizeRedirectPath(
+          window.location.pathname + window.location.search,
+          defaultDashboard,
+        );
         if (!window.location.pathname.endsWith('/login')) {
           window.location.href = `${loginBase}?redirect=${encodeURIComponent(currentTarget)}`;
         }
