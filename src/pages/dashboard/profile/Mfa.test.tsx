@@ -112,4 +112,39 @@ describe('ProfileMfa', () => {
     expect(screen.queryByAltText('TOTP QR Code')).toBeNull();
     expect(screen.getByText('Set up 2FA')).toBeDefined();
   });
+
+  it('requires current password alongside TOTP/recovery code when disabling 2FA', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ two_factor_enabled: true });
+    vi.mocked(api.post).mockResolvedValueOnce({ disabled: true });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Disable 2FA')).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText('Disable 2FA'));
+
+    const codeInput = screen.getByLabelText('Current 6-digit TOTP or recovery code');
+    const passwordInput = screen.getByLabelText('Current password');
+
+    // Attempt disable without password
+    fireEvent.change(codeInput, { target: { value: '654321' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Disable' }));
+
+    expect(screen.getByRole('alert').textContent).toContain('current password');
+    expect(api.post).not.toHaveBeenCalled();
+
+    // Provide password and submit
+    fireEvent.change(passwordInput, { target: { value: 'MyStrongPass!99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Disable' }));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/storefront/profile/mfa/disable', {
+        code: '654321',
+        password: 'MyStrongPass!99',
+      });
+      expect(screen.getByText('Set up 2FA')).toBeDefined();
+    });
+  });
 });

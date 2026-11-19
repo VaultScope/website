@@ -32,6 +32,7 @@ export default function SftpStorage() {
   const [claimingTrial, setClaimingTrial] = useState(false);
   const [error, setError] = useState('');
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [openConfigDropdown, setOpenConfigDropdown] = useState<string | null>(null);
   const [showSecurityWarning, setShowSecurityWarning] = useState(false);
@@ -95,10 +96,46 @@ export default function SftpStorage() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleCopyFthr = (s: SftpService) => {
+  const resolveServicePassword = async (s: SftpService): Promise<string> => {
+    const inlinePass =
+      revealedPasswords[s.id] || s.config?.raw_response?.password || s.config?.password;
+    if (inlinePass) {
+      return inlinePass;
+    }
+    try {
+      const creds = await api.get<{ username?: string; password?: string | null }>(
+        `/storefront/services/${encodeURIComponent(s.id)}/credentials`
+      );
+      if (creds?.password) {
+        setRevealedPasswords((prev) => ({ ...prev, [s.id]: creds.password as string }));
+        return creds.password;
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Failed to retrieve SFTP credentials');
+    }
+    return '';
+  };
+
+  const handleTogglePassword = async (s: SftpService) => {
+    const nextVisible = !showPass[s.id];
+    if (nextVisible) {
+      await resolveServicePassword(s);
+    }
+    setShowPass((prev) => ({ ...prev, [s.id]: nextVisible }));
+  };
+
+  const handleCopyPassword = async (s: SftpService) => {
+    const pw = await resolveServicePassword(s);
+    if (pw) {
+      copyText(pw, `pass-${s.id}`);
+    }
+  };
+
+  const handleCopyFthr = async (s: SftpService) => {
     const username = s.provider_resource_id || `vs_${s.id.substring(0, 8)}`;
-    const password =
-      s.config?.raw_response?.password || s.config?.password || 'Check welcome email';
+    const inlinePass =
+      revealedPasswords[s.id] || s.config?.raw_response?.password || s.config?.password;
+    const password = inlinePass || (await resolveServicePassword(s)) || 'Unavailable';
     const fthrPayload = {
       username,
       password,
@@ -183,7 +220,10 @@ export default function SftpStorage() {
           {services.map((s) => {
             const username = s.provider_resource_id || `vs_${s.id.substring(0, 8)}`;
             const password =
-              s.config?.raw_response?.password || s.config?.password || 'Check welcome email';
+              revealedPasswords[s.id] ||
+              s.config?.raw_response?.password ||
+              s.config?.password ||
+              'Encrypted — click reveal';
             const host = 'sftp.vaultscope.de';
             const port = 2022;
             const sftpCmd = `sftp -P ${port} ${username}@${host}`;
@@ -318,9 +358,7 @@ export default function SftpStorage() {
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowPass((prev) => ({ ...prev, [s.id]: !prev[s.id] }))
-                          }
+                          onClick={() => handleTogglePassword(s)}
                           aria-label={showPass[s.id] ? 'Hide SFTP password' : 'Show SFTP password'}
                           className="p-1 rounded-md text-[var(--fg-faint)] hover:text-[var(--fg)]"
                         >
@@ -332,7 +370,7 @@ export default function SftpStorage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => copyText(password, `pass-${s.id}`)}
+                          onClick={() => handleCopyPassword(s)}
                           aria-label="Copy SFTP password"
                           className="p-1 rounded-md text-[var(--fg-faint)] hover:text-[var(--fg)]"
                         >

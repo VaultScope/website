@@ -167,4 +167,63 @@ describe('SftpStorage - CONFIGURATIONS & FTHR Preset', () => {
       expect(screen.queryByText("Don't share this with anyone")).toBeNull();
     });
   });
+
+  it('fetches decrypted credentials from /storefront/services/:id/credentials when config omits plaintext password', async () => {
+    const encryptedServices = [
+      {
+        id: 'sftp-svc-enc',
+        name: 'SFTP Storage Encrypted',
+        status: 'running',
+        is_trial: false,
+        hostname: 'sftp.vaultscope.de',
+        provider_resource_id: 'vs_enc_user',
+        config: { storage_gb: 150 },
+      },
+    ];
+
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/storefront/services') return Promise.resolve(encryptedServices);
+      if (path === '/storefront/catalog') return Promise.resolve(mockCatalog);
+      if (path === '/storefront/services/sftp-svc-enc/credentials') {
+        return Promise.resolve({ username: 'vs_enc_user', password: 'decrypted-vault-password-999' });
+      }
+      return Promise.resolve([]);
+    });
+
+    const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText');
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('SFTP Storage Encrypted')).toBeDefined();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Show SFTP password'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('decrypted-vault-password-999')).toBeDefined();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('CONFIGURATIONS').closest('button')!);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText('FTHR'));
+    });
+
+    expect(writeTextSpy).toHaveBeenCalledWith(
+      JSON.stringify(
+        {
+          username: 'vs_enc_user',
+          password: 'decrypted-vault-password-999',
+          port: 2022,
+          domain: 'sftp.vaultscope.de',
+          providerName: 'VaultScope',
+        },
+        null,
+        2
+      )
+    );
+  });
 });

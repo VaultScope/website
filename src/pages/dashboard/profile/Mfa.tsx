@@ -15,6 +15,7 @@ export function ProfileMfa() {
   const [setupData, setSetupData] = useState<MfaSetupData | null>(null);
   const [code, setCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
+  const [disablePassword, setDisablePassword] = useState('');
   const [showDisablePrompt, setShowDisablePrompt] = useState(false);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [copiedRecovery, setCopiedRecovery] = useState(false);
@@ -73,13 +74,21 @@ export function ProfileMfa() {
       setError('Please enter your 6-digit authenticator code or recovery code');
       return;
     }
+    if (!disablePassword) {
+      setError('Please enter your current password to confirm disabling 2FA');
+      return;
+    }
     setError('');
     setSubmitting(true);
     try {
-      await api.post('/storefront/profile/mfa/disable', { code: disableCode.trim() });
+      await api.post('/storefront/profile/mfa/disable', {
+        code: disableCode.trim(),
+        password: disablePassword,
+      });
       setMfaEnabled(false);
       setShowDisablePrompt(false);
       setDisableCode('');
+      setDisablePassword('');
       setRecoveryCodes(null);
     } catch (e: any) {
       setError(e.message || 'Failed to disable 2FA');
@@ -170,16 +179,25 @@ export function ProfileMfa() {
             className="pt-5 border-t border-[var(--line)] space-y-4"
           >
             <p className="text-xs text-[var(--fg-muted)]">
-              Enter your current 6-digit TOTP code or a recovery code to disable 2FA:
+              Enter your current password and 6-digit TOTP code or recovery code to disable 2FA:
             </p>
-            <div className="flex flex-wrap items-center gap-2 max-w-md">
+            <div className="flex flex-wrap items-center gap-2 max-w-xl">
+              <input
+                type="password"
+                aria-label="Current password"
+                autoComplete="current-password"
+                value={disablePassword}
+                onChange={(e) => setDisablePassword(e.target.value)}
+                placeholder="Current password"
+                className="flex-1 min-w-[180px] h-8 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
+              />
               <input
                 type="text"
                 aria-label="Current 6-digit TOTP or recovery code"
                 value={disableCode}
                 onChange={(e) => setDisableCode(e.target.value)}
                 placeholder="000000 or XXXX-XXXX"
-                className="flex-1 h-8 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
+                className="flex-1 min-w-[160px] h-8 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 text-xs font-mono text-[var(--fg)] focus:outline-none focus:border-[var(--accent-bright)]"
               />
               <button
                 type="submit"
