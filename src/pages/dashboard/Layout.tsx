@@ -20,6 +20,12 @@ import {
 } from 'lucide-react';
 import { getInitialDark, applyDark } from '../../hooks/useTheme';
 import { getStoredUsername } from '../../lib/quickNav';
+import {
+  isAuthenticated,
+  logout,
+  sanitizeRedirectPath,
+  type AuthClaims,
+} from '../../lib/auth';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard', icon: LayoutDashboard, exact: true },
@@ -47,7 +53,15 @@ export function DashboardLayout() {
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('vs_token') : null;
   const rawClaims = typeof window !== 'undefined' ? localStorage.getItem('vs_claims') : null;
-  const claims = rawClaims ? JSON.parse(rawClaims) : null;
+  let claims: (AuthClaims & { name?: string; username?: string }) | null = null;
+  if (rawClaims) {
+    try {
+      claims = JSON.parse(rawClaims);
+    } catch {
+      claims = null;
+    }
+  }
+  const authenticated = Boolean(token) && isAuthenticated();
   const storedUsername = getStoredUsername() || claims?.username;
 
   useEffect(() => {
@@ -57,7 +71,7 @@ export function DashboardLayout() {
 
   // Eagerly warm dashboard route chunks once inside the dashboard so tab transitions (e.g. /dashboard/odp) never fail mid-navigation
   useEffect(() => {
-    if (!token) return;
+    if (!authenticated) return;
     const timer = window.setTimeout(() => {
       void import('./Overview').catch(() => {});
       void import('./VpsList').catch(() => {});
@@ -69,7 +83,7 @@ export function DashboardLayout() {
       void import('./NewService').catch(() => {});
     }, 150);
     return () => window.clearTimeout(timer);
-  }, [token]);
+  }, [authenticated]);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -90,14 +104,11 @@ export function DashboardLayout() {
   }, [userMenuOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem('vs_token');
-    localStorage.removeItem('vs_claims');
-    localStorage.removeItem('vs_username');
-    localStorage.removeItem('vs_preview_mode');
+    logout();
     navigate('/login');
   };
 
-  if (!token) {
+  if (!authenticated) {
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex items-center justify-center p-6">
         <div className="max-w-md w-full rounded-xl bg-[var(--bg-card)] border border-[var(--line)] p-8 sm:p-10 text-center space-y-6">
@@ -114,7 +125,7 @@ export function DashboardLayout() {
           </div>
           <div className="flex flex-col gap-2.5 pt-2">
             <Link
-              to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+              to={`/login?redirect=${encodeURIComponent(sanitizeRedirectPath(location.pathname + location.search, '/dashboard'))}`}
               className="vs-btn-primary w-full justify-center"
             >
               Sign In

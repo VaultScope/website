@@ -12,6 +12,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { api } from '../../../lib/api';
+import { logout } from '../../../lib/auth';
 import {
   ALL_QUICK_NAV_ITEMS,
   DEFAULT_QUICK_NAV_IDS,
@@ -185,9 +186,7 @@ export function ProfileAccount() {
     setDeleteError('');
     try {
       await api.delete('/storefront/profile', { password: deletePassword });
-      localStorage.removeItem('vs_token');
-      localStorage.removeItem('vs_claims');
-      localStorage.removeItem('vs_username');
+      logout();
       navigate('/login');
     } catch (e: any) {
       setDeleteError(e.message || 'Failed to delete account');
