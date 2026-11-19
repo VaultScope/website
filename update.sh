@@ -159,6 +159,39 @@ EOF
 
     echo
 
+    # Backup current version and PostgreSQL database before stopping containers
+    log_step "Creating Database & Code Backup"
+    BACKUP_DIR="$INSTALL_DIR/backups"
+    BACKUP_NAME="backup-$(date +%Y%m%d-%H%M%S)"
+    local install_parent install_base
+    install_parent="$(dirname "$INSTALL_DIR")"
+    install_base="$(basename "$INSTALL_DIR")"
+
+    (umask 077 && mkdir -p "$BACKUP_DIR")
+
+    cd "$INSTALL_DIR"
+    log "Backing up PostgreSQL database ($db_name) to $BACKUP_DIR/$BACKUP_NAME-db.sql.gz..."
+    if compose_cmd -f docker-compose.production.yml ps postgres 2>/dev/null | grep -q "Up"; then
+        (umask 077 && compose_cmd -f docker-compose.production.yml exec -T postgres \
+            pg_dump -U "$db_user" -d "$db_name" --clean --if-exists | gzip -9 > "$BACKUP_DIR/$BACKUP_NAME-db.sql.gz") || {
+            log_error "Database backup failed! Aborting update to protect database."
+            exit 1
+        }
+        chmod 600 "$BACKUP_DIR/$BACKUP_NAME-db.sql.gz" 2>/dev/null || true
+        log "Database backup created at $BACKUP_DIR/$BACKUP_NAME-db.sql.gz"
+    else
+        log_warn "Postgres container is not currently running; starting it to take pre-update backup..."
+        compose_cmd -f docker-compose.production.yml up -d postgres
+        sleep 5
+        (umask 077 && compose_cmd -f docker-compose.production.yml exec -T postgres \
+            pg_dump -U "$db_user" -d "$db_name" --clean --if-exists | gzip -9 > "$BACKUP_DIR/$BACKUP_NAME-db.sql.gz") || {
+            log_error "Database backup failed! Aborting update to protect database."
+            exit 1
+        }
+        chmod 600 "$BACKUP_DIR/$BACKUP_NAME-db.sql.gz" 2>/dev/null || true
+        log "Database backup created at $BACKUP_DIR/$BACKUP_NAME-db.sql.gz"
+    fi
+
     # Stop services
     log_step "Stopping Services"
     log "Stopping VaultScope services..."
@@ -168,17 +201,7 @@ EOF
     compose_cmd -f docker-compose.production.yml down 2>/dev/null || log_warn "Could not stop Docker services"
     log "Services stopped"
 
-    # Backup current version
-    log_step "Creating Backup"
-    BACKUP_DIR="$INSTALL_DIR/backups"
-    BACKUP_NAME="backup-$(date +%Y%m%d-%H%M%S)"
-    local install_parent install_base
-    install_parent="$(dirname "$INSTALL_DIR")"
-    install_base="$(basename "$INSTALL_DIR")"
-
-    (umask 077 && mkdir -p "$BACKUP_DIR")
-
-    log "Creating backup: $BACKUP_NAME"
+    log "Creating filesystem backup: $BACKUP_NAME"
     (umask 077 && tar -czf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" \
         --exclude="${install_base}/backups" \
         --exclude="*/node_modules" \
