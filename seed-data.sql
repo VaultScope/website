@@ -21,7 +21,7 @@ UPDATE staff SET email_verified = true WHERE email IN ('admin1@test.local', 'bil
 
 -- 3. Customers
 INSERT INTO customers (id, external_id, name, email, phone, company, address, city, country, vat_id, status, email_verified) VALUES
-    ('01a09b2e-0532-7403-86db-a10464205764', 'customer1_ext_id', 'Anton Schmidt', 'customer1@test.local', '+4915172210043', 'VaultScope - Customer', 'Gottlob-Spiess-Straße 2', 'Sachsenheim', 'Germany', '', 'active', true),
+    ('01a09b2e-0532-7403-86db-a10464205764', 'customer1_ext_id', 'Anton Schmidt', 'customer1@test.local', '+49301234567', 'VaultScope - Customer', 'Musterweg 10', 'Stuttgart', 'Germany', '', 'active', true),
     ('01a081be-0b06-7483-8ef8-964179d3fc5c', 'customer2_ext_id', 'Max Mustermann', 'max@example.com', '+49123456789', 'Mustermann Cloud GmbH', 'Musterstrasse 1', 'Berlin', 'Germany', 'DE123456789', 'active', true)
 ON CONFLICT (email) DO UPDATE SET status = 'active', email_verified = true;
 

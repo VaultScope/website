@@ -10,7 +10,7 @@
  *   node scripts/setup-db.js [--seed] [--reset]
  */
 
-const { execSync, spawnSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -46,7 +46,7 @@ function executePsql(sql, dbName = 'postgres') {
     } else if (res.stderr && !res.stderr.includes('already exists')) {
       return { success: false, error: res.stderr };
     }
-  } catch (err) {
+  } catch {
     // Docker not available or container not running
   }
 
@@ -63,7 +63,7 @@ function executePsql(sql, dbName = 'postgres') {
     } else {
       return { success: false, error: res.stderr };
     }
-  } catch (err) {
+  } catch {
     return { success: false, error: 'Neither docker exec nor psql command is available.' };
   }
 }
@@ -71,24 +71,31 @@ function executePsql(sql, dbName = 'postgres') {
 function runSetup() {
   log.info('Running VaultScope Database Setup...');
 
-  // 1. Ensure vaultscope user and database exist
+  // 1. Ensure least-privilege vaultscope user (no SUPERUSER) and database exist
+  const dbPassword = process.env.VAULTSCOPE_DB_PASSWORD || 'vaultscope_dev';
+  if (!process.env.VAULTSCOPE_DB_PASSWORD) {
+    log.warn('Using default local dev DB password for role "vaultscope" (set VAULTSCOPE_DB_PASSWORD to override).');
+  }
+  const escapedDbPassword = dbPassword.replace(/'/g, "''");
+
   log.info('Ensuring role "vaultscope" and database "vaultscope" exist...');
   executePsql(`
     DO $$
     BEGIN
       IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'vaultscope') THEN
-        CREATE ROLE vaultscope LOGIN PASSWORD 'vaultscope_dev' SUPERUSER;
+        CREATE ROLE vaultscope LOGIN PASSWORD '${escapedDbPassword}';
       END IF;
     END
     $$;
   `, 'postgres');
-  const createDbRes = executePsql('CREATE DATABASE vaultscope;', 'postgres');
+  const createDbRes = executePsql('CREATE DATABASE vaultscope OWNER vaultscope;', 'postgres');
   if (createDbRes.success) {
     log.success('Created database "vaultscope".');
   } else {
     log.info('Database "vaultscope" already exists or created.');
   }
-  executePsql('GRANT ALL PRIVILEGES ON DATABASE vaultscope TO vaultscope;', 'postgres');
+  executePsql('ALTER DATABASE vaultscope OWNER TO vaultscope; GRANT ALL PRIVILEGES ON DATABASE vaultscope TO vaultscope;', 'postgres');
+  executePsql('ALTER SCHEMA public OWNER TO vaultscope;', 'vaultscope');
 
   // 2. Ensure migration tracking table exists
   const createTableSql = `
