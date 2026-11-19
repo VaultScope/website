@@ -20,6 +20,8 @@ function renderRegister() {
 describe('Register page', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    sessionStorage.clear();
+    window.history.replaceState({}, '', '/register');
   });
 
   it('renders account credentials, billing address with autofill attributes, company, and EU VAT ID fields', () => {
@@ -135,5 +137,21 @@ describe('Register page', () => {
         vat_id: 'DE123456789',
       });
     });
+  });
+
+  it('does not persist unsafe redirect parameters into sessionStorage', () => {
+    window.history.replaceState({}, '', '/register?redirect=https://evil.com/phish');
+    renderRegister();
+    expect(sessionStorage.getItem('vs_redirect')).toBeNull();
+
+    window.history.replaceState({}, '', '/register?redirect=//evil.com');
+    renderRegister();
+    expect(sessionStorage.getItem('vs_redirect')).toBeNull();
+  });
+
+  it('persists valid same-origin relative redirect parameter into sessionStorage', () => {
+    window.history.replaceState({}, '', '/register?redirect=%2Fdashboard%2Fvps');
+    renderRegister();
+    expect(sessionStorage.getItem('vs_redirect')).toBe('/dashboard/vps');
   });
 });

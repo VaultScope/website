@@ -14,6 +14,7 @@ import { Button, CustomSelect } from '../components/Shared';
 import { useLanguage } from '../i18n';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { setStoredUsername } from '../lib/quickNav';
+import { sanitizeRedirectPath } from '../lib/auth';
 
 const API_BASE =
   typeof window !== 'undefined' &&
@@ -87,7 +88,12 @@ export function Register() {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect');
     if (redirect) {
-      sessionStorage.setItem('vs_redirect', redirect);
+      const safeRedirect = sanitizeRedirectPath(redirect, '');
+      if (safeRedirect) {
+        sessionStorage.setItem('vs_redirect', safeRedirect);
+      } else {
+        sessionStorage.removeItem('vs_redirect');
+      }
     }
   }, []);
 

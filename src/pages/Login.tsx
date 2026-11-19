@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/Shared';
 import { useLanguage } from '../i18n';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { setStoredUsername } from '../lib/quickNav';
+import { sanitizeRedirectPath } from '../lib/auth';
 
 const API_BASE =
   typeof window !== 'undefined' &&
@@ -13,10 +14,12 @@ const API_BASE =
     : import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export function Login() {
+  const navigate = useNavigate();
   const { locale, localePath } = useLanguage();
   const isDe = locale === 'de';
   const [searchParams] = useSearchParams();
-  const redirectParam = searchParams.get('redirect') || sessionStorage.getItem('vs_redirect') || '';
+  const rawRedirectParam = searchParams.get('redirect') || sessionStorage.getItem('vs_redirect') || '';
+  const redirectParam = rawRedirectParam ? sanitizeRedirectPath(rawRedirectParam, '') : '';
 
   useDocumentMeta({
     title: isDe ? 'Anmelden — VaultScope' : 'Sign In — VaultScope',
@@ -114,7 +117,11 @@ export function Login() {
       } else {
         try {
           const tokenParts = token.split('.');
-          const decoded = JSON.parse(atob(tokenParts[1]));
+          const base64Url = tokenParts[1] || '';
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+          const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+          const decoded = JSON.parse(new TextDecoder().decode(bytes));
           localStorage.setItem(
             'vs_claims',
             JSON.stringify({ ...decoded, username: decoded.username || resolvedUsername }),
@@ -126,14 +133,15 @@ export function Login() {
 
       const activeRedirect =
         searchParams.get('redirect') || sessionStorage.getItem('vs_redirect');
-      if (activeRedirect) {
-        sessionStorage.removeItem('vs_redirect');
-        window.location.href = activeRedirect;
-      } else if (email_verified === false) {
-        window.location.href = localePath('/dashboard/profile');
-      } else {
-        window.location.href = localePath('/dashboard');
-      }
+      sessionStorage.removeItem('vs_redirect');
+      const defaultTarget =
+        email_verified === false
+          ? localePath('/dashboard/profile')
+          : localePath('/dashboard');
+      const safeTarget = activeRedirect
+        ? sanitizeRedirectPath(activeRedirect, defaultTarget)
+        : defaultTarget;
+      navigate(safeTarget, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     } finally {
