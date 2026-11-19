@@ -12,16 +12,18 @@
 # - Nginx (reverse proxy)
 # - Let's Encrypt SSL
 #
-# Usage:
-#   curl -fsSL https://raw.githubusercontent.com/VaultScope/website/dev/installer.sh | bash
-#
-# Or download and run:
-#   wget https://raw.githubusercontent.com/VaultScope/website/dev/installer.sh
+# Usage (recommended: pin a release tag/ref and verify checksum before running):
+#   VAULTSCOPE_REF="v1.0.0" # or main
+#   curl -fsSL "https://raw.githubusercontent.com/VaultScope/website/${VAULTSCOPE_REF}/installer.sh" -o installer.sh
+#   curl -fsSL "https://raw.githubusercontent.com/VaultScope/website/${VAULTSCOPE_REF}/installer.sh.sha256" -o installer.sh.sha256
+#   sha256sum -c installer.sh.sha256
+#   less installer.sh
 #   chmod +x installer.sh
 #   sudo ./installer.sh
 #############################################################################
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
+umask 077
 
 # Colors for output
 RED='\033[0;31m'
@@ -38,8 +40,16 @@ CONFIG_DIR="/etc/vaultscope"
 LOG_FILE="/var/log/vaultscope-install.log"
 BACKUP_DIR="/opt/vaultscope-backup-$(date +%Y%m%d-%H%M%S)"
 
-# Version to install
-BRANCH="${VAULTSCOPE_BRANCH:-dev}"
+# Version to install (prefer tagged release or 'main' for production)
+BRANCH="${VAULTSCOPE_BRANCH:-main}"
+
+compose_cmd() {
+    if docker compose version &> /dev/null; then
+        docker compose "$@"
+    else
+        docker-compose "$@"
+    fi
+}
 
 # Git clone timeout
 GIT_CLONE_TIMEOUT=300
@@ -63,7 +73,7 @@ cleanup_on_failure() {
         if [ "$DOCKER_STARTED" = true ] && [ -f "$INSTALL_DIR/docker-compose.production.yml" ]; then
             log_warn "Stopping Docker containers..."
             cd "$INSTALL_DIR" || true
-            docker-compose -f docker-compose.production.yml down 2>/dev/null || true
+            compose_cmd -f docker-compose.production.yml down 2>/dev/null || true
         fi
 
         # Remove Nginx configs
@@ -197,8 +207,12 @@ generate_password() {
 validate_domain() {
     local domain=$1
 
-    # Basic domain validation regex
-    if [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
+    if [ ${#domain} -gt 253 ] || [[ "$domain" == *..* ]]; then
+        log_error "Invalid domain format: $domain"
+        return 1
+    fi
+
+    if [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$ ]]; then
         return 0
     else
         log_error "Invalid domain format: $domain"
@@ -221,10 +235,10 @@ validate_email() {
 validate_branch() {
     local branch=$1
 
-    if [[ "$branch" == "dev" ]] || [[ "$branch" == "main" ]]; then
+    if [[ "$branch" == "dev" ]] || [[ "$branch" == "main" ]] || [[ "$branch" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9._-]+)?$ ]]; then
         return 0
     else
-        log_error "Invalid branch: $branch (must be 'dev' or 'main')"
+        log_error "Invalid branch/tag: $branch (must be 'main', 'dev', or a release tag like 'v1.0.0')"
         return 1
     fi
 }
@@ -232,11 +246,34 @@ validate_branch() {
 validate_url() {
     local url=$1
 
-    # Basic URL validation
-    if [[ $url =~ ^https?://[a-zA-Z0-9.-]+(/.*)?$ ]]; then
+    # Strict URL validation (no whitespace, quotes, or shell metacharacters)
+    if [[ $url =~ ^https?://[a-zA-Z0-9.-]+(:[0-9]{1,5})?(/[a-zA-Z0-9._~:/?#\[\]@!\$\&\'\(\)*+,;=%-]*)?$ ]]; then
         return 0
     else
         log_error "Invalid URL format: $url"
+        return 1
+    fi
+}
+
+validate_db_identifier() {
+    local ident=$1
+    local label=${2:-identifier}
+
+    if [[ $ident =~ ^[a-zA-Z_][a-zA-Z0-9_]{0,62}$ ]]; then
+        return 0
+    else
+        log_error "Invalid ${label}: $ident (only letters, digits, underscores allowed; max 63 chars)"
+        return 1
+    fi
+}
+
+validate_oidc_client_id() {
+    local client_id=$1
+
+    if [[ $client_id =~ ^[a-zA-Z0-9._-]{1,128}$ ]]; then
+        return 0
+    else
+        log_error "Invalid OIDC client ID: $client_id"
         return 1
     fi
 }
@@ -331,12 +368,12 @@ install_docker() {
             echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
             apt-get update
-            apt-get install -y docker-ce docker-ce-cli containerd.io
+            apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             ;;
         yum)
             yum install -y yum-utils
             yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-            yum install -y docker-ce docker-ce-cli containerd.io
+            yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             ;;
     esac
 
@@ -349,32 +386,66 @@ install_docker() {
 install_docker_compose() {
     log_step "Installing Docker Compose"
 
+    if docker compose version &> /dev/null; then
+        log "Docker Compose plugin already installed: $(docker compose version)"
+        return 0
+    fi
+
     if command -v docker-compose &> /dev/null; then
         log "Docker Compose already installed: $(docker-compose --version)"
         return 0
     fi
 
-    log "Installing Docker Compose..."
+    log "Installing Docker Compose plugin via package manager..."
+    if case $PACKAGE_MANAGER in
+        apt-get) apt-get update && apt-get install -y docker-compose-plugin ;;
+        yum)     yum install -y docker-compose-plugin ;;
+    esac; then
+        if docker compose version &> /dev/null; then
+            log "Docker Compose plugin installed: $(docker compose version)"
+            return 0
+        fi
+    fi
 
+    log_warn "Falling back to standalone Docker Compose binary with SHA256 verification..."
     local compose_version
-    if ! compose_version=$(curl -fsSL --max-time 30 https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d'"' -f4); then
+    if ! compose_version=$(curl -fsSL --max-time 30 https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name"' | head -n1 | cut -d'"' -f4); then
         log_error "Failed to fetch Docker Compose version from GitHub API"
         exit 1
     fi
 
-    if [ -z "$compose_version" ]; then
-        log_error "Could not determine Docker Compose version"
+    if [[ ! "$compose_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        log_error "Unexpected Docker Compose version format: ${compose_version}"
         exit 1
     fi
 
-    if ! curl -fsSL --max-time 300 "https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose; then
+    local asset_name="docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+    local download_url="https://github.com/docker/compose/releases/download/${compose_version}/${asset_name}"
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+
+    if ! curl -fsSL --max-time 300 "${download_url}" -o "${tmp_dir}/${asset_name}"; then
+        rm -rf "${tmp_dir}"
         log_error "Failed to download Docker Compose"
         exit 1
     fi
 
-    chmod +x /usr/local/bin/docker-compose
+    if ! curl -fsSL --max-time 60 "${download_url}.sha256" -o "${tmp_dir}/${asset_name}.sha256"; then
+        rm -rf "${tmp_dir}"
+        log_error "Failed to download Docker Compose SHA256 checksum"
+        exit 1
+    fi
 
-    log "Docker Compose installed: $(docker-compose --version)"
+    if ! (cd "${tmp_dir}" && sha256sum -c "${asset_name}.sha256"); then
+        rm -rf "${tmp_dir}"
+        log_error "Docker Compose SHA256 verification failed!"
+        exit 1
+    fi
+
+    install -m 0755 "${tmp_dir}/${asset_name}" /usr/local/bin/docker-compose
+    rm -rf "${tmp_dir}"
+
+    log "Docker Compose installed and SHA256 verified: $(docker-compose --version)"
 }
 
 install_nginx() {
@@ -456,25 +527,29 @@ collect_configuration() {
     echo
 
     # Release Branch Selection (Unified across all repositories)
-    if [ -z "$VAULTSCOPE_BRANCH" ]; then
+    if [ -z "${VAULTSCOPE_BRANCH:-}" ]; then
         echo -e "${BOLD}Release Branch Selection (Unified across all repositories):${NC}"
-        echo -e "  ${GREEN}1) dev${NC}  - Latest active development (Recommended; required for upcoming updates)"
-        echo -e "  ${BLUE}2) main${NC} - Production stable releases"
+        echo -e "  ${BLUE}1) main${NC} - Production stable releases (Recommended for production)"
+        echo -e "  ${GREEN}2) dev${NC}  - Latest active development (unreleased features)"
         echo -e "${NC}  Note: Branch selection is unified across Storefront, API, and Admin to ensure inter-service compatibility.${NC}"
-        read -r -p "$(echo -e "${CYAN}Choose branch [1=dev / 2=main] (default: dev): ${NC}")" branch_sel
+        read -r -p "$(echo -e "${CYAN}Choose branch [1=main / 2=dev] (default: main): ${NC}")" branch_sel
         case "$branch_sel" in
-            2|main) BRANCH="main" ;;
-            *)      BRANCH="dev" ;;
+            2|dev) BRANCH="dev" ;;
+            *)     BRANCH="main" ;;
         esac
-
-        if ! validate_branch "$BRANCH"; then
-            log_error "Invalid branch selection"
-            exit 1
-        fi
-
-        log_info "Selected release branch: ${BRANCH}"
-        echo
     fi
+
+    if ! validate_branch "$BRANCH"; then
+        log_error "Invalid branch selection: ${BRANCH}"
+        exit 1
+    fi
+
+    if [ "$BRANCH" = "dev" ]; then
+        log_warn "Installing from 'dev' branch. For production systems, prefer 'main' or a pinned release tag."
+    fi
+
+    log_info "Selected release branch: ${BRANCH}"
+    echo
 
     # Domain Configuration
     echo -e "${BOLD}Domain Configuration:${NC}"
@@ -524,16 +599,28 @@ collect_configuration() {
     # Database Configuration
     echo
     echo -e "${BOLD}Database Configuration:${NC}"
-    prompt DB_NAME "Database name" "vaultscope"
-    prompt DB_USER "Database user" "vaultscope"
+    while true; do
+        prompt DB_NAME "Database name" "vaultscope"
+        if validate_db_identifier "$DB_NAME" "database name"; then
+            break
+        fi
+        log_warn "Please enter a valid PostgreSQL database name"
+    done
+    while true; do
+        prompt DB_USER "Database user" "vaultscope"
+        if validate_db_identifier "$DB_USER" "database user"; then
+            break
+        fi
+        log_warn "Please enter a valid PostgreSQL role name"
+    done
     DB_PASSWORD=$(generate_password)
     log_info "Generated database password (not shown for security)"
 
     # JWT and Encryption
     echo
     echo -e "${BOLD}Security Configuration:${NC}"
-    JWT_SECRET=$(openssl rand -base64 64)
-    ENCRYPTION_KEY=$(openssl rand -base64 32)
+    JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
+    ENCRYPTION_KEY=$(openssl rand -hex 32)
     log_info "Generated JWT secret and encryption key (not shown for security)"
 
     # Authentik Configuration
@@ -548,7 +635,13 @@ collect_configuration() {
         log_warn "Please enter a valid URL"
     done
 
-    prompt AUTHENTIK_CLIENT_ID_ADMIN "Admin OIDC client ID" "vaultscope-admin"
+    while true; do
+        prompt AUTHENTIK_CLIENT_ID_ADMIN "Admin OIDC client ID" "vaultscope-admin"
+        if validate_oidc_client_id "$AUTHENTIK_CLIENT_ID_ADMIN"; then
+            break
+        fi
+        log_warn "Please enter a valid OIDC client ID"
+    done
     prompt_password AUTHENTIK_CLIENT_SECRET_ADMIN "Admin OIDC client secret"
 
     if [ -z "$AUTHENTIK_CLIENT_SECRET_ADMIN" ]; then
@@ -556,7 +649,13 @@ collect_configuration() {
         exit 1
     fi
 
-    prompt AUTHENTIK_CLIENT_ID_STOREFRONT "Storefront OIDC client ID" "vaultscope-storefront"
+    while true; do
+        prompt AUTHENTIK_CLIENT_ID_STOREFRONT "Storefront OIDC client ID" "vaultscope-storefront"
+        if validate_oidc_client_id "$AUTHENTIK_CLIENT_ID_STOREFRONT"; then
+            break
+        fi
+        log_warn "Please enter a valid OIDC client ID"
+    done
     prompt_password AUTHENTIK_CLIENT_SECRET_STOREFRONT "Storefront OIDC client secret"
 
     if [ -z "$AUTHENTIK_CLIENT_SECRET_STOREFRONT" ]; then
@@ -639,7 +738,7 @@ clone_repositories() {
     # Clone storefront
     if [ ! -d "website" ]; then
         log "Cloning VaultScope Website..."
-        if ! timeout "$GIT_CLONE_TIMEOUT" git clone -b "$BRANCH" https://github.com/VaultScope/website.git; then
+        if ! timeout "$GIT_CLONE_TIMEOUT" git clone -b "$BRANCH" -- https://github.com/VaultScope/website.git; then
             log_error "Failed to clone website repository (timeout or error after ${GIT_CLONE_TIMEOUT}s)"
             exit 1
         fi
@@ -662,7 +761,7 @@ clone_repositories() {
     # Clone API
     if [ ! -d "vamos" ]; then
         log "Cloning VaultScope API (VAMOS)..."
-        if ! timeout "$GIT_CLONE_TIMEOUT" git clone -b "$BRANCH" https://github.com/VaultScope/vamos.git; then
+        if ! timeout "$GIT_CLONE_TIMEOUT" git clone -b "$BRANCH" -- https://github.com/VaultScope/vamos.git; then
             log_error "Failed to clone vamos repository (timeout or error after ${GIT_CLONE_TIMEOUT}s)"
             exit 1
         fi
@@ -685,7 +784,7 @@ clone_repositories() {
     # Clone Admin
     if [ ! -d "camos" ]; then
         log "Cloning VaultScope Admin (CAMOS)..."
-        if ! timeout "$GIT_CLONE_TIMEOUT" git clone -b "$BRANCH" https://github.com/VaultScope/camos.git; then
+        if ! timeout "$GIT_CLONE_TIMEOUT" git clone -b "$BRANCH" -- https://github.com/VaultScope/camos.git; then
             log_error "Failed to clone camos repository (timeout or error after ${GIT_CLONE_TIMEOUT}s)"
             exit 1
         fi
@@ -779,6 +878,21 @@ VITE_OIDC_CLIENT_ID=${AUTHENTIK_CLIENT_ID_ADMIN}
 VITE_OIDC_REDIRECT_URI=https://${DOMAIN_ADMIN}/auth/callback
 EOF
 
+    # Root Compose Environment
+    log "Creating Compose environment file..."
+    (umask 077 && cat > "$INSTALL_DIR/.env") <<EOF
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+REDIS_PASSWORD=${REDIS_PASSWORD}
+DOMAIN_STOREFRONT=${DOMAIN_STOREFRONT}
+DOMAIN_API=${DOMAIN_API}
+DOMAIN_ADMIN=${DOMAIN_ADMIN}
+AUTHENTIK_ISSUER=${AUTHENTIK_ISSUER}
+AUTHENTIK_CLIENT_ID_STOREFRONT=${AUTHENTIK_CLIENT_ID_STOREFRONT}
+AUTHENTIK_CLIENT_ID_ADMIN=${AUTHENTIK_CLIENT_ID_ADMIN}
+EOF
+
     log "Environment files created successfully"
 }
 
@@ -789,25 +903,23 @@ EOF
 create_docker_compose() {
     log_step "Creating Docker Compose Configuration"
 
-    cat > "$INSTALL_DIR/docker-compose.production.yml" <<EOF
-version: '3.8'
-
+    (umask 077 && cat > "$INSTALL_DIR/docker-compose.production.yml") <<EOF
 services:
   postgres:
     image: postgres:16-alpine
     container_name: vaultscope-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: \${DB_NAME}
+      POSTGRES_USER: \${DB_USER}
+      POSTGRES_PASSWORD: \${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./vamos/crates/db/migrations:/docker-entrypoint-initdb.d
     networks:
       - vaultscope-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U \${DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -824,13 +936,16 @@ services:
     image: redis:7-alpine
     container_name: vaultscope-redis
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    environment:
+      REDIS_PASSWORD: \${REDIS_PASSWORD}
+      REDISCLI_AUTH: \${REDIS_PASSWORD}
+    command: ["sh", "-c", "umask 077 && printf 'requirepass %s\\n' \"\$REDIS_PASSWORD\" > /tmp/redis.conf && exec redis-server /tmp/redis.conf"]
     volumes:
       - redis_data:/data
     networks:
       - vaultscope-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -850,7 +965,7 @@ services:
     container_name: vaultscope-api
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     env_file:
       - ./vamos/.env
     depends_on:
@@ -860,6 +975,10 @@ services:
         condition: service_healthy
     networks:
       - vaultscope-network
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
@@ -880,16 +999,20 @@ services:
       context: ./website
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://${DOMAIN_API}/api
-        - VITE_AUTHENTIK_URL=${AUTHENTIK_ISSUER}
-        - VITE_OIDC_CLIENT_ID=${AUTHENTIK_CLIENT_ID_STOREFRONT}
-        - VITE_OIDC_REDIRECT_URI=https://${DOMAIN_STOREFRONT}/auth/callback
+        - VITE_API_URL=https://\${DOMAIN_API}/api
+        - VITE_AUTHENTIK_URL=\${AUTHENTIK_ISSUER}
+        - VITE_OIDC_CLIENT_ID=\${AUTHENTIK_CLIENT_ID_STOREFRONT}
+        - VITE_OIDC_REDIRECT_URI=https://\${DOMAIN_STOREFRONT}/auth/callback
     container_name: vaultscope-storefront
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:3000"
     networks:
       - vaultscope-network
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     deploy:
       resources:
         limits:
@@ -904,16 +1027,20 @@ services:
       context: ./camos
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://${DOMAIN_API}/api
-        - VITE_AUTHENTIK_URL=${AUTHENTIK_ISSUER}
-        - VITE_OIDC_CLIENT_ID=${AUTHENTIK_CLIENT_ID_ADMIN}
-        - VITE_OIDC_REDIRECT_URI=https://${DOMAIN_ADMIN}/auth/callback
+        - VITE_API_URL=https://\${DOMAIN_API}/api
+        - VITE_AUTHENTIK_URL=\${AUTHENTIK_ISSUER}
+        - VITE_OIDC_CLIENT_ID=\${AUTHENTIK_CLIENT_ID_ADMIN}
+        - VITE_OIDC_REDIRECT_URI=https://\${DOMAIN_ADMIN}/auth/callback
     container_name: vaultscope-admin
     restart: unless-stopped
     ports:
-      - "8081:80"
+      - "127.0.0.1:8081:80"
     networks:
       - vaultscope-network
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     deploy:
       resources:
         limits:
@@ -942,6 +1069,9 @@ EOF
 configure_nginx_http_only() {
     log_step "Configuring Nginx (HTTP-only for Let's Encrypt)"
 
+    mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+    chmod 755 /etc/nginx/sites-available /etc/nginx/sites-enabled
+
     # Storefront configuration (HTTP only)
     log "Creating HTTP-only Nginx configuration for storefront..."
     cat > "/etc/nginx/sites-available/${DOMAIN_STOREFRONT}" <<EOF
@@ -954,7 +1084,7 @@ server {
     }
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -966,6 +1096,7 @@ server {
     }
 }
 EOF
+    chmod 644 "/etc/nginx/sites-available/${DOMAIN_STOREFRONT}"
     NGINX_CONFIGS_CREATED+=("/etc/nginx/sites-available/${DOMAIN_STOREFRONT}")
 
     # API configuration (HTTP only)
@@ -980,7 +1111,7 @@ server {
     }
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -994,6 +1125,7 @@ server {
     }
 }
 EOF
+    chmod 644 "/etc/nginx/sites-available/${DOMAIN_API}"
     NGINX_CONFIGS_CREATED+=("/etc/nginx/sites-available/${DOMAIN_API}")
 
     # Admin configuration (HTTP only)
@@ -1008,7 +1140,7 @@ server {
     }
 
     location / {
-        proxy_pass http://localhost:8081;
+        proxy_pass http://127.0.0.1:8081;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1020,10 +1152,10 @@ server {
     }
 }
 EOF
+    chmod 644 "/etc/nginx/sites-available/${DOMAIN_ADMIN}"
     NGINX_CONFIGS_CREATED+=("/etc/nginx/sites-available/${DOMAIN_ADMIN}")
 
     # Enable sites
-    mkdir -p /etc/nginx/sites-enabled
     ln -sf "/etc/nginx/sites-available/${DOMAIN_STOREFRONT}" /etc/nginx/sites-enabled/
     ln -sf "/etc/nginx/sites-available/${DOMAIN_API}" /etc/nginx/sites-enabled/
     ln -sf "/etc/nginx/sites-available/${DOMAIN_ADMIN}" /etc/nginx/sites-enabled/
@@ -1042,6 +1174,21 @@ configure_nginx_https() {
 
     # Strong SSL cipher suite (modern browsers, TLS 1.2+)
     local SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"
+
+    # Shared security headers snippet (included in server and any location that defines add_header
+    # so child location add_header directives never silently wipe parent security headers)
+    mkdir -p /etc/nginx/snippets
+    chmod 755 /etc/nginx/snippets
+    cat > /etc/nginx/snippets/vaultscope-security-headers.conf <<EOF
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+EOF
+    chmod 644 /etc/nginx/snippets/vaultscope-security-headers.conf
+
+    local SPA_CSP="default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://${DOMAIN_API} wss://${DOMAIN_API} https://api.stripe.com https://nominatim.openstreetmap.org https://photon.komoot.io; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
 
     # Storefront configuration (HTTPS)
     log "Creating HTTPS Nginx configuration for storefront..."
@@ -1072,15 +1219,11 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    include /etc/nginx/snippets/vaultscope-security-headers.conf;
+    add_header Content-Security-Policy "${SPA_CSP}" always;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1092,8 +1235,12 @@ server {
     }
 }
 EOF
+    chmod 644 "/etc/nginx/sites-available/${DOMAIN_STOREFRONT}"
 
     # API configuration (HTTPS)
+    # Note: CORS is enforced dynamically by vaultscope-api (CORS_ORIGINS); do not emit a
+    # comma-separated Access-Control-Allow-Origin or add_header inside location / which would
+    # wipe out parent server security headers.
     log "Creating HTTPS Nginx configuration for API..."
     cat > "/etc/nginx/sites-available/${DOMAIN_API}" <<EOF
 server {
@@ -1122,31 +1269,16 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
+    include /etc/nginx/snippets/vaultscope-security-headers.conf;
+    add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'" always;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-
-        # Complete CORS headers (handled by API, but backup here)
-        add_header 'Access-Control-Allow-Origin' 'https://${DOMAIN_STOREFRONT},https://${DOMAIN_ADMIN}' always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type, Accept, Origin' always;
-        add_header 'Access-Control-Allow-Credentials' 'true' always;
-        add_header 'Access-Control-Max-Age' '3600' always;
-
-        # Handle preflight requests
-        if (\$request_method = 'OPTIONS') {
-            return 204;
-        }
 
         # Increase timeout for long-running requests
         proxy_connect_timeout 60s;
@@ -1155,6 +1287,7 @@ server {
     }
 }
 EOF
+    chmod 644 "/etc/nginx/sites-available/${DOMAIN_API}"
 
     # Admin configuration (HTTPS)
     log "Creating HTTPS Nginx configuration for admin..."
@@ -1185,15 +1318,11 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    include /etc/nginx/snippets/vaultscope-security-headers.conf;
+    add_header Content-Security-Policy "${SPA_CSP}" always;
 
     location / {
-        proxy_pass http://localhost:8081;
+        proxy_pass http://127.0.0.1:8081;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1205,6 +1334,7 @@ server {
     }
 }
 EOF
+    chmod 644 "/etc/nginx/sites-available/${DOMAIN_ADMIN}"
 
     # Test configuration
     if nginx -t; then
@@ -1223,6 +1353,7 @@ setup_ssl() {
     log_step "Setting up SSL Certificates"
 
     mkdir -p /var/www/certbot
+    chmod 755 /var/www/certbot
 
     # Reload nginx for HTTP challenge
     systemctl reload nginx
@@ -1273,13 +1404,13 @@ setup_database() {
     fi
 
     # Start postgres and redis first
-    docker-compose -f docker-compose.production.yml up -d postgres redis
+    compose_cmd -f docker-compose.production.yml up -d postgres redis
     DOCKER_STARTED=true
 
     log "Waiting for PostgreSQL to be ready..."
     local max_wait=60
     local waited=0
-    until docker-compose -f docker-compose.production.yml exec -T postgres pg_isready -U "${DB_USER}" > /dev/null 2>&1; do
+    until compose_cmd -f docker-compose.production.yml exec -T postgres pg_isready -U "${DB_USER}" > /dev/null 2>&1; do
         if [ $waited -ge $max_wait ]; then
             log_error "PostgreSQL failed to become ready within ${max_wait} seconds"
             exit 1
@@ -1293,7 +1424,7 @@ setup_database() {
 
     # Verify database connection
     log "Verifying database connection..."
-    if docker-compose -f docker-compose.production.yml exec -T postgres psql -U "${DB_USER}" -d "${DB_NAME}" -c "SELECT version();" > /dev/null 2>&1; then
+    if compose_cmd -f docker-compose.production.yml exec -T postgres psql -U "${DB_USER}" -d "${DB_NAME}" -c "SELECT version();" > /dev/null 2>&1; then
         log "✓ Database connection verified"
     else
         log_error "Failed to connect to database"
@@ -1316,7 +1447,7 @@ deploy_application() {
     fi
 
     log "Building and starting all services..."
-    docker-compose -f docker-compose.production.yml up -d --build
+    compose_cmd -f docker-compose.production.yml up -d --build
 
     log "Waiting for services to be healthy..."
     local max_wait=180
@@ -1324,7 +1455,7 @@ deploy_application() {
     local all_healthy=false
 
     while [ $waited -lt $max_wait ]; do
-        if docker-compose -f docker-compose.production.yml ps | grep -E "(unhealthy|restarting)" > /dev/null 2>&1; then
+        if compose_cmd -f docker-compose.production.yml ps | grep -E "(unhealthy|restarting)" > /dev/null 2>&1; then
             log_info "Some services are still starting... (${waited}s/${max_wait}s)"
             sleep 10
             waited=$((waited + 10))
@@ -1336,15 +1467,15 @@ deploy_application() {
 
     if [ "$all_healthy" = false ]; then
         log_error "Services failed to become healthy within ${max_wait} seconds"
-        log_error "Check logs with: docker-compose -f $INSTALL_DIR/docker-compose.production.yml logs"
+        log_error "Check logs with: docker compose -f $INSTALL_DIR/docker-compose.production.yml logs"
         exit 1
     fi
 
     # Check health
-    if docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
+    if compose_cmd -f docker-compose.production.yml ps | grep -q "Up"; then
         log "Application deployed successfully!"
     else
-        log_error "Some services failed to start. Check logs with: docker-compose -f docker-compose.production.yml logs"
+        log_error "Some services failed to start. Check logs with: docker compose -f docker-compose.production.yml logs"
         exit 1
     fi
 }
@@ -1356,7 +1487,12 @@ deploy_application() {
 create_systemd_service() {
     log_step "Creating Systemd Service"
 
-    (umask 077 && cat > /etc/systemd/system/vaultscope.service) <<EOF
+    local compose_exec="/usr/bin/docker compose"
+    if ! docker compose version &> /dev/null && command -v docker-compose &> /dev/null; then
+        compose_exec="$(command -v docker-compose)"
+    fi
+
+    cat > /etc/systemd/system/vaultscope.service <<EOF
 [Unit]
 Description=VaultScope Full Stack
 Requires=docker.service
@@ -1366,13 +1502,14 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=${INSTALL_DIR}
-ExecStart=/usr/local/bin/docker-compose -f docker-compose.production.yml up -d
-ExecStop=/usr/local/bin/docker-compose -f docker-compose.production.yml down
+ExecStart=${compose_exec} -f docker-compose.production.yml up -d
+ExecStop=${compose_exec} -f docker-compose.production.yml down
 TimeoutStartSec=0
 
 [Install]
 WantedBy=multi-user.target
 EOF
+    chmod 644 /etc/systemd/system/vaultscope.service
 
     systemctl daemon-reload
     systemctl enable vaultscope.service
