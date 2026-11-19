@@ -9,7 +9,8 @@
 #   sudo ./uninstall.sh
 #############################################################################
 
-set -e
+set -eu
+umask 077
 
 # Colors
 RED='\033[0;31m'
@@ -45,6 +46,20 @@ check_root() {
         log_error "This script must be run as root. Please use sudo."
         exit 1
     fi
+}
+
+compose_cmd() {
+    if docker compose version &> /dev/null; then
+        docker compose "$@"
+    else
+        docker-compose "$@"
+    fi
+}
+
+read_config_value() {
+    local key=$1
+    local file=$2
+    grep -E "^${key}=" "$file" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d '\r"'
 }
 
 #############################################################################
@@ -95,9 +110,9 @@ EOF
     log_step "Stopping Docker Containers"
     if [ -f "$INSTALL_DIR/docker-compose.production.yml" ]; then
         cd "$INSTALL_DIR" || true
-        if docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
+        if compose_cmd -f docker-compose.production.yml ps | grep -q "Up"; then
             log "Stopping all services..."
-            docker-compose -f docker-compose.production.yml down -v 2>/dev/null || log_warn "Some containers may not have stopped cleanly"
+            compose_cmd -f docker-compose.production.yml down -v 2>/dev/null || log_warn "Some containers may not have stopped cleanly"
             log "Containers and volumes removed"
         else
             log "No running containers found"
@@ -131,10 +146,13 @@ EOF
 
     local domains_found=false
     if [ -f "$CONFIG_DIR/config.env" ]; then
-        source "$CONFIG_DIR/config.env" 2>/dev/null || true
+        local domain_storefront domain_api domain_admin
+        domain_storefront=$(read_config_value "DOMAIN_STOREFRONT" "$CONFIG_DIR/config.env")
+        domain_api=$(read_config_value "DOMAIN_API" "$CONFIG_DIR/config.env")
+        domain_admin=$(read_config_value "DOMAIN_ADMIN" "$CONFIG_DIR/config.env")
 
-        for domain in "$DOMAIN_STOREFRONT" "$DOMAIN_API" "$DOMAIN_ADMIN"; do
-            if [ -n "$domain" ]; then
+        for domain in "$domain_storefront" "$domain_api" "$domain_admin"; do
+            if [ -n "$domain" ] && [[ "$domain" =~ ^[a-zA-Z0-9.-]+$ ]] && [[ "$domain" != *..* ]]; then
                 domains_found=true
                 if [ -f "/etc/nginx/sites-enabled/$domain" ]; then
                     rm -f "/etc/nginx/sites-enabled/$domain"

@@ -9,7 +9,8 @@
 #   sudo ./update.sh [--branch=main|dev]
 #############################################################################
 
-set -e
+set -eu
+umask 077
 
 # Colors
 RED='\033[0;31m'
@@ -24,8 +25,32 @@ NC='\033[0m'
 INSTALL_DIR="/opt/vaultscope"
 CONFIG_DIR="/etc/vaultscope"
 
-# Default branch
-BRANCH="${VAULTSCOPE_BRANCH:-dev}"
+# Default branch (overridden by CLI flags, VAULTSCOPE_BRANCH, or saved config)
+BRANCH="${VAULTSCOPE_BRANCH:-}"
+BRANCH_FROM_CLI=false
+
+compose_cmd() {
+    if docker compose version &> /dev/null; then
+        docker compose "$@"
+    else
+        docker-compose "$@"
+    fi
+}
+
+read_config_value() {
+    local key=$1
+    local file=$2
+    grep -E "^${key}=" "$file" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d '\r"'
+}
+
+validate_branch() {
+    local branch=$1
+    if [[ "$branch" =~ ^(dev|main|v[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9._-]+)?)$ ]]; then
+        return 0
+    fi
+    log_error "Invalid branch/tag: $branch (must be 'main', 'dev', or a release tag like 'v1.0.0')"
+    exit 1
+}
 
 log() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $*"
@@ -59,12 +84,15 @@ parse_args() {
         case $arg in
             --branch=*)
                 BRANCH="${arg#*=}"
+                BRANCH_FROM_CLI=true
                 ;;
             --dev)
                 BRANCH="dev"
+                BRANCH_FROM_CLI=true
                 ;;
             --main)
                 BRANCH="main"
+                BRANCH_FROM_CLI=true
                 ;;
             *)
                 log_warn "Unknown argument: $arg"
@@ -107,10 +135,22 @@ EOF
         exit 1
     fi
 
+    if [ -z "$BRANCH" ] && [ "$BRANCH_FROM_CLI" = false ]; then
+        BRANCH=$(read_config_value "BRANCH" "$CONFIG_DIR/config.env")
+    fi
+    BRANCH="${BRANCH:-main}"
+    validate_branch "$BRANCH"
+
+    local db_user db_name
+    db_user=$(read_config_value "DB_USER" "$CONFIG_DIR/config.env")
+    db_name=$(read_config_value "DB_NAME" "$CONFIG_DIR/config.env")
+    [[ "$db_user" =~ ^[a-zA-Z_][a-zA-Z0-9_]{0,62}$ ]] || db_user="vaultscope"
+    [[ "$db_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]{0,62}$ ]] || db_name="vaultscope"
+
     log_info "Updating to branch: ${BRANCH}"
     echo
 
-    read -p "$(echo -e ${YELLOW}Continue with update? [y/N]: ${NC})" -n 1 -r
+    read -p "$(echo -e "${YELLOW}Continue with update? [y/N]: ${NC}")" -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         log "Update cancelled by user"
@@ -125,22 +165,26 @@ EOF
     systemctl stop vaultscope 2>/dev/null || log_warn "Could not stop vaultscope service"
 
     cd "$INSTALL_DIR"
-    docker-compose -f docker-compose.production.yml down 2>/dev/null || log_warn "Could not stop Docker services"
+    compose_cmd -f docker-compose.production.yml down 2>/dev/null || log_warn "Could not stop Docker services"
     log "Services stopped"
 
     # Backup current version
     log_step "Creating Backup"
     BACKUP_DIR="$INSTALL_DIR/backups"
     BACKUP_NAME="backup-$(date +%Y%m%d-%H%M%S)"
+    local install_parent install_base
+    install_parent="$(dirname "$INSTALL_DIR")"
+    install_base="$(basename "$INSTALL_DIR")"
 
-    mkdir -p "$BACKUP_DIR"
+    (umask 077 && mkdir -p "$BACKUP_DIR")
 
     log "Creating backup: $BACKUP_NAME"
-    tar -czf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" \
-        --exclude="$BACKUP_DIR" \
+    (umask 077 && tar -czf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" \
+        --exclude="${install_base}/backups" \
         --exclude="*/node_modules" \
         --exclude="*/target" \
-        "$INSTALL_DIR" 2>/dev/null || log_warn "Backup may be incomplete"
+        -C "$install_parent" "$install_base" 2>/dev/null) || log_warn "Backup may be incomplete"
+    chmod 600 "$BACKUP_DIR/$BACKUP_NAME.tar.gz" 2>/dev/null || true
 
     log "Backup created at $BACKUP_DIR/$BACKUP_NAME.tar.gz"
 
@@ -193,8 +237,7 @@ EOF
 
     if [ "$update_failed" = true ]; then
         log_error "Update failed. Restoring from backup..."
-        cd "$INSTALL_DIR/.."
-        tar -xzf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" 2>/dev/null || log_error "Backup restore failed"
+        tar -xzf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" -C "$install_parent" 2>/dev/null || log_error "Backup restore failed"
         log_error "System restored to previous state"
         exit 1
     fi
@@ -204,12 +247,12 @@ EOF
     cd "$INSTALL_DIR"
 
     log "Starting database..."
-    docker-compose -f docker-compose.production.yml up -d postgres redis
+    compose_cmd -f docker-compose.production.yml up -d postgres redis
 
     sleep 5
 
     log "Running migrations..."
-    docker-compose -f docker-compose.production.yml exec -T postgres psql -U vaultscope -d vaultscope -c "SELECT version();" || {
+    compose_cmd -f docker-compose.production.yml exec -T postgres psql -U "$db_user" -d "$db_name" -c "SELECT version();" || {
         log_warn "Database connection failed, skipping migrations"
     }
 
@@ -218,17 +261,16 @@ EOF
     cd "$INSTALL_DIR"
 
     log "Building Docker images (this may take 5-10 minutes)..."
-    docker-compose -f docker-compose.production.yml build --no-cache || {
+    compose_cmd -f docker-compose.production.yml build --no-cache || {
         log_error "Build failed. Restoring from backup..."
-        cd "$INSTALL_DIR/.."
-        tar -xzf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" 2>/dev/null
+        tar -xzf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" -C "$install_parent" 2>/dev/null || log_error "Backup restore failed"
         systemctl start vaultscope
         exit 1
     }
 
     log "Starting services..."
-    docker-compose -f docker-compose.production.yml up -d || {
-        log_error "Failed to start services. Check logs: docker-compose -f $INSTALL_DIR/docker-compose.production.yml logs"
+    compose_cmd -f docker-compose.production.yml up -d || {
+        log_error "Failed to start services. Check logs: docker compose -f $INSTALL_DIR/docker-compose.production.yml logs"
         exit 1
     }
 
@@ -241,7 +283,7 @@ EOF
     local all_healthy=false
 
     while [ $waited -lt $max_wait ]; do
-        if docker-compose -f docker-compose.production.yml ps | grep -q "Up"; then
+        if compose_cmd -f docker-compose.production.yml ps | grep -q "Up"; then
             all_healthy=true
             break
         fi
@@ -253,10 +295,10 @@ EOF
 
     if [ "$all_healthy" = true ]; then
         log "Services are healthy"
-        docker-compose -f docker-compose.production.yml ps
+        compose_cmd -f docker-compose.production.yml ps
     else
         log_warn "Services may not be fully healthy. Check status manually."
-        docker-compose -f docker-compose.production.yml ps
+        compose_cmd -f docker-compose.production.yml ps
     fi
 
     # Start systemd service
@@ -293,11 +335,11 @@ EOF
     echo -e "${BOLD}Backup:${NC} $BACKUP_DIR/$BACKUP_NAME.tar.gz"
     echo
     echo -e "${BOLD}Services:${NC}"
-    echo "  Storefront: https://$(grep DOMAIN_STOREFRONT $CONFIG_DIR/config.env 2>/dev/null | cut -d= -f2)"
-    echo "  API:        https://$(grep DOMAIN_API $CONFIG_DIR/config.env 2>/dev/null | cut -d= -f2)/api/health"
-    echo "  Admin:      https://$(grep DOMAIN_ADMIN $CONFIG_DIR/config.env 2>/dev/null | cut -d= -f2)"
+    echo "  Storefront: https://$(read_config_value DOMAIN_STOREFRONT "$CONFIG_DIR/config.env")"
+    echo "  API:        https://$(read_config_value DOMAIN_API "$CONFIG_DIR/config.env")/api/health"
+    echo "  Admin:      https://$(read_config_value DOMAIN_ADMIN "$CONFIG_DIR/config.env")"
     echo
-    log "View logs with: docker-compose -f $INSTALL_DIR/docker-compose.production.yml logs -f"
+    log "View logs with: docker compose -f $INSTALL_DIR/docker-compose.production.yml logs -f"
     echo
 }
 
