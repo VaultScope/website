@@ -8,7 +8,7 @@ export const home = {
     tag: 'EUROPEAN INFRASTRUCTURE & SOFTWARE',
     headline: 'Infrastructure and software, engineered together in Germany.',
     subtext:
-      'We operate high-performance cloud servers, encrypted SFTP storage, and our own open-source software stack on dedicated European hardware—with transparent pricing and strict GDPR compliance.',
+      'We operate high-performance cloud servers and reliable SFTP storage solutions, built on open-source technologies as well as dedicated infrastructure in European data centers. Our focus is on transparent pricing, dependable services, and responsible handling of data.',
     ctaPrimary: 'Explore Services',
     ctaSecondary: 'Create Account',
     stats: [

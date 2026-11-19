@@ -31,6 +31,26 @@ describe('Home page interactions', () => {
     const aboutLink = screen.getByRole('link', { name: /About VaultScope/i });
     expect(exploreLink.getAttribute('href')).toContain('/infrastructure');
     expect(aboutLink.getAttribute('href')).toContain('/company/about');
+    expect(
+      screen.getByText(
+        /We operate high-performance cloud servers and reliable SFTP storage solutions, built on open-source technologies as well as dedicated infrastructure in European data centers\./i
+      )
+    ).toBeDefined();
+  });
+
+  it('renders German hero subtext on /de/ route', () => {
+    render(
+      <MemoryRouter initialEntries={['/de/']}>
+        <LanguageProvider>
+          <Home />
+        </LanguageProvider>
+      </MemoryRouter>
+    );
+    expect(
+      screen.getByText(
+        'Wir betreiben leistungsstarke Cloud-Server, zuverlässige SFTP-Speicherlösungen und setzen auf Open-Source-Technologien sowie dedizierte Infrastruktur in europäischen Rechenzentren. Dabei stehen transparente Preise, zuverlässige Dienste und ein verantwortungsvoller Umgang mit Daten im Mittelpunkt.'
+      )
+    ).toBeDefined();
   });
 
   it('renders low-poly 3D floating hero stack without mock hostnames or spec arrays', () => {

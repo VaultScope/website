@@ -8,7 +8,7 @@ export const home = {
     tag: 'EUROPÄISCHE INFRASTRUKTUR & SOFTWARE',
     headline: 'Infrastruktur und Software – gemeinsam entwickelt in Deutschland.',
     subtext:
-      'Wir betreiben leistungsstarke Cloud-Server, verschlüsselten SFTP-Speicher und unseren eigenen Open-Source-Software-Stack auf dedizierter europäischer Hardware – mit transparenten Preisen und konsequenter DSGVO-Konformität.',
+      'Wir betreiben leistungsstarke Cloud-Server, zuverlässige SFTP-Speicherlösungen und setzen auf Open-Source-Technologien sowie dedizierte Infrastruktur in europäischen Rechenzentren. Dabei stehen transparente Preise, zuverlässige Dienste und ein verantwortungsvoller Umgang mit Daten im Mittelpunkt.',
     ctaPrimary: 'Services entdecken',
     ctaSecondary: 'Konto erstellen',
     stats: [
