@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { LocaleLink } from '../i18n';
 import { SeoHead } from '../components/SeoHead';
 import { marked } from 'marked';
@@ -12,6 +13,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { sanitizeSafeUrl } from '../lib/auth';
 
 export interface BlogArticle {
   id: string;
@@ -53,7 +55,7 @@ export function BlogDetail() {
     setError(false);
 
     api
-      .get<BlogArticle>(`/storefront/blog/${slug}`)
+      .get<BlogArticle>(`/storefront/blog/${encodeURIComponent(slug)}`)
       .then((res) => {
         setArticle(res);
       })
@@ -72,7 +74,10 @@ export function BlogDetail() {
 
   const contentHtml = useMemo(() => {
     if (!article?.content) return '';
-    return marked.parse(article.content) as string;
+    const rawHtml = marked.parse(article.content) as string;
+    return DOMPurify.sanitize(rawHtml, {
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|\/(?![/\\]))/i,
+    });
   }, [article?.content]);
 
   if (loading) {
@@ -123,6 +128,7 @@ export function BlogDetail() {
     month: 'long',
     day: 'numeric',
   });
+  const safeImageUrl = sanitizeSafeUrl(article.image_url, true);
 
   return (
     <>
@@ -133,7 +139,7 @@ export function BlogDetail() {
           (article.content ? article.content.substring(0, 160).replace(/[#*`\n]/g, ' ') : undefined)
         }
         path={`/resources/blog/${article.slug}`}
-        image={article.image_url}
+        image={safeImageUrl ?? undefined}
         type="article"
         publishedTime={article.published_at}
         author={article.author?.name || article.author_name}
@@ -211,10 +217,10 @@ export function BlogDetail() {
                   </span>
                 </div>
 
-                {article.image_url && (
+                {safeImageUrl && (
                   <div className="mt-6 w-full rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--line)]">
                     <img
-                      src={article.image_url}
+                      src={safeImageUrl}
                       alt={article.title}
                       className="w-full h-auto max-h-[460px] object-contain mx-auto block"
                     />

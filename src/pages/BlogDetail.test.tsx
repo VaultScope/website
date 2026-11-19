@@ -67,4 +67,38 @@ describe('BlogDetail', () => {
       expect(screen.getByText(/Article not found/i)).toBeDefined();
     });
   });
+
+  it('strips script tags, event handlers, and javascript: links via DOMPurify', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      ...mockArticle,
+      slug: 'xss-test',
+      image_url: 'javascript:alert(1)',
+      content:
+        'Safe text <script>window.__xss=1</script><img src="x" onerror="window.__xss=2" /><a href="javascript:alert(3)">evil</a><a href="/docs">safe</a>',
+    });
+
+    const { container } = renderComponent('xss-test');
+
+    await waitFor(() => {
+      expect(screen.getByText(/Safe text/)).toBeDefined();
+    });
+
+    expect(container.querySelector('script')).toBeNull();
+    const renderedImg = container.querySelector('.markdown-preview img');
+    expect(renderedImg?.getAttribute('onerror')).toBeNull();
+    const links = Array.from(container.querySelectorAll('.markdown-preview a'));
+    expect(links.some((a) => a.getAttribute('href')?.toLowerCase().startsWith('javascript:'))).toBe(false);
+    expect(links.some((a) => a.getAttribute('href') === '/docs')).toBe(true);
+    // Unsafe cover image_url should not render <img>
+    expect(container.querySelector('header img')).toBeNull();
+  });
+
+  it('URL-encodes slug when fetching article from API', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce(mockArticle);
+    renderComponent('slug with spaces');
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith('/storefront/blog/slug%20with%20spaces');
+    });
+  });
 });

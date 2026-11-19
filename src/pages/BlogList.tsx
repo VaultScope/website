@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { api } from '../lib/api';
+import { sanitizeSafeUrl } from '../lib/auth';
 
 export interface BlogPost {
   id: string;
@@ -259,13 +260,15 @@ export function BlogList() {
           ) : (
             <div className="space-y-12">
               {/* Featured Article */}
-              {featuredPost && (
+              {featuredPost && (() => {
+                const safeFeaturedImageUrl = sanitizeSafeUrl(featuredPost.image_url, true);
+                return (
                 <div className="py-8 group">
                   <div className="grid md:grid-cols-12 gap-8 lg:gap-12 items-center">
                     <div className="md:col-span-6 relative rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--line)] flex items-center justify-center">
-                      {featuredPost.image_url ? (
+                      {safeFeaturedImageUrl ? (
                         <img
-                          src={featuredPost.image_url}
+                          src={safeFeaturedImageUrl}
                           alt={featuredPost.title}
                           className="w-full h-auto max-h-[360px] object-contain block"
                         />
@@ -294,7 +297,7 @@ export function BlogList() {
                           </span>
                         </div>
 
-                        <LocaleLink to={`/resources/blog/${featuredPost.slug}`}>
+                        <LocaleLink to={`/resources/blog/${encodeURIComponent(featuredPost.slug)}`}>
                           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent-bright)] transition-colors leading-snug">
                             {featuredPost.title}
                           </h2>
@@ -339,7 +342,7 @@ export function BlogList() {
                         </div>
 
                         <LocaleLink
-                          to={`/resources/blog/${featuredPost.slug}`}
+                          to={`/resources/blog/${encodeURIComponent(featuredPost.slug)}`}
                           className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-[var(--accent-bright)] hover:underline group/link"
                         >
                           <span>Read full article</span>
@@ -349,12 +352,14 @@ export function BlogList() {
                     </div>
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               {/* Grid of Remaining Articles */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 not-prose">
                 {gridPosts.map((post) => {
                   const readTime = calculateReadingTime(post.content);
+                  const safePostImageUrl = sanitizeSafeUrl(post.image_url, true);
 
                   return (
                     <article
@@ -362,8 +367,8 @@ export function BlogList() {
                       className="pt-2 transition-colors flex flex-col justify-between group overflow-hidden"
                     >
                       <div className="relative aspect-[16/9] w-full rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--line)] mb-5 flex items-center justify-center">
-                        {post.image_url ? (
-                          <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
+                        {safePostImageUrl ? (
+                          <img src={safePostImageUrl} alt={post.title} className="w-full h-full object-contain" />
                         ) : (
                           <ArticleCoverFallback title={post.title} tags={post.tags} />
                         )}
@@ -386,7 +391,7 @@ export function BlogList() {
                             </span>
                           </div>
 
-                          <LocaleLink to={`/resources/blog/${post.slug}`} className="block">
+                          <LocaleLink to={`/resources/blog/${encodeURIComponent(post.slug)}`} className="block">
                             <h3 className="text-base font-semibold text-[var(--text)] group-hover:text-[var(--accent-bright)] transition-colors leading-snug line-clamp-2">
                               {post.title}
                             </h3>
@@ -423,7 +428,7 @@ export function BlogList() {
                           </span>
 
                           <LocaleLink
-                            to={`/resources/blog/${post.slug}`}
+                            to={`/resources/blog/${encodeURIComponent(post.slug)}`}
                             className="text-[var(--accent-bright)] hover:underline flex items-center gap-1 font-medium font-mono text-xs group/link"
                           >
                             <span>Read</span>
@@ -458,7 +463,7 @@ export function BlogList() {
               <a
                 href="https://status.vaultscope.de/status/vs"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="px-4 py-2 bg-[var(--accent)] text-white font-mono text-xs font-medium hover:bg-[var(--accent-bright)] transition-colors"
               >
                 Live Status Portal &rarr;

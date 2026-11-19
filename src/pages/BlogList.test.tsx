@@ -111,4 +111,22 @@ describe('BlogList', () => {
       expect(links.length).toBeGreaterThan(0);
     });
   });
+
+  it('rejects javascript: image_url values and renders fallback instead of unsafe img src', async () => {
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url === '/storefront/blog/tags') return ['networking'];
+      return [
+        { ...mockPosts[0], image_url: 'javascript:alert(1)' },
+        { ...mockPosts[1], image_url: 'data:text/html,<script>alert(1)</script>' },
+      ];
+    });
+
+    const { container } = renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText(/IPv6 deployment/)).toBeDefined();
+    });
+
+    const imgs = container.querySelectorAll('img');
+    expect(imgs.length).toBe(0);
+  });
 });
