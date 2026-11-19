@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { sanitizeSafeUrl } from '../../lib/auth';
 
 const API_BASE =
   typeof window !== 'undefined' &&
@@ -32,8 +33,12 @@ export function SupportDetail() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     api
-      .get(`/storefront/tickets/${id}`)
+      .get(`/storefront/tickets/${encodeURIComponent(id)}`)
       .then((res) => {
         setData(res);
         setLoading(false);
@@ -46,30 +51,43 @@ export function SupportDetail() {
     const token = localStorage.getItem('vs_token');
     if (!token) return;
 
-    const url = `${API_BASE}/storefront/tickets/${id}/events?token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
+    let cancelled = false;
+    let es: EventSource | null = null;
 
-    es.onmessage = (event) => {
+    (async () => {
       try {
-        const parsed = JSON.parse(event.data);
-        if (parsed.type === 'message' && parsed.message) {
-          setData((prev: any) => {
-            if (!prev) return prev;
-            const exists = (prev.messages || []).some((m: any) => m.id === parsed.message.id);
-            if (exists) return prev;
-            return {
-              ...prev,
-              messages: [...(prev.messages || []), parsed.message],
-            };
-          });
-        }
+        const res = await api.post<{ ticket: string }>('/auth/sse-ticket', {});
+        if (cancelled || !res?.ticket) return;
+
+        const url = `${API_BASE}/storefront/tickets/${encodeURIComponent(id)}/events?ticket=${encodeURIComponent(res.ticket)}`;
+        es = new EventSource(url);
+
+        es.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed.type === 'message' && parsed.message) {
+              setData((prev: any) => {
+                if (!prev) return prev;
+                const exists = (prev.messages || []).some((m: any) => m.id === parsed.message.id);
+                if (exists) return prev;
+                return {
+                  ...prev,
+                  messages: [...(prev.messages || []), parsed.message],
+                };
+              });
+            }
+          } catch {
+            // Ignore malformed SSE events
+          }
+        };
       } catch {
-        // Ignore malformed SSE events
+        // Ignore SSE ticket negotiation failure; polling/manual refresh still works
       }
-    };
+    })();
 
     return () => {
-      es.close();
+      cancelled = true;
+      es?.close();
     };
   }, [id]);
 
@@ -92,7 +110,10 @@ export function SupportDetail() {
       try {
         const formData = new FormData();
         formData.append('file', file);
-        const uploaded = await api.post(`/storefront/tickets/${id}/attachments`, formData);
+        const uploaded = await api.post(
+          `/storefront/tickets/${encodeURIComponent(id)}/attachments`,
+          formData,
+        );
         setAttachments((prev) => [...prev, uploaded]);
       } catch (err: any) {
         setUploadError(err.message || 'Failed to upload image');
@@ -111,10 +132,10 @@ export function SupportDetail() {
   };
 
   const handleReply = async () => {
-    if (!reply.trim() && attachments.length === 0) return;
+    if ((!reply.trim() && attachments.length === 0) || !id) return;
     setSending(true);
     try {
-      const msg: any = await api.post(`/storefront/tickets/${id}/messages`, {
+      const msg: any = await api.post(`/storefront/tickets/${encodeURIComponent(id)}/messages`, {
         content: reply,
         attachments,
       });
@@ -234,13 +255,14 @@ export function SupportDetail() {
                   {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
                     <div className="pl-6 pt-2 flex flex-wrap gap-3">
                       {msg.attachments.map((att: any) => {
-                        const imgUrl = att.url;
+                        const imgUrl = sanitizeSafeUrl(att.url, true);
+                        if (!imgUrl) return null;
                         return (
                           <a
                             key={att.id || att.url}
                             href={imgUrl}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                             className="block rounded-[6px] overflow-hidden bg-[var(--bg)] border border-[var(--line)] max-w-xs"
                           >
                             <img

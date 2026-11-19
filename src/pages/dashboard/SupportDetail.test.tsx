@@ -202,4 +202,102 @@ describe('SupportDetail', () => {
       expect(screen.getByText(/exceeds the 10MB limit/)).toBeDefined();
     });
   });
+
+  it('requests a single-use SSE ticket via POST /auth/sse-ticket instead of passing JWT in query string', async () => {
+    localStorage.setItem('vs_token', 'secret-bearer-jwt');
+    mockGet.mockResolvedValue(mockTicketData);
+    mockPost.mockResolvedValueOnce({ ticket: 'one-time-sse-ticket-42' });
+
+    const esInstances: Array<{ url: string; close: ReturnType<typeof vi.fn>; onmessage: ((e: any) => void) | null }> = [];
+    const MockEventSource = vi.fn(function (this: any, url: string) {
+      this.url = url;
+      this.close = vi.fn();
+      this.onmessage = null;
+      esInstances.push(this);
+    });
+    vi.stubGlobal('EventSource', MockEventSource);
+
+    try {
+      const { unmount } = renderComponent();
+
+      await waitFor(() => {
+        expect(mockPost).toHaveBeenCalledWith('/auth/sse-ticket', {});
+        expect(MockEventSource).toHaveBeenCalledTimes(1);
+      });
+
+      const connectedUrl = esInstances[0].url;
+      expect(connectedUrl).toContain('/storefront/tickets/tkt-1/events?ticket=one-time-sse-ticket-42');
+      expect(connectedUrl).not.toContain('token=');
+      expect(connectedUrl).not.toContain('secret-bearer-jwt');
+
+      unmount();
+      expect(esInstances[0].close).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+      localStorage.clear();
+    }
+  });
+
+  it('does not open EventSource if unmounted before sse-ticket resolves', async () => {
+    localStorage.setItem('vs_token', 'secret-bearer-jwt');
+    mockGet.mockResolvedValue(mockTicketData);
+
+    let resolveTicket!: (val: { ticket: string }) => void;
+    mockPost.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveTicket = resolve;
+        }),
+    );
+
+    const MockEventSource = vi.fn();
+    vi.stubGlobal('EventSource', MockEventSource);
+
+    try {
+      const { unmount } = renderComponent();
+
+      await waitFor(() => {
+        expect(mockPost).toHaveBeenCalledWith('/auth/sse-ticket', {});
+      });
+
+      unmount();
+      resolveTicket({ ticket: 'late-ticket' });
+      await Promise.resolve();
+
+      expect(MockEventSource).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      localStorage.clear();
+    }
+  });
+
+  it('blocks unsafe javascript: attachment URLs from rendering links or images', async () => {
+    mockGet.mockResolvedValue({
+      ...mockTicketData,
+      messages: [
+        {
+          id: 'msg-xss-att',
+          author_id: 'staff-1',
+          author_type: 'staff',
+          content: 'Attachment check',
+          created_at: '2026-08-25T10:00:00Z',
+          attachments: [
+            {
+              id: 'att-bad',
+              filename: 'evil.png',
+              url: 'javascript:alert(1)',
+            },
+          ],
+        },
+      ],
+    });
+
+    const { container } = renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText('Attachment check')).toBeDefined();
+    });
+
+    expect(container.querySelector('a[href^="javascript:"]')).toBeNull();
+    expect(container.querySelector('img[src^="javascript:"]')).toBeNull();
+  });
 });
