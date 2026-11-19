@@ -30,7 +30,7 @@
  *   -y, --yes                   Non-interactive mode (auto-confirm prompts)
  */
 
-const { exec, execSync } = require('child_process');
+const { execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -142,10 +142,29 @@ function parseArgs() {
   return options;
 }
 
-// Execute shell command
-function execCommand(command, cwd) {
+// Strictly validate git branch / ref names to prevent option or shell injection
+const VALID_BRANCH_RE = /^(dev|main|[A-Za-z0-9._/-]+)$/;
+
+function validateBranch(branch) {
+  if (typeof branch !== 'string') return false;
+  const trimmed = branch.trim();
+  if (
+    !trimmed ||
+    trimmed.startsWith('-') ||
+    trimmed.includes('..') ||
+    trimmed.includes('//') ||
+    trimmed.endsWith('/') ||
+    trimmed.endsWith('.lock')
+  ) {
+    return false;
+  }
+  return VALID_BRANCH_RE.test(trimmed);
+}
+
+// Execute command directly without shell interpolation
+function execFileCommand(file, args, cwd, useShell = false) {
   return new Promise((resolve, reject) => {
-    exec(command, { cwd }, (error, stdout, stderr) => {
+    execFile(file, args, { cwd, shell: useShell }, (error, stdout, stderr) => {
       if (error) {
         reject({ error, stderr, stdout });
       } else {
@@ -171,7 +190,7 @@ function askQuestion(question, options, defaultValue = 'y') {
       rlInterface.question(question, answer => {
         resolve(answer.trim() || defaultValue);
       });
-    } catch (e) {
+    } catch {
       resolve(defaultValue);
     }
   });
@@ -179,6 +198,9 @@ function askQuestion(question, options, defaultValue = 'y') {
 
 // Clone or update repository
 async function setupRepository(component, branch, options) {
+  if (!validateBranch(branch)) {
+    throw new Error(`Invalid git branch name: ${branch}`);
+  }
   const { name, dir, repo } = COMPONENTS[component];
 
   log.title(`Setting up ${name} (Branch: ${branch})`);
@@ -187,7 +209,7 @@ async function setupRepository(component, branch, options) {
     let currentBranch = '';
     let isGit = false;
     try {
-      currentBranch = (await execCommand('git rev-parse --abbrev-ref HEAD', dir)).trim();
+      currentBranch = (await execFileCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], dir)).trim();
       isGit = true;
     } catch {
       isGit = false;
@@ -200,16 +222,16 @@ async function setupRepository(component, branch, options) {
 
     log.info(`Directory ${dir} exists [current branch: ${currentBranch || 'unknown'}]. Syncing with release branch: ${branch}...`);
     try {
-      await execCommand('git fetch origin --prune', dir);
+      await execFileCommand('git', ['fetch', 'origin', '--prune'], dir);
       if (currentBranch && currentBranch !== branch) {
         log.info(`Switching ${name} from ${currentBranch} to ${branch}...`);
         try {
-          await execCommand(`git checkout ${branch}`, dir);
+          await execFileCommand('git', ['checkout', branch], dir);
         } catch {
-          await execCommand(`git checkout -b ${branch} origin/${branch}`, dir);
+          await execFileCommand('git', ['checkout', '-b', branch, `origin/${branch}`], dir);
         }
       }
-      await execCommand(`git pull origin ${branch}`, dir);
+      await execFileCommand('git', ['pull', 'origin', branch], dir);
       log.success(`Updated ${name} on branch: ${branch}`);
     } catch (err) {
       log.warn(`Could not switch/pull ${name} on branch ${branch}: ${(err.stderr || err.error.message || '').trim()}`);
@@ -218,7 +240,7 @@ async function setupRepository(component, branch, options) {
   } else {
     log.info(`Cloning ${name} (branch: ${branch})...`);
     try {
-      await execCommand(`git clone -b ${branch} ${repo} ${dir}`, '.');
+      await execFileCommand('git', ['clone', '-b', branch, '--', repo, dir], '.');
       log.success(`Cloned ${name} from branch: ${branch}`);
     } catch (err) {
       log.error(`Failed to clone ${name}: ${(err.stderr || err.error.message || '').trim()}`);
@@ -235,7 +257,8 @@ async function installDependencies(component) {
 
   try {
     if (type === 'node') {
-      await execCommand('npm install', dir);
+      const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+      await execFileCommand(npmBin, ['install'], dir, process.platform === 'win32');
       log.success(`Installed Node.js dependencies for ${name}`);
     } else if (type === 'rust') {
       log.info('Rust dependencies will be fetched on first build (cargo build/run)');
@@ -293,7 +316,15 @@ async function configureEnvironment(component, options) {
   }
 
   if (component === 'api') {
-    envContent = updateEnvVar(envContent, 'DATABASE_URL', 'postgres://vaultscope:vaultscope_dev@localhost:5432/vaultscope');
+    const dbPassword = process.env.VAULTSCOPE_DB_PASSWORD || 'vaultscope_dev';
+    if (!process.env.VAULTSCOPE_DB_PASSWORD) {
+      log.warn('Using default local dev DB password for DATABASE_URL (set VAULTSCOPE_DB_PASSWORD or update .env before any non-local deployment).');
+    }
+    envContent = updateEnvVar(
+      envContent,
+      'DATABASE_URL',
+      `postgres://vaultscope:${encodeURIComponent(dbPassword)}@localhost:5432/vaultscope`
+    );
     envContent = updateEnvVar(envContent, 'DB_MAX_CONNECTIONS', '10');
     envContent = updateEnvVar(envContent, 'HOST', '0.0.0.0');
     envContent = updateEnvVar(envContent, 'PORT', '3000');
@@ -303,13 +334,15 @@ async function configureEnvironment(component, options) {
     envContent = updateEnvVar(envContent, 'CORS_ORIGINS', 'http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:3001');
 
     if (options.excludeAuthentik) {
+      const mockAdminSecret = crypto.randomBytes(32).toString('hex');
+      const mockStorefrontSecret = crypto.randomBytes(32).toString('hex');
       envContent = updateEnvVar(envContent, 'AUTHENTIK_ENABLED', 'false');
       envContent = updateEnvVar(envContent, 'AUTH_MODE', 'local');
       envContent = updateEnvVar(envContent, 'AUTHENTIK_ISSUER', 'http://localhost:3000/api/auth/mock');
       envContent = updateEnvVar(envContent, 'AUTHENTIK_CLIENT_ID_ADMIN', 'vaultscope-admin');
-      envContent = updateEnvVar(envContent, 'AUTHENTIK_CLIENT_SECRET_ADMIN', 'dev-mock-admin-secret');
+      envContent = updateEnvVar(envContent, 'AUTHENTIK_CLIENT_SECRET_ADMIN', mockAdminSecret);
       envContent = updateEnvVar(envContent, 'AUTHENTIK_CLIENT_ID_STOREFRONT', 'vaultscope-storefront');
-      envContent = updateEnvVar(envContent, 'AUTHENTIK_CLIENT_SECRET_STOREFRONT', 'dev-mock-storefront-secret');
+      envContent = updateEnvVar(envContent, 'AUTHENTIK_CLIENT_SECRET_STOREFRONT', mockStorefrontSecret);
     }
   } else if (component === 'website') {
     envContent = updateEnvVar(envContent, 'VITE_API_URL', 'http://localhost:3000/api');
@@ -327,7 +360,7 @@ async function configureEnvironment(component, options) {
     }
   }
 
-  fs.writeFileSync(envPath, envContent.trim() + '\n', 'utf-8');
+  fs.writeFileSync(envPath, envContent.trim() + '\n', { encoding: 'utf-8', mode: 0o600 });
   log.success(`Configured .env for ${name}`);
 }
 
@@ -351,7 +384,9 @@ async function runDatabaseSetup(options) {
       log.success('Database migrations and seeding completed successfully.');
     } else {
       log.warn(`Setup script not found at ${setupScriptPath}. Attempting sqlx fallback...`);
-      await execCommand('sqlx database create && sqlx migrate run', path.join('VaultScope-API', 'crates', 'db'));
+      const dbCrateDir = path.join('VaultScope-API', 'crates', 'db');
+      await execFileCommand('sqlx', ['database', 'create'], dbCrateDir);
+      await execFileCommand('sqlx', ['migrate', 'run'], dbCrateDir);
       log.success('Database migrations completed via sqlx.');
     }
   } catch (err) {
@@ -415,6 +450,11 @@ async function main() {
   log.title('🚀 VaultScope CLI Installer');
 
   const options = parseArgs();
+
+  if (!validateBranch(options.branch)) {
+    log.error(`Invalid branch name "${options.branch}". Only alphanumeric characters, '.', '_', '/', and '-' (not leading '-') are allowed.`);
+    process.exit(1);
+  }
 
   // Unified release channel / branch selection across all repositories
   if (!options.branchExplicit && !options.yes) {
@@ -504,4 +544,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { main };
+module.exports = { main, validateBranch, parseArgs };
