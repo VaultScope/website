@@ -2,7 +2,7 @@
 FROM node:22-slim AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Declare build-time environment variables
 ARG VITE_API_URL
@@ -19,11 +19,19 @@ RUN npm run build
 
 # Production stage
 FROM caddy:2-alpine
+RUN addgroup -g 10001 -S caddy \
+    && adduser -u 10001 -S -G caddy -H -D caddy \
+    && mkdir -p /data/caddy /config/caddy /srv \
+    && chown -R caddy:caddy /data /config /srv /etc/caddy
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
-ENV PORT=3000
+RUN chown -R caddy:caddy /srv /etc/caddy
+ENV PORT=3000 \
+    XDG_DATA_HOME=/data \
+    XDG_CONFIG_HOME=/config
+USER caddy
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=20s \
-    CMD wget --spider -q http://localhost:3000 || exit 1
+    CMD wget --spider -q http://127.0.0.1:3000 || exit 1
 
 EXPOSE 3000
