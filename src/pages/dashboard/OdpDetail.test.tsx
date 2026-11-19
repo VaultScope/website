@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { OdpDetail } from './OdpDetail';
@@ -10,6 +10,7 @@ vi.mock('../../lib/api', () => ({
 
 import { api } from '../../lib/api';
 const mockGet = vi.mocked(api.get);
+const mockPost = vi.mocked(api.post);
 
 const mockService = {
   id: 'odp-789',
@@ -41,6 +42,7 @@ function renderComponent() {
 describe('OdpDetail', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockPost.mockReset();
   });
 
   it('shows loading state initially', () => {
@@ -91,5 +93,40 @@ describe('OdpDetail', () => {
     await waitFor(() => {
       expect(screen.getAllByText('odp-789').length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it('opens safe shell console URL with noopener,noreferrer and blocks javascript: URLs', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path.includes('/storefront/services/')) return Promise.resolve(mockService);
+      if (path.includes('/storefront/catalog')) return Promise.resolve(mockCatalog);
+      return Promise.resolve(null);
+    });
+
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    try {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Shell')).toBeDefined();
+      });
+
+      mockPost.mockResolvedValueOnce({ url: 'javascript:alert(1)' });
+      fireEvent.click(screen.getByText('Shell'));
+      await waitFor(() => {
+        expect(mockPost).toHaveBeenCalledWith('/storefront/services/odp-789/console');
+      });
+      expect(openSpy).not.toHaveBeenCalled();
+
+      mockPost.mockResolvedValueOnce({ wss_url: 'wss://shell.vaultscope.de/term?t=abc' });
+      fireEvent.click(screen.getByText('Shell'));
+      await waitFor(() => {
+        expect(openSpy).toHaveBeenCalledWith(
+          'wss://shell.vaultscope.de/term?t=abc',
+          '_blank',
+          'noopener,noreferrer',
+        );
+      });
+    } finally {
+      openSpy.mockRestore();
+    }
   });
 });

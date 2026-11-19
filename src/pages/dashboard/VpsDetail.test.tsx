@@ -212,4 +212,39 @@ describe('VpsDetail', () => {
     expect(screen.queryByText('Reinstall')).toBeNull();
     expect(screen.queryByText('Power Control')).toBeNull();
   });
+
+  it('opens safe console URL with noopener,noreferrer and blocks javascript: URLs', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path.includes('/storefront/services/')) return Promise.resolve(mockService);
+      if (path.includes('/storefront/catalog')) return Promise.resolve(mockCatalog);
+      return Promise.resolve(null);
+    });
+
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    try {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Console')).toBeDefined();
+      });
+
+      mockPost.mockResolvedValueOnce({ url: 'javascript:alert(1)' });
+      fireEvent.click(screen.getByText('Console'));
+      await waitFor(() => {
+        expect(mockPost).toHaveBeenCalledWith('/storefront/services/svc-123/console');
+      });
+      expect(openSpy).not.toHaveBeenCalled();
+
+      mockPost.mockResolvedValueOnce({ url: 'https://console.vaultscope.de/vnc?id=1' });
+      fireEvent.click(screen.getByText('Console'));
+      await waitFor(() => {
+        expect(openSpy).toHaveBeenCalledWith(
+          'https://console.vaultscope.de/vnc?id=1',
+          '_blank',
+          'noopener,noreferrer',
+        );
+      });
+    } finally {
+      openSpy.mockRestore();
+    }
+  });
 });

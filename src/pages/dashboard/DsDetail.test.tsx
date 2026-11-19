@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { DsDetail } from './DsDetail';
@@ -10,6 +10,7 @@ vi.mock('../../lib/api', () => ({
 
 import { api } from '../../lib/api';
 const mockGet = vi.mocked(api.get);
+const mockPost = vi.mocked(api.post);
 
 const mockService = {
   id: 'ds-456',
@@ -41,6 +42,7 @@ function renderComponent() {
 describe('DsDetail', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockPost.mockReset();
   });
 
   it('shows loading state initially', () => {
@@ -137,5 +139,32 @@ describe('DsDetail', () => {
     await waitFor(() => {
       expect(screen.getByText('Delete')).toBeDefined();
     });
+  });
+
+  it('sanitizes IPMI endpoint URL and rejects javascript: URLs', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path.includes('/storefront/services/')) return Promise.resolve(mockService);
+      if (path.includes('/storefront/catalog')) return Promise.resolve(mockCatalog);
+      return Promise.resolve(null);
+    });
+    mockPost.mockResolvedValueOnce({
+      url: 'javascript:alert(1)',
+      username: 'admin',
+      password: 'secret',
+    });
+
+    const { container } = renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText('IPMI / KVM')).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText('IPMI / KVM'));
+
+    await waitFor(() => {
+      expect(screen.getByText('IPMI / KVM Out-of-Band Session Active')).toBeDefined();
+    });
+
+    expect(container.querySelector('a[href^="javascript:"]')).toBeNull();
+    expect(screen.getByText('N/A')).toBeDefined();
   });
 });

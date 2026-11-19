@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Button } from './Shared';
 import { api } from '../lib/api';
+import { sanitizeSafeUrl } from '../lib/auth';
 
 interface VncConsoleModalProps {
   isOpen: boolean;
@@ -376,14 +377,24 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
                         {fk}
                       </Button>
                     ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(session.wss_url, '_blank')}
-                      className="h-6 px-2 text-[10px] border-zinc-800 text-zinc-300 hover:bg-zinc-900"
-                    >
-                      External Viewer
-                    </Button>
+                    {(() => {
+                      const safeViewerUrl = sanitizeSafeUrl(session.wss_url, true, ['https:', 'http:', 'wss:']);
+                      return (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!safeViewerUrl}
+                          onClick={() => {
+                            if (safeViewerUrl) {
+                              window.open(safeViewerUrl, '_blank', 'noopener,noreferrer');
+                            }
+                          }}
+                          className="h-6 px-2 text-[10px] border-zinc-800 text-zinc-300 hover:bg-zinc-900"
+                        >
+                          External Viewer
+                        </Button>
+                      );
+                    })()}
                   </div>
 
                   <span className="text-[10px] text-zinc-600 font-sans hidden sm:inline">

@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { sanitizeSafeUrl } from '../../lib/auth';
 import { useToast } from '../../components/Toast';
 
 export function OdpDetail() {
@@ -47,9 +48,14 @@ export function OdpDetail() {
     setActionLoading(action);
     try {
       const res: any = await api.post(`/storefront/services/${id}/${action}`);
-      const consoleUrl = res?.url || res?.wss_url;
-      if (action === 'console' && consoleUrl) {
-        window.open(consoleUrl, '_blank');
+      const rawConsoleUrl = res?.url || res?.wss_url;
+      if (action === 'console' && rawConsoleUrl) {
+        const consoleUrl = sanitizeSafeUrl(rawConsoleUrl, true, ['https:', 'http:', 'wss:']);
+        if (consoleUrl) {
+          window.open(consoleUrl, '_blank', 'noopener,noreferrer');
+        } else {
+          toast('Invalid console URL returned by server.', 'error');
+        }
       }
       loadData();
     } catch (e: any) {

@@ -15,6 +15,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { sanitizeSafeUrl } from '../../lib/auth';
 import { useToast } from '../../components/Toast';
 
 function maskIp(ip?: string) {
@@ -301,18 +302,21 @@ export function DsDetail() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
             <div>
               <span className="text-[var(--fg-faint)] block mb-1">Endpoint</span>
-              {ipmiData.url ? (
-                <a
-                  href={ipmiData.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[var(--accent-bright)] underline break-all"
-                >
-                  {ipmiData.url}
-                </a>
-              ) : (
-                <span className="text-[var(--fg)]">N/A</span>
-              )}
+              {(() => {
+                const safeIpmiUrl = sanitizeSafeUrl(ipmiData.url);
+                return safeIpmiUrl ? (
+                  <a
+                    href={safeIpmiUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--accent-bright)] underline break-all"
+                  >
+                    {safeIpmiUrl}
+                  </a>
+                ) : (
+                  <span className="text-[var(--fg)]">N/A</span>
+                );
+              })()}
             </div>
             <div>
               <span className="text-[var(--fg-faint)] block mb-1">Username</span>
