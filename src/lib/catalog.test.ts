@@ -36,8 +36,8 @@ describe('catalog normalization & hook', () => {
   });
 
   describe('normalizeCatalogProduct', () => {
-    it('normalizes nested specs, VAT gross calculation, and stock states', () => {
-      const normalized = normalizeCatalogProduct({
+    it('normalizes nested specs, safe 0% fallback & explicit 19% VAT, and stock states', () => {
+      const sample = {
         id: 'vps-1',
         name: 'VS-Cloud-4',
         category: 'VPS',
@@ -53,7 +53,15 @@ describe('catalog normalization & hook', () => {
           location: 'Falkenstein, DE',
           features: ['IPv4', 'IPv6'],
         },
-      });
+      };
+
+      const safeNormalized = normalizeCatalogProduct(sample);
+      expect(safeNormalized.netPrice).toBe(10);
+      expect(safeNormalized.grossPrice).toBe(10);
+      expect(safeNormalized.formattedNet).toBe('€10.00');
+      expect(safeNormalized.formattedGross).toBe('€10.00');
+
+      const normalized = normalizeCatalogProduct(sample, 19);
 
       expect(normalized.id).toBe('vps-1');
       expect(normalized.category).toBe('vps');

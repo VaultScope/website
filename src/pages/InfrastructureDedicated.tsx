@@ -9,7 +9,8 @@ const stripHighlight = (str: string) => str.replace(/\*/g, '');
 
 export const InfrastructureDedicated = () => {
   const { t, locale } = useLanguage();
-  const { products, status, error, refetch } = useCatalogProducts('dedicated');
+  const { products, taxConfig, status, error, refetch } = useCatalogProducts('dedicated');
+  const isTaxExempt = taxConfig.smallBusinessExempt || taxConfig.taxRatePercent <= 0;
 
   return (
     <div className="flex flex-col w-full bg-[var(--bg)] text-[var(--fg)]">
@@ -27,8 +28,8 @@ export const InfrastructureDedicated = () => {
         eyebrow={t.infrastructureDedicated.eyebrow}
         title={t.infrastructureDedicated.heroTitle}
         description={t.infrastructureDedicated.heroDescription}
-        primaryCta={t.common.joinWaitlist}
-        primaryLink="#waitlist"
+        primaryCta={locale === 'de' ? 'Server konfigurieren' : 'Configure & Order'}
+        primaryLink="/dashboard/new?category=ds"
         align="left"
       />
 
@@ -42,14 +43,14 @@ export const InfrastructureDedicated = () => {
                   {locale === 'de' ? 'Dedizierte Bare-Metal-Server' : 'Dedicated Bare-Metal Servers'}
                 </h2>
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--fg-muted)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" />
-                  {locale === 'de' ? 'Live-Bestand & Warteliste' : 'Live Inventory & Waitlist'}
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  {locale === 'de' ? 'Jetzt verfügbar · Live-Bestand' : 'Available Now · Live Inventory'}
                 </span>
               </div>
               <p className="text-sm font-sans text-[var(--fg-muted)]">
                 {locale === 'de'
-                  ? 'Physische Single-Tenant-Hardware ohne geteilte Ressourcen.'
-                  : 'Single-tenant physical hardware with unshared compute and storage.'}
+                  ? 'Physische Single-Tenant-Hardware ohne geteilte Ressourcen. Die Bereitstellung dauert nach erfolgreicher Zahlung regulär bis zu 7 Werktage.'
+                  : 'Single-tenant physical hardware with unshared compute and storage. Provisioning regularly takes up to 7 business days after payment succeeds.'}
               </p>
             </div>
           </div>
@@ -96,7 +97,15 @@ export const InfrastructureDedicated = () => {
                   <tr className="border-b border-[var(--line)] text-xs font-mono text-[var(--fg-muted)]">
                     <th className="py-3.5 pr-5 font-medium">{locale === 'de' ? 'Serverprofil' : 'Chassis Profile'}</th>
                     <th className="py-3.5 px-4 font-medium">{locale === 'de' ? 'Hardware-Spezifikationen' : 'Hardware Specifications'}</th>
-                    <th className="py-3.5 px-4 font-medium text-right">{locale === 'de' ? 'Monatspreis (inkl. 19% MwSt.)' : 'Monthly Rate (incl. 19% VAT)'}</th>
+                    <th className="py-3.5 px-4 font-medium text-right">
+                      {isTaxExempt
+                        ? locale === 'de'
+                          ? 'Monatspreis (gem. § 19 UStG)'
+                          : 'Monthly Rate (§ 19 UStG)'
+                        : locale === 'de'
+                          ? `Monatspreis (inkl. ${taxConfig.taxRatePercent}% MwSt.)`
+                          : `Monthly Rate (incl. ${taxConfig.taxRatePercent}% VAT)`}
+                    </th>
                     <th className="py-3.5 pl-5 font-medium text-right">{locale === 'de' ? 'Aktion' : 'Action'}</th>
                   </tr>
                 </thead>
@@ -146,7 +155,11 @@ export const InfrastructureDedicated = () => {
                           {plan.priceGrossFormatted}
                         </div>
                         <div className="font-mono text-[11px] text-[var(--fg-muted)]">
-                          {plan.priceNetFormatted} {locale === 'de' ? 'netto' : 'net'} / mo
+                          {isTaxExempt
+                            ? locale === 'de'
+                              ? 'gem. § 19 UStG (keine USt.) / Monat'
+                              : 'VAT-exempt (§ 19 UStG) / mo'
+                            : `${plan.priceNetFormatted} ${locale === 'de' ? 'netto' : 'net'} / mo`}
                         </div>
                       </td>
                       <td className="py-5 pl-5 align-middle text-right whitespace-nowrap">

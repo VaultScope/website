@@ -76,8 +76,8 @@ describe('InfrastructureCloud', () => {
     });
 
     const tableText = container.querySelector('table')?.textContent ?? '';
-    expect(tableText).toContain('€11.90');
     expect(tableText).toContain('€10.00');
+    expect(tableText).toContain('§ 19 UStG');
     expect(tableText).not.toContain('€€');
     expect(tableText).not.toContain('[object Object]');
     expect(tableText).not.toContain('bandwidth');

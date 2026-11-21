@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, ArrowUpRight, HardDrive } from 'lucide-react';
 import { api } from '../../lib/api';
+import { getOrderStateDisplay } from '../../lib/orderState';
 
 export function DsList() {
   const [services, setServices] = useState<any[]>([]);
@@ -102,6 +103,13 @@ export function DsList() {
                       <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--fg-muted)]">
                         {ds.status}
                       </span>
+                      {ds.order_state && (
+                        <span
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded ${getOrderStateDisplay(ds.order_state).badgeClass}`}
+                        >
+                          {getOrderStateDisplay(ds.order_state).label}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--fg-faint)] mt-1">
                       <span className="text-[var(--fg-muted)]">
@@ -111,6 +119,11 @@ export function DsList() {
                       <span className="font-mono">{specs.ram || '—'}</span>
                       {specs.disk && <span className="font-mono">{specs.disk}</span>}
                     </div>
+                    {ds.order_state_note && (
+                      <div className="text-[11px] text-[var(--fg-muted)] mt-1">
+                        {ds.order_state_note}
+                      </div>
+                    )}
                   </div>
                 </div>
 

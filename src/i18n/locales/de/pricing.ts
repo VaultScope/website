@@ -6,7 +6,7 @@ export const pricing = {
   infrastructure: {
     title: 'Infrastruktur',
     cloud: { title: 'Cloud VPS', desc: 'Preise werden zum Launch veröffentlicht.' },
-    dedicated: { title: 'Dedizierte Server', desc: 'Preise werden zum Launch veröffentlicht.' },
+    dedicated: { title: 'Dedizierte Server', desc: 'Jetzt verfügbar — Live-Preise im Katalog (Bereitstellung regulär bis zu 7 Werktage nach Zahlung).' },
     managed: { title: 'Managed', desc: 'Pro Projekt bepreist, basierend auf Umfang und Anforderungen.' },
   },
   deploy: {

@@ -90,11 +90,12 @@ describe('Home page interactions', () => {
     ).toBeDefined();
   });
 
-  it('renders Section 3: Products (VPS soon, Dedicated soon, Storage SFTP only as of now)', () => {
+  it('renders Section 3: Products (VPS soon, Dedicated Servers available, Storage SFTP only as of now)', () => {
     renderHome();
     expect(screen.getByText('Products')).toBeDefined();
     expect(screen.getByText('VPS (soon)')).toBeDefined();
-    expect(screen.getByText('Dedicated (soon)')).toBeDefined();
+    expect(screen.getByText('Dedicated Servers')).toBeDefined();
+    expect(screen.queryByText('Dedicated (soon)')).toBeNull();
     expect(screen.getByText('Storage (SFTP only as of now)')).toBeDefined();
   });
 

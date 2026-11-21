@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
+  ClipboardList,
   Server,
   HardDrive,
   Cpu,
@@ -29,6 +30,7 @@ import {
 
 const navItems = [
   { name: 'Overview', path: '/dashboard', icon: LayoutDashboard, exact: true },
+  { name: 'Orders', path: '/dashboard/orders', icon: ClipboardList },
   { name: 'VPS', path: '/dashboard/vps', icon: Server },
   { name: 'Dedicated', path: '/dashboard/ds', icon: HardDrive },
   { name: 'OCD', path: '/dashboard/odp', icon: Cpu },

@@ -43,11 +43,11 @@ export const home = {
       },
       {
         title: 'Dedicated Servers',
-        status: 'In Preparation',
-        desc: 'Single-tenant physical servers delivering unshared hardware performance and full root control for demanding workloads.',
-        specs: ['Single-Tenant Hardware', 'Full Root & IPMI', '10 Gbps Network'],
+        status: 'Available Now',
+        desc: 'Single-tenant physical servers delivering unshared hardware performance and full root control. Provisioning regularly takes up to 7 business days after payment.',
+        specs: ['Single-Tenant Hardware', 'Up to 7 Business Days', '10 Gbps Network'],
         href: '/infrastructure/dedicated/',
-        cta: 'Learn More',
+        cta: 'Configure Server',
       },
       {
         title: 'One-Click Deploy',

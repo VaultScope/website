@@ -38,6 +38,6 @@ export const contactPage = {
   },
   waitlist: {
     title: 'Interested in hosting?',
-    description: 'Cloud VPS and Dedicated Servers are in preparation. Leave your email and we’ll reach out when services are ready to launch.',
+    description: 'Dedicated Servers (provisioning up to 7 business days after payment) and SFTP Storage are available now; Cloud VPS is in preparation. Leave your email for upcoming releases.',
   },
 };

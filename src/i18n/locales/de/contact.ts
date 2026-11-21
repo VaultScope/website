@@ -38,6 +38,6 @@ export const contactPage = {
   },
   waitlist: {
     title: 'Interesse am Hosting?',
-    description: 'Cloud VPS und Dedizierte Server sind in Vorbereitung. Hinterlassen Sie Ihre E-Mail und wir melden uns, sobald die Dienste startbereit sind.',
+    description: 'Dedizierte Server (Bereitstellung bis zu 7 Werktage nach Zahlung) und SFTP-Speicher sind verfügbar; Cloud VPS befindet sich in Vorbereitung. Hinterlassen Sie Ihre E-Mail für Neuigkeiten.',
   },
 };

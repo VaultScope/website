@@ -104,12 +104,13 @@ export const infrastructureDedicated = {
   technical: [
     { label: 'Operating System', value: 'Debian', note: 'Stable, production-grade Linux distribution.' },
     { label: 'Location', value: 'European Union', note: 'EU-based partner datacentres under GDPR jurisdiction.' },
+    { label: 'Provisioning', value: 'Up to 7 business days', note: 'Regular hardware setup timeframe after payment succeeds.' },
     { label: 'Infrastructure', value: 'Enterprise Hardware', note: 'Premium physical hardware.' },
   ],
-  pricing: 'Specifications and pricing will be published at launch.',
+  pricing: 'Live configurations and pricing are available directly in the catalog.',
   waitlist: {
-    title: 'Be the first to know.',
-    description: 'Dedicated Server services are currently in preparation. Leave your email and we\'ll notify you when they launch.',
+    title: 'Hardware updates & restocks.',
+    description: 'Dedicated servers are available for order. Provisioning regularly takes up to 7 business days after payment succeeds. Leave your email for restock or new location alerts.',
   },
 };
 

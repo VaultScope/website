@@ -74,6 +74,8 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
   const [orderError, setOrderError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [alreadyClaimedTrial, setAlreadyClaimedTrial] = useState(false);
+  const [taxRatePercent, setTaxRatePercent] = useState<number>(0);
+  const [smallBusinessExempt, setSmallBusinessExempt] = useState<boolean>(true);
 
   const isAuth = isAuthenticated();
 
@@ -99,15 +101,32 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
     setLoading(true);
     setError(null);
 
-    fetch(`${API_BASE}/storefront/ps/${encodeURIComponent(slug)}`)
-      .then(async res => {
+    Promise.all([
+      fetch(`${API_BASE}/storefront/ps/${encodeURIComponent(slug)}`).then(async res => {
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || 'Partner promotion not found or expired.');
         }
         return res.json();
-      })
-      .then((res: PartnerPayload) => {
+      }),
+      fetch(`${API_BASE}/storefront/config`)
+        .then(async res => (res.ok ? res.json() : null))
+        .catch(() => null),
+    ])
+      .then(([res, cfg]: [PartnerPayload, any]) => {
+        if (cfg && typeof cfg === 'object' && ('tax_rate_percent' in cfg || 'small_business_exempt' in cfg)) {
+          const parsedRate = Number(cfg.tax_rate_percent ?? 0);
+          const safeRate = Number.isFinite(parsedRate) && parsedRate >= 0 ? parsedRate : 0;
+          const exempt =
+            typeof cfg.small_business_exempt === 'boolean'
+              ? cfg.small_business_exempt
+              : cfg.tax_mode === 'small_business' || safeRate <= 0;
+          setSmallBusinessExempt(exempt);
+          setTaxRatePercent(exempt ? 0 : safeRate);
+        } else {
+          setSmallBusinessExempt(true);
+          setTaxRatePercent(0);
+        }
         setData(res);
         setHostname(`${res.partner.slug}-node`);
         document.title = `${res.partner.name} × VaultScope | Exclusive Trial`;
@@ -188,7 +207,7 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
   const { partner, product } = data;
   const trialDays = partner.trial_days || product.trial_days || 14;
   const priceNum = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
-  const monthlyPriceVat = (priceNum * 1.19).toFixed(2);
+  const monthlyPriceVat = (priceNum * (1 + (smallBusinessExempt ? 0 : taxRatePercent) / 100)).toFixed(2);
   const specs = (product.specs || {}) as Record<string, any>;
   const isStorageProduct =
     (product.category || '').toLowerCase().includes('storage') ||
@@ -371,9 +390,13 @@ export function PartnerLanding({ defaultPartnerSlug }: { defaultPartnerSlug?: st
                         </div>
                       </div>
                       <p className="text-xs text-[var(--fg-faint)] sm:text-right">
-                        {locale === 'de' 
-                          ? `Danach regulär €${monthlyPriceVat} / Monat inkl. MwSt. Jederzeit vor Ablauf kündbar.` 
-                          : `Then regular €${monthlyPriceVat} / mo incl. VAT. Cancel anytime prior.`}
+                        {smallBusinessExempt || taxRatePercent <= 0
+                          ? locale === 'de'
+                            ? `Danach regulär €${monthlyPriceVat} / Monat (gem. § 19 UStG keine USt.). Jederzeit vor Ablauf kündbar.`
+                            : `Then regular €${monthlyPriceVat} / mo (VAT-exempt per § 19 UStG). Cancel anytime prior.`
+                          : locale === 'de'
+                            ? `Danach regulär €${monthlyPriceVat} / Monat inkl. ${taxRatePercent}% MwSt. Jederzeit vor Ablauf kündbar.`
+                            : `Then regular €${monthlyPriceVat} / mo incl. ${taxRatePercent}% VAT. Cancel anytime prior.`}
                       </p>
                     </>
                   ) : (

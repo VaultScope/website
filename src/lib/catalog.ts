@@ -78,7 +78,79 @@ export interface CatalogProduct {
   raw: RawCatalogProduct;
 }
 
+export const DEFAULT_TAX_RATE_PERCENT = 0;
 export const VAT_MULTIPLIER = 1.19;
+
+export interface StorefrontTaxConfig {
+  taxMode: string;
+  taxRatePercent: number;
+  smallBusinessExempt: boolean;
+  taxNotice: string | null;
+}
+
+export const SAFE_DEFAULT_TAX_CONFIG: StorefrontTaxConfig = {
+  taxMode: 'small_business',
+  taxRatePercent: 0,
+  smallBusinessExempt: true,
+  taxNotice: 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.',
+};
+
+export function parseStorefrontTaxConfig(raw: any): StorefrontTaxConfig {
+  if (!raw || typeof raw !== 'object') {
+    return SAFE_DEFAULT_TAX_CONFIG;
+  }
+  const hasExplicitRate =
+    raw.tax_rate_percent !== undefined && raw.tax_rate_percent !== null;
+  if (!hasExplicitRate && raw.small_business_exempt === undefined && !raw.tax_mode) {
+    return SAFE_DEFAULT_TAX_CONFIG;
+  }
+  const parsedRate = Number(raw.tax_rate_percent);
+  const taxRatePercent = Number.isFinite(parsedRate) && parsedRate >= 0 ? parsedRate : 0;
+  const taxMode =
+    typeof raw.tax_mode === 'string' && raw.tax_mode.trim()
+      ? raw.tax_mode.trim()
+      : taxRatePercent <= 0
+        ? 'small_business'
+        : 'exclusive';
+  const smallBusinessExempt =
+    typeof raw.small_business_exempt === 'boolean'
+      ? raw.small_business_exempt
+      : taxMode === 'small_business' || taxRatePercent <= 0;
+  const taxNotice =
+    typeof raw.tax_notice === 'string' && raw.tax_notice.trim()
+      ? raw.tax_notice.trim()
+      : smallBusinessExempt
+        ? 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.'
+        : null;
+  return {
+    taxMode,
+    taxRatePercent: smallBusinessExempt ? 0 : taxRatePercent,
+    smallBusinessExempt,
+    taxNotice,
+  };
+}
+
+export async function fetchStorefrontTaxConfig(): Promise<StorefrontTaxConfig> {
+  if (typeof fetch !== 'function') {
+    return SAFE_DEFAULT_TAX_CONFIG;
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') {
+    return SAFE_DEFAULT_TAX_CONFIG;
+  }
+  try {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const base =
+      host === 'vaultscope.de' || host.endsWith('.vaultscope.de')
+        ? '/api'
+        : import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const res = await fetch(`${base}/storefront/config`);
+    if (!res.ok) return SAFE_DEFAULT_TAX_CONFIG;
+    const json = await res.json();
+    return parseStorefrontTaxConfig(json);
+  } catch {
+    return SAFE_DEFAULT_TAX_CONFIG;
+  }
+}
 
 function isPlaceholderSpec(val: string): boolean {
   const lower = val.trim().toLowerCase();
@@ -118,7 +190,10 @@ export function parseDecimalPrice(raw: unknown): number {
   return 0;
 }
 
-export function normalizeCatalogProduct(raw: RawCatalogProduct): CatalogProduct {
+export function normalizeCatalogProduct(
+  raw: RawCatalogProduct,
+  taxRatePercent: number = DEFAULT_TAX_RATE_PERCENT
+): CatalogProduct {
   const specsObj: Record<string, unknown> =
     raw.specs && typeof raw.specs === 'object' && !Array.isArray(raw.specs)
       ? raw.specs
@@ -155,7 +230,8 @@ export function normalizeCatalogProduct(raw: RawCatalogProduct): CatalogProduct 
     specsObj.datacenter;
 
   const netPrice = parseDecimalPrice(raw.price);
-  const grossPrice = Math.round(netPrice * VAT_MULTIPLIER * 100) / 100;
+  const multiplier = 1 + Math.max(0, Number.isFinite(taxRatePercent) ? taxRatePercent : 0) / 100;
+  const grossPrice = Math.round(netPrice * multiplier * 100) / 100;
   const formattedNet = netPrice <= 0 ? '€0.00' : `€${netPrice.toFixed(2)}`;
   const formattedGross = grossPrice <= 0 ? '€0.00' : `€${grossPrice.toFixed(2)}`;
 
@@ -272,6 +348,7 @@ export function matchesProductCategory(
 export interface UseCatalogResult {
   products: CatalogProduct[];
   allProducts: CatalogProduct[];
+  taxConfig: StorefrontTaxConfig;
   loading: boolean;
   error: string | null;
   errorMessage: string | null;
@@ -281,7 +358,8 @@ export interface UseCatalogResult {
 }
 
 export function useCatalogProducts(categoryFilter?: ProductCategoryFilter): UseCatalogResult {
-  const [allProducts, setAllProducts] = useState<CatalogProduct[]>([]);
+  const [rawProducts, setRawProducts] = useState<RawCatalogProduct[]>([]);
+  const [taxConfig, setTaxConfig] = useState<StorefrontTaxConfig>(SAFE_DEFAULT_TAX_CONFIG);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -289,15 +367,18 @@ export function useCatalogProducts(categoryFilter?: ProductCategoryFilter): UseC
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get<RawCatalogProduct[]>('/storefront/catalog');
+      const [data, fetchedTaxConfig] = await Promise.all([
+        api.get<RawCatalogProduct[]>('/storefront/catalog'),
+        fetchStorefrontTaxConfig(),
+      ]);
+      setTaxConfig(fetchedTaxConfig);
       if (!Array.isArray(data)) {
-        setAllProducts([]);
+        setRawProducts([]);
       } else {
-        const visible = data
+        const visibleRaw = data
           .filter((item) => !item.hidden)
-          .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
-          .map(normalizeCatalogProduct);
-        setAllProducts(visible);
+          .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0));
+        setRawProducts(visibleRaw);
       }
     } catch (err: unknown) {
       const msg =
@@ -305,7 +386,7 @@ export function useCatalogProducts(categoryFilter?: ProductCategoryFilter): UseC
           ? err.message
           : 'Unable to reach the VAMOS catalog endpoint.';
       setError(msg);
-      setAllProducts([]);
+      setRawProducts([]);
     } finally {
       setLoading(false);
     }
@@ -314,6 +395,10 @@ export function useCatalogProducts(categoryFilter?: ProductCategoryFilter): UseC
   useEffect(() => {
     fetchCatalog();
   }, [fetchCatalog]);
+
+  const allProducts = rawProducts.map((item) =>
+    normalizeCatalogProduct(item, taxConfig.taxRatePercent)
+  );
 
   const products =
     categoryFilter && categoryFilter !== 'all'
@@ -331,6 +416,7 @@ export function useCatalogProducts(categoryFilter?: ProductCategoryFilter): UseC
   return {
     products,
     allProducts,
+    taxConfig,
     loading,
     error,
     errorMessage: error,

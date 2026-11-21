@@ -74,6 +74,7 @@ const Roadmap      = lazyWithRetry(() => import('./pages/Roadmap').then(m => ({ 
 // ─── Dashboard Routes ────────────────────────────────────────────────────────
 const DashboardLayout = lazyWithRetry(() => import('./pages/dashboard/Layout').then(m => ({ default: m.DashboardLayout })));
 const DashboardOverview = lazyWithRetry(() => import('./pages/dashboard/Overview').then(m => ({ default: m.DashboardOverview })));
+const DashboardOrders = lazyWithRetry(() => import('./pages/dashboard/Orders').then(m => ({ default: m.DashboardOrders })));
 const NewService = lazyWithRetry(() => import('./pages/dashboard/NewService').then(m => ({ default: m.NewService })));
 
 const VpsList = lazyWithRetry(() => import('./pages/dashboard/VpsList').then(m => ({ default: m.VpsList })));
@@ -166,6 +167,7 @@ const PAGE_ROUTES: RouteConfig[] = [
     ),
     children: [
       { path: '', element: <DashboardOverview /> },
+      { path: 'orders', element: <DashboardOrders /> },
       { path: 'new', element: <NewService /> },
       { path: 'vps', element: <VpsList /> },
       { path: 'vps/:id', element: <VpsDetail /> },

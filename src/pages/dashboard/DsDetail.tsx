@@ -284,6 +284,21 @@ export function DsDetail() {
         </div>
       </div>
 
+      {(service.status === 'pending' || service.status === 'provisioning' || (service.order_state && service.order_state !== 'active')) && (
+        <div className="rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent-bright)]/30 px-5 py-4 text-xs text-[var(--fg-muted)] space-y-1">
+          <div>
+            <strong className="text-[var(--fg)]">Order State:</strong>{' '}
+            <span className="font-mono text-[var(--fg)]">{(service.order_state || service.status).replace(/_/g, ' ')}</span>
+            {' — '}Dedicated server provisioning regularly takes{' '}
+            <strong>up to 7 business days</strong> after payment succeeds. We will notify you by
+            email as soon as your hardware and access credentials are ready.
+          </div>
+          {service.order_state_note && (
+            <div className="font-mono text-[11px] text-[var(--fg)]">{service.order_state_note}</div>
+          )}
+        </div>
+      )}
+
       {service.cancel_at_period_end && (
         <div className="rounded-xl bg-[var(--warn-bg)] border border-[var(--warn)]/25 px-5 py-4 flex items-center gap-3 text-xs text-[var(--warn)]">
           <AlertTriangle className="w-4 h-4 text-[var(--warn)] shrink-0" />

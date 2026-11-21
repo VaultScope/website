@@ -104,12 +104,13 @@ export const infrastructureDedicated = {
   technical: [
     { label: 'Betriebssystem', value: 'Debian', note: 'Stabile, produktionsreife Linux-Distribution.' },
     { label: 'Standort', value: 'Europäische Union', note: 'Europäische Partner-Rechenzentren im Geltungsbereich der DSGVO.' },
+    { label: 'Bereitstellung', value: 'Bis zu 7 Werktage', note: 'Reguläre Bereitstellungszeit nach erfolgreicher Zahlung.' },
     { label: 'Infrastruktur', value: 'Enterprise-Hardware', note: 'Dedizierte Server-Hardware für den Dauerbetrieb.' },
   ],
-  pricing: 'Detaillierte Spezifikationen und Preise werden zum Start veröffentlicht.',
+  pricing: 'Aktuelle Konfigurationen und Preise finden Sie direkt im Live-Katalog.',
   waitlist: {
-    title: 'Als Erste informiert werden.',
-    description: 'Dedizierte Server befinden sich aktuell in Vorbereitung. Hinterlassen Sie Ihre E-Mail-Adresse, um direkt zum Start benachrichtigt zu werden.',
+    title: 'Hardware-Updates & Bestand.',
+    description: 'Dedizierte Server sind regulär bestellbar (Bereitstellung nach Zahlungseingang bis zu 7 Werktage). Hinterlassen Sie Ihre E-Mail für Benachrichtigungen zu neuem Bestand oder weiteren Standorten.',
   },
 };
 

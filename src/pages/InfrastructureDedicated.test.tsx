@@ -76,8 +76,8 @@ describe('InfrastructureDedicated', () => {
     });
 
     const tableText = container.querySelector('table')?.textContent ?? '';
-    expect(tableText).toContain('€119.00');
     expect(tableText).toContain('€100.00');
+    expect(tableText).toContain('§ 19 UStG');
     expect(tableText).not.toContain('€€');
     expect(tableText).not.toContain('[object Object]');
     expect(tableText).not.toContain('bandwidth');

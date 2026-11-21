@@ -43,11 +43,11 @@ export const home = {
       },
       {
         title: 'Dedizierte Server',
-        status: 'In Vorbereitung',
-        desc: 'Exklusive Bare-Metal-Server mit ungeteilter Hardware-Performance und vollem Root-Zugriff für anspruchsvolle Workloads.',
-        specs: ['Dedizierte Hardware', 'Voller Root- & IPMI-Zugriff', '10-Gbit/s-Anbindung'],
+        status: 'Jetzt verfügbar',
+        desc: 'Exklusive Bare-Metal-Server mit ungeteilter Hardware-Performance und vollem Root-Zugriff. Die Bereitstellung dauert nach erfolgreicher Zahlung regulär bis zu 7 Werktage.',
+        specs: ['Dedizierte Hardware', 'Bis zu 7 Werktage', '10-Gbit/s-Anbindung'],
         href: '/infrastructure/dedicated/',
-        cta: 'Mehr erfahren',
+        cta: 'Server konfigurieren',
       },
       {
         title: 'One-Click Deploy',

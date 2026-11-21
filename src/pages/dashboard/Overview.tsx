@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { getQuickNavItems, type QuickNavItem } from '../../lib/quickNav';
+import { getOrderStateDisplay } from '../../lib/orderState';
 
 const VAT_RATE = 0.19;
 
@@ -21,6 +22,8 @@ interface ServiceItem {
   name?: string;
   hostname?: string;
   status: string;
+  order_state?: string;
+  order_state_note?: string | null;
   product_id?: string;
   provider_type?: string;
   ip?: string;
@@ -244,10 +247,18 @@ export function DashboardOverview() {
       {/* Active Services Stream */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[var(--fg-muted)]">Deployed Infrastructure</h2>
-          <span className="text-xs font-mono text-[var(--fg-faint)]">
-            {activeServices.length} total
-          </span>
+          <h2 className="text-sm font-medium text-[var(--fg-muted)]">Deployed Infrastructure &amp; Orders</h2>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/dashboard/orders"
+              className="text-xs font-mono text-[var(--accent-bright)] hover:text-[var(--fg)] transition-colors"
+            >
+              View Orders →
+            </Link>
+            <span className="text-xs font-mono text-[var(--fg-faint)]">
+              {activeServices.length} total
+            </span>
+          </div>
         </div>
 
         {loading ? (
@@ -309,9 +320,19 @@ export function DashboardOverview() {
                         <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--fg-muted)]">
                           {service.status}
                         </span>
+                        {service.order_state && (
+                          <span
+                            className={`text-[10px] font-mono px-2 py-0.5 rounded ${getOrderStateDisplay(service.order_state).badgeClass}`}
+                          >
+                            {getOrderStateDisplay(service.order_state).label}
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--fg-faint)] mt-1">
                         <span>{prod?.name || service.name || 'Infrastructure Node'}</span>
+                        {service.order_state_note && (
+                          <span className="text-[var(--fg-muted)]">{service.order_state_note}</span>
+                        )}
                         {service.ip && (
                           <span className="font-mono text-[var(--fg-muted)]">{service.ip}</span>
                         )}

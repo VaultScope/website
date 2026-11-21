@@ -240,11 +240,19 @@ export function NewService() {
   const [clientSecret, setClientSecret] = useState('');
   const [paymentIntentId, setPaymentIntentId] = useState('');
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [taxRatePercent, setTaxRatePercent] = useState<number>(0);
+  const [smallBusinessExempt, setSmallBusinessExempt] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     api
-      .get<{ stripe_public_key?: string; stripe_publishable_key?: string }>('/storefront/config')
+      .get<{
+        stripe_public_key?: string;
+        stripe_publishable_key?: string;
+        tax_mode?: string;
+        tax_rate_percent?: number;
+        small_business_exempt?: boolean;
+      }>('/storefront/config')
       .then((cfg) => {
         const key =
           cfg?.stripe_public_key ||
@@ -252,6 +260,14 @@ export function NewService() {
           import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
           '';
         if (key) setStripePromise(loadStripe(key));
+        const rate = Number(cfg?.tax_rate_percent ?? 0);
+        const safeRate = Number.isFinite(rate) && rate >= 0 ? rate : 0;
+        const exempt =
+          typeof cfg?.small_business_exempt === 'boolean'
+            ? cfg.small_business_exempt
+            : cfg?.tax_mode === 'small_business' || safeRate <= 0;
+        setSmallBusinessExempt(exempt);
+        setTaxRatePercent(exempt ? 0 : safeRate);
       })
       .catch(() => {
         const fallback = import.meta.env.VITE_STRIPE_PUBLIC_KEY || '';
@@ -512,7 +528,7 @@ export function NewService() {
         }
       }
       const subtotal = recurring + setupFee;
-      const vatVal = subtotal * 0.19;
+      const vatVal = subtotal * (taxRatePercent / 100);
       return { recurring, setupFee, subtotal, vat: vatVal, total: subtotal + vatVal };
     }
     return null;
@@ -525,7 +541,7 @@ export function NewService() {
       : 0;
   const setupFeeNet = fallbackDedicatedPricing ? fallbackDedicatedPricing.setupFee : 0;
   const price = fallbackDedicatedPricing ? fallbackDedicatedPricing.subtotal : recurringNet;
-  const vat = fallbackDedicatedPricing ? fallbackDedicatedPricing.vat : price * 0.19;
+  const vat = fallbackDedicatedPricing ? fallbackDedicatedPricing.vat : price * (taxRatePercent / 100);
   const total = fallbackDedicatedPricing ? fallbackDedicatedPricing.total : price + vat;
 
   const handleProceedToPayment = async () => {
@@ -749,7 +765,9 @@ export function NewService() {
                             <span className="text-xs text-[var(--fg-faint)] font-normal"> / mo</span>
                           </div>
                           <div className="text-[11px] font-mono text-[var(--fg-faint)]">
-                            excl. 19% VAT
+                            {smallBusinessExempt || taxRatePercent <= 0
+                              ? 'incl. €0.00 VAT (§ 19 UStG)'
+                              : `excl. ${taxRatePercent}% VAT`}
                           </div>
                         </div>
                       </div>
@@ -1103,16 +1121,33 @@ export function NewService() {
                   </div>
                 )}
                 <div className="flex justify-between py-3">
-                  <span className="text-[var(--fg-muted)]">19% German VAT</span>
+                  <span className="text-[var(--fg-muted)]">
+                    {smallBusinessExempt || taxRatePercent <= 0
+                      ? 'VAT (Kleinunternehmer § 19 UStG)'
+                      : `${taxRatePercent}% German VAT`}
+                  </span>
                   <span className="font-mono text-[var(--fg)]">€{vat.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between pt-3 text-sm font-semibold">
                   <span className="text-[var(--fg)]">
-                    {isDedicatedConfigurable ? 'Total Due Today (Gross)' : 'Total Monthly (Gross)'}
+                    {smallBusinessExempt || taxRatePercent <= 0
+                      ? isDedicatedConfigurable
+                        ? 'Total Due Today'
+                        : 'Total Monthly'
+                      : isDedicatedConfigurable
+                        ? 'Total Due Today (Gross)'
+                        : 'Total Monthly (Gross)'}
                   </span>
                   <span className="font-mono text-[var(--accent-bright)]">€{total.toFixed(2)}</span>
                 </div>
               </div>
+              {isDedicatedConfigurable && (
+                <div className="mt-4 rounded-[5px] border border-[var(--accent-bright)]/30 bg-[var(--accent-subtle)] px-4 py-3 text-xs text-[var(--fg-muted)]">
+                  <strong className="text-[var(--fg)]">Provisioning Lead Time:</strong>{' '}
+                  Dedicated server provisioning regularly takes <strong>up to 7 business days</strong>{' '}
+                  after payment succeeds. You will receive an order confirmation and access details by email.
+                </div>
+              )}
             </div>
           )}
 
@@ -1138,9 +1173,15 @@ export function NewService() {
           {currentStep === 4 && (
             <div className="py-12 text-center space-y-3">
               <div className="w-8 h-8 rounded-full border-2 border-[var(--accent-bright)] border-t-transparent animate-spin mx-auto" />
-              <div className="text-sm font-medium text-[var(--fg)]">Provisioning resource...</div>
+              <div className="text-sm font-medium text-[var(--fg)]">
+                {isDedicatedConfigurable
+                  ? 'Submitting dedicated server order...'
+                  : 'Provisioning resource...'}
+              </div>
               <p className="text-xs text-[var(--fg-muted)]">
-                Allocating resource and configuring access credentials.
+                {isDedicatedConfigurable
+                  ? 'Payment succeeded. Dedicated server provisioning regularly takes up to 7 business days after payment — we will send updates and credentials by email.'
+                  : 'Allocating resource and configuring access credentials.'}
               </p>
             </div>
           )}

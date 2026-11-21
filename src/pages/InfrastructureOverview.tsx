@@ -23,8 +23,8 @@ export const InfrastructureOverview = () => {
       desc: t.infrastructureOverview.dedicated.desc,
       cta: t.infrastructureOverview.dedicated.cta,
       href: '/infrastructure/dedicated/',
-      status: isDe ? 'Warteliste offen' : 'Waitlist Open',
-      availableNow: false,
+      status: isDe ? 'Jetzt verfügbar (bis zu 7 Werktage)' : 'Available Now (up to 7 business days)',
+      availableNow: true,
     },
     {
       title: isDe ? 'SFTP- & Backup-Speicher' : 'SFTP & Backup Storage',

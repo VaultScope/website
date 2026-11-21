@@ -10,7 +10,8 @@ const stripHighlight = (str: string) => str.replace(/\*/g, '');
 export const InfrastructureCloud = () => {
   const { t, locale } = useLanguage();
   const isDe = locale === 'de';
-  const { products, status, error, refetch } = useCatalogProducts('cloud');
+  const { products, taxConfig, status, error, refetch } = useCatalogProducts('cloud');
+  const isTaxExempt = taxConfig.smallBusinessExempt || taxConfig.taxRatePercent <= 0;
 
   return (
     <div className="flex flex-col w-full bg-[var(--bg)] text-[var(--fg)]">
@@ -50,7 +51,13 @@ export const InfrastructureCloud = () => {
               </p>
             </div>
             <span className="font-mono text-xs text-[var(--fg-muted)]">
-              {isDe ? 'Standorte: DE / AT · Preise inkl. 19% MwSt.' : 'Regions: DE / AT · Prices incl. 19% VAT'}
+              {isTaxExempt
+                ? isDe
+                  ? 'Standorte: DE / AT · gem. § 19 UStG (keine USt.)'
+                  : 'Regions: DE / AT · VAT-exempt (§ 19 UStG)'
+                : isDe
+                  ? `Standorte: DE / AT · Preise inkl. ${taxConfig.taxRatePercent}% MwSt.`
+                  : `Regions: DE / AT · Prices incl. ${taxConfig.taxRatePercent}% VAT`}
             </span>
           </div>
 
@@ -101,7 +108,13 @@ export const InfrastructureCloud = () => {
                     <th className="py-3.5 px-4 font-medium">RAM</th>
                     <th className="py-3.5 px-4 font-medium">NVMe</th>
                     <th className="py-3.5 px-4 font-medium text-right">
-                      {isDe ? 'Monatspreis (inkl. 19% MwSt.)' : 'Monthly Rate (incl. 19% VAT)'}
+                      {isTaxExempt
+                        ? isDe
+                          ? 'Monatspreis (gem. § 19 UStG)'
+                          : 'Monthly Rate (§ 19 UStG)'
+                        : isDe
+                          ? `Monatspreis (inkl. ${taxConfig.taxRatePercent}% MwSt.)`
+                          : `Monthly Rate (incl. ${taxConfig.taxRatePercent}% VAT)`}
                     </th>
                     <th className="py-3.5 pl-5 font-medium text-right">{isDe ? 'Aktion' : 'Action'}</th>
                   </tr>
@@ -128,7 +141,11 @@ export const InfrastructureCloud = () => {
                           {plan.priceGrossFormatted}
                         </div>
                         <div className="font-mono text-[11px] text-[var(--fg-muted)]">
-                          {plan.priceNetFormatted} {isDe ? 'netto' : 'net'} / mo
+                          {isTaxExempt
+                            ? isDe
+                              ? 'gem. § 19 UStG (keine USt.) / mo'
+                              : 'VAT-exempt (§ 19 UStG) / mo'
+                            : `${plan.priceNetFormatted} ${isDe ? 'netto' : 'net'} / mo`}
                         </div>
                       </td>
                       <td className="py-4 pl-5 text-right whitespace-nowrap">

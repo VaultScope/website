@@ -26,8 +26,8 @@ export const Hosting = () => {
           isolation: 'Single-Tenant Physische Hardware',
           storage: 'Dedizierte NVMe / ZFS RAID',
           network: 'DE / AT · Ungeteilter Port + IPMI',
-          status: 'In Vorbereitung (Warteliste)',
-          availableNow: false,
+          status: 'Verfügbar (Bereitstellung i. d. R. bis zu 7 Werktage)',
+          availableNow: true,
         },
         {
           product: 'SFTP-Backup-Speicher',
@@ -64,8 +64,8 @@ export const Hosting = () => {
           isolation: 'Single-Tenant Physical Hardware',
           storage: 'Dedicated NVMe / ZFS RAID',
           network: 'DE / AT · Unshared Port + IPMI',
-          status: 'In Preparation (Waitlist)',
-          availableNow: false,
+          status: 'Available Now (provisioning up to 7 business days)',
+          availableNow: true,
         },
         {
           product: 'SFTP Backup Storage',

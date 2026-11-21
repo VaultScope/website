@@ -265,6 +265,9 @@ describe('Home', () => {
     expect(text).toContain('150 GB SFTP Storage · SFTP, SCP, FTPS, WebDAV');
     expect(text).toContain('Helsinki, FI · Unmetered / Fair Use');
     expect(text).not.toContain('150 GB SFTP Storage GB NVMe');
+    expect(text).toContain('Dedicated Servers');
+    expect(text).not.toContain('Dedicated (soon)');
+    expect(text).toContain('up to 7 business days');
   });
 });
 

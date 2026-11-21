@@ -16,6 +16,11 @@ import { useLanguage } from '../i18n';
 import { WaitlistForm } from '../components/WaitlistForm';
 import { CatalogErrorState } from '../components/Shared';
 import { api } from '../lib/api';
+import {
+  fetchStorefrontTaxConfig,
+  SAFE_DEFAULT_TAX_CONFIG,
+  type StorefrontTaxConfig,
+} from '../lib/catalog';
 import { HeroStack3D } from '../components/HeroStack3D';
 
 interface CatalogProduct {
@@ -38,12 +43,11 @@ interface CatalogProduct {
   } | null;
 }
 
-const VAT_MULTIPLIER = 1.19;
-
-function formatPriceGross(netPriceStr: string): string {
+function formatPriceGross(netPriceStr: string, taxRatePercent: number): string {
   const numeric = parseFloat(netPriceStr);
   if (Number.isNaN(numeric)) return netPriceStr;
-  return (numeric * VAT_MULTIPLIER).toFixed(2);
+  const multiplier = 1 + Math.max(0, taxRatePercent) / 100;
+  return (numeric * multiplier).toFixed(2);
 }
 
 interface TypewriterSentence {
@@ -126,14 +130,15 @@ export const Home = () => {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
+  const [taxConfig, setTaxConfig] = useState<StorefrontTaxConfig>(SAFE_DEFAULT_TAX_CONFIG);
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const fetchCatalog = () => {
     setLoadingCatalog(true);
     setCatalogError(false);
-    api
-      .get<CatalogProduct[]>('/storefront/catalog')
-      .then((data) => {
+    Promise.all([api.get<CatalogProduct[]>('/storefront/catalog'), fetchStorefrontTaxConfig()])
+      .then(([data, taxCfg]) => {
+        setTaxConfig(taxCfg);
         setProducts(Array.isArray(data) ? data.filter((p) => !p.hidden) : []);
       })
       .catch(() => {
@@ -147,10 +152,10 @@ export const Home = () => {
 
   useEffect(() => {
     let active = true;
-    api
-      .get<CatalogProduct[]>('/storefront/catalog')
-      .then((data) => {
+    Promise.all([api.get<CatalogProduct[]>('/storefront/catalog'), fetchStorefrontTaxConfig()])
+      .then(([data, taxCfg]) => {
         if (active) {
+          setTaxConfig(taxCfg);
           setProducts(Array.isArray(data) ? data.filter((p) => !p.hidden) : []);
           setCatalogError(false);
         }
@@ -263,11 +268,11 @@ export const Home = () => {
     },
     {
       name: 'Dedicated',
-      badge: isDe ? 'bald' : 'soon',
-      title: 'Dedicated (soon)',
+      badge: null,
+      title: isDe ? 'Dedizierte Server' : 'Dedicated Servers',
       desc: isDe
-        ? 'Dedizierte Bare-Metal-Server mit vollem Root-Zugriff und maximaler Performance ohne Hypervisor-Overhead.'
-        : 'Single-tenant bare-metal servers with full root access and maximum throughput without hypervisor overhead.',
+        ? 'Dedizierte Bare-Metal-Server mit vollem Root-Zugriff und maximaler Performance. Die Bereitstellung dauert nach Zahlungseingang regulär bis zu 7 Werktage.'
+        : 'Single-tenant bare-metal servers with full root access and maximum throughput. Provisioning regularly takes up to 7 business days after payment succeeds.',
       href: '/infrastructure/dedicated/',
       icon: HardDrive,
     },
@@ -531,7 +536,7 @@ export const Home = () => {
             </p>
           </div>
 
-          {/* Core Product Pillars: VPS (soon), Dedicated (soon), Storage (SFTP only as of now) */}
+          {/* Core Product Pillars: VPS (soon), Dedicated Servers, Storage (SFTP only as of now) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 mb-16">
             {productPillars.map((product) => {
               const Icon = product.icon;
@@ -580,7 +585,13 @@ export const Home = () => {
                   {isDe ? 'Live-Katalog' : 'Live Catalog'}
                 </h3>
                 <span className="text-xs text-[var(--fg-muted)]">
-                  {isDe ? 'Alle Preise inkl. 19 % MwSt.' : 'All prices incl. 19% VAT'}
+                  {taxConfig.smallBusinessExempt || taxConfig.taxRatePercent <= 0
+                    ? isDe
+                      ? 'gem. § 19 UStG (keine USt.)'
+                      : 'VAT-exempt (§ 19 UStG)'
+                    : isDe
+                      ? `Alle Preise inkl. ${taxConfig.taxRatePercent} % MwSt.`
+                      : `All prices incl. ${taxConfig.taxRatePercent}% VAT`}
                 </span>
               </div>
 
@@ -738,7 +749,7 @@ export const Home = () => {
                             </span>
                           </td>
                           <td className="text-right font-mono font-semibold text-[var(--fg)]">
-                            €{formatPriceGross(plan.price)}
+                            €{formatPriceGross(plan.price, taxConfig.smallBusinessExempt ? 0 : taxConfig.taxRatePercent)}
                             <span className="text-[11px] font-normal text-[var(--fg-muted)] ml-1">
                               / {isDe ? 'Monat' : 'mo'}
                             </span>
