@@ -109,7 +109,7 @@ export function ForumCategory() {
     }
   }, [category]);
 
-  if (!category || !CATEGORY_INFO[category]) {
+  if (!category || !Object.prototype.hasOwnProperty.call(CATEGORY_INFO, category)) {
     return (
       <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text)] pt-28 lg:pt-32 pb-24">
         <div className="vs-container">

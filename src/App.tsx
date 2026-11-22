@@ -1,11 +1,13 @@
-import { Suspense, lazy, type ComponentType } from 'react';
+import { Suspense, lazy, useEffect, type ComponentType } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Navbar, Footer } from './components/Shared';
+import { ConsentBanner } from './components/ConsentBanner';
 import { LanguageProvider } from './i18n';
 import { ToastProvider } from './components/Toast';
 import { ExplainModeProvider } from './components/HelpTooltip';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { initAnalyticsConsent, trackPageView } from './lib/analytics';
 
 // ─── Eagerly loaded (homepage + primary routes) ───────────────────────────────
 import { Home }       from './pages/Home';
@@ -97,6 +99,8 @@ const ProfileLogs = lazyWithRetry(() => import('./pages/dashboard/profile/Logs')
 // ─── Resources Routes ────────────────────────────────────────────────────────
 const BlogList = lazyWithRetry(() => import('./pages/BlogList').then(m => ({ default: m.BlogList })));
 const BlogDetail = lazyWithRetry(() => import('./pages/BlogDetail').then(m => ({ default: m.BlogDetail })));
+const GuidesIndex = lazyWithRetry(() => import('./pages/GuidesIndex').then(m => ({ default: m.GuidesIndex })));
+const GuideDetail = lazyWithRetry(() => import('./pages/GuideDetail').then(m => ({ default: m.GuideDetail })));
 const ForumList = lazyWithRetry(() => import('./pages/ForumList').then(m => ({ default: m.ForumList })));
 const ForumCategory = lazyWithRetry(() => import('./pages/ForumCategory').then(m => ({ default: m.ForumCategory })));
 const ForumThread = lazyWithRetry(() => import('./pages/ForumThread').then(m => ({ default: m.ForumThread })));
@@ -211,6 +215,8 @@ const PAGE_ROUTES: RouteConfig[] = [
   { path: '/resources/blog/:slug', element: <BlogDetail /> },
   { path: '/blog', element: <BlogList /> },
   { path: '/blog/:slug', element: <BlogDetail /> },
+  { path: '/guides', element: <GuidesIndex /> },
+  { path: '/guides/:slug', element: <GuideDetail /> },
 
   { path: '/resources/forum', element: <ForumList /> },
   { path: '/resources/forum/:category', element: <ForumCategory /> },
@@ -326,6 +332,14 @@ function AppContent() {
   const location = useLocation();
   const isDashboard = location.pathname.includes('/dashboard');
 
+  useEffect(() => {
+    initAnalyticsConsent();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col text-foreground font-sans">
       <a
@@ -367,6 +381,7 @@ function AppContent() {
         </ErrorBoundary>
       </main>
       {!isDashboard && <Footer />}
+      <ConsentBanner />
     </div>
   );
 }

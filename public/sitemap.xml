@@ -1,108 +1,394 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <!-- Core -->
   <url>
     <loc>https://vaultscope.de/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://vaultscope.de/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://vaultscope.de/de" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://vaultscope.de/" />
+    <priority>1.0</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://vaultscope.de/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://vaultscope.de/de" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://vaultscope.de/" />
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
 
   <!-- Infrastructure -->
   <url>
-    <loc>https://vaultscope.de/infrastructure/</loc>
+    <loc>https://vaultscope.de/infrastructure</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://vaultscope.de/infrastructure" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://vaultscope.de/de/infrastructure" />
     <priority>0.9</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/infrastructure/cloud/</loc>
+    <loc>https://vaultscope.de/de/infrastructure</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/infrastructure/cloud</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/infrastructure/dedicated/</loc>
+    <loc>https://vaultscope.de/de/infrastructure/cloud</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/infrastructure/managed/</loc>
+    <loc>https://vaultscope.de/infrastructure/dedicated</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/infrastructure/dedicated</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/infrastructure/storage</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/infrastructure/storage</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/infrastructure/managed</loc>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
   </url>
-
-  <!-- Deploy -->
   <url>
-    <loc>https://vaultscope.de/deploy/</loc>
+    <loc>https://vaultscope.de/de/infrastructure/managed</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/deploy</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/deploy</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
 
   <!-- Software -->
   <url>
-    <loc>https://vaultscope.de/software/pegasus/</loc>
+    <loc>https://vaultscope.de/software/pegasus</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/software/pegasus</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/software/vamos</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/software/vamos</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/software/camos</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/software/camos</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
 
-  <!-- Pricing -->
+  <!-- Resources & Docs -->
   <url>
-    <loc>https://vaultscope.de/pricing/</loc>
+    <loc>https://vaultscope.de/docs</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/docs</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/resources/blog</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/resources/blog</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/resources/forum</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/resources/forum</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Technical SEO Guides -->
+  <url>
+    <loc>https://vaultscope.de/guides</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/eu-cloud-vps-gdpr-hosting</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/eu-cloud-vps-gdpr-hosting</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/encrypted-sftp-backup-storage-zfs</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/encrypted-sftp-backup-storage-zfs</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/dedicated-bare-metal-ddos-protection</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/dedicated-bare-metal-ddos-protection</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/one-click-self-hosted-apps-eu</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/one-click-self-hosted-apps-eu</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/vps-vs-dedicated-server-comparison</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/vps-vs-dedicated-server-comparison</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/sftp-storage-vs-s3-object-storage</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/sftp-storage-vs-s3-object-storage</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/linux-vps-hardening-ssh-2fa-checklist</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/linux-vps-hardening-ssh-2fa-checklist</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/proxmox-kvm-virtualization-bare-metal</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/proxmox-kvm-virtualization-bare-metal</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/borgbackup-restic-offsite-sftp-guide</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/borgbackup-restic-offsite-sftp-guide</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/guides/german-hosting-gdpr-dpa-compliance-guide</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/guides/german-hosting-gdpr-dpa-compliance-guide</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
   </url>
 
   <!-- Company -->
   <url>
-    <loc>https://vaultscope.de/company/about/</loc>
+    <loc>https://vaultscope.de/company/about</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/company/open-source/</loc>
+    <loc>https://vaultscope.de/de/company/about</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/company/contact/</loc>
+    <loc>https://vaultscope.de/company/open-source</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/company/open-source</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/company/contact</loc>
     <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/company/contact</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/company/roadmap</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/company/roadmap</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/company/team</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/company/team</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/company/partners</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/company/partners</loc>
+    <priority>0.5</priority>
     <changefreq>monthly</changefreq>
   </url>
 
   <!-- Legal -->
   <url>
-    <loc>https://vaultscope.de/legal/privacy/</loc>
+    <loc>https://vaultscope.de/legal/privacy</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/legal/terms/</loc>
+    <loc>https://vaultscope.de/de/legal/privacy</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/legal/imprint/</loc>
+    <loc>https://vaultscope.de/legal/terms</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/legal/hosting-terms/</loc>
+    <loc>https://vaultscope.de/de/legal/terms</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/legal/cancellation/</loc>
+    <loc>https://vaultscope.de/legal/imprint</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/legal/aup/</loc>
+    <loc>https://vaultscope.de/de/legal/imprint</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://vaultscope.de/legal/dpa/</loc>
+    <loc>https://vaultscope.de/legal/hosting-terms</loc>
     <priority>0.3</priority>
     <changefreq>monthly</changefreq>
   </url>
-
+  <url>
+    <loc>https://vaultscope.de/de/legal/hosting-terms</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/legal/cancellation</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/legal/cancellation</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/legal/aup</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/legal/aup</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/legal/dpa</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://vaultscope.de/de/legal/dpa</loc>
+    <priority>0.3</priority>
+    <changefreq>monthly</changefreq>
+  </url>
 </urlset>

@@ -77,6 +77,8 @@ export function BlogDetail() {
     const rawHtml = marked.parse(article.content) as string;
     return DOMPurify.sanitize(rawHtml, {
       ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|\/(?![/\\]))/i,
+      FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'iframe', 'object', 'embed', 'svg', 'math'],
+      FORBID_ATTR: ['style', 'srcdoc', 'formaction'],
     });
   }, [article?.content]);
 
@@ -143,6 +145,28 @@ export function BlogDetail() {
         type="article"
         publishedTime={article.published_at}
         author={article.author?.name || article.author_name}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: article.title,
+          description:
+            article.excerpt ||
+            (article.content ? article.content.substring(0, 160).replace(/[#*`\n]/g, ' ') : undefined),
+          datePublished: article.published_at,
+          author: {
+            '@type': 'Person',
+            name: authorDisplay,
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'VaultScope',
+            logo: {
+              '@type': 'ImageObject',
+              url: 'https://vaultscope.de/logos/logo-picture.png',
+            },
+          },
+          mainEntityOfPage: `https://vaultscope.de/resources/blog/${article.slug}`,
+        }}
       />
 
       <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text)] pt-28 lg:pt-32 pb-24">

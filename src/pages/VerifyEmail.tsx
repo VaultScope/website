@@ -40,6 +40,10 @@ export function VerifyEmail() {
       return;
     }
 
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     const verify = async () => {
       try {
         const res = await fetch(`${API_BASE}/auth/verify-email`, {

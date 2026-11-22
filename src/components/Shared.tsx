@@ -40,6 +40,7 @@ import { useLanguage } from '../i18n';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { getStoredClaims, logout } from '../lib/auth';
 import { api } from '../lib/api';
+import { openConsentPreferences } from '../lib/analytics';
 
 // ─── Highlight Parser (Strips legacy * markers for uniform display type) ───
 
@@ -1330,7 +1331,20 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-sans text-xs text-[var(--fg-faint)]">
           <p>{t.footer.copyright}</p>
-          <div className="flex gap-5 items-center">
+          <div className="flex flex-wrap gap-5 items-center">
+            <Link
+              to={localePath('/guides/')}
+              className="hover:text-[var(--accent-bright)] transition-colors"
+            >
+              {isDe ? 'Technische Guides' : 'Technical Guides'}
+            </Link>
+            <button
+              type="button"
+              onClick={openConsentPreferences}
+              className="hover:text-[var(--accent-bright)] transition-colors cursor-pointer"
+            >
+              {isDe ? 'Cookie-Einstellungen' : 'Cookie Settings'}
+            </button>
             <a
               href="https://discord.gg/84kMAY2aKm"
               target="_blank"
@@ -1807,18 +1821,19 @@ export const CTABlock = ({
 // ─── LegalDocumentLayout (Open Editorial Legal & Compliance Layout) ───────────
 
 const LEGAL_DOC_LINKS = [
-  { href: '/legal/imprint', label: 'Imprint (Impressum)', code: 'DDG §5' },
-  { href: '/legal/privacy', label: 'Privacy Policy', code: 'GDPR' },
-  { href: '/legal/terms', label: 'Terms of Service', code: 'AGB' },
-  { href: '/legal/hosting-terms', label: 'Hosting Terms', code: 'AGB-Host' },
-  { href: '/legal/aup', label: 'Acceptable Use Policy', code: 'AUP' },
-  { href: '/legal/dpa', label: 'Data Processing Agreement', code: 'Art. 28' },
-  { href: '/legal/cancellation', label: 'Cancellation Policy', code: 'Widerruf' },
+  { href: '/legal/imprint', en: 'Imprint (Impressum)', de: 'Impressum', code: 'DDG §5' },
+  { href: '/legal/privacy', en: 'Privacy Policy', de: 'Datenschutzerklärung', code: 'GDPR / DSGVO' },
+  { href: '/legal/terms', en: 'Terms of Service', de: 'Nutzungsbedingungen', code: 'AGB' },
+  { href: '/legal/hosting-terms', en: 'Hosting Terms', de: 'Hosting-AGB', code: 'AGB-Host' },
+  { href: '/legal/aup', en: 'Acceptable Use Policy', de: 'Nutzungsrichtlinie', code: 'AUP' },
+  { href: '/legal/dpa', en: 'Data Processing Agreement', de: 'Auftragsverarbeitung', code: 'Art. 28' },
+  { href: '/legal/cancellation', en: 'Cancellation Policy', de: 'Widerrufsbelehrung', code: 'Widerruf' },
 ];
 
 export const LegalDocumentLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const { localePath, stripLocale } = useLanguage();
+  const { locale, localePath, stripLocale } = useLanguage();
+  const isDe = locale === 'de';
   const currentPath = stripLocale(location.pathname).replace(/\/$/, '');
 
   return (
@@ -1829,11 +1844,11 @@ export const LegalDocumentLayout = ({ children }: { children: React.ReactNode })
             <div className="space-y-4">
               <div className="border-b border-[var(--line)] pb-3 flex items-center justify-between">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--accent-bright)]">
-                  Legal Directory
+                  {isDe ? 'Rechtliches' : 'Legal Directory'}
                 </span>
                 <span className="text-[11px] font-mono text-[var(--fg-faint)]">EU / DE</span>
               </div>
-              <nav aria-label="Legal documents" className="space-y-1">
+              <nav aria-label={isDe ? 'Rechtliche Dokumente' : 'Legal documents'} className="space-y-1">
                 {LEGAL_DOC_LINKS.map((doc) => {
                   const isActive = currentPath === doc.href;
                   return (
@@ -1846,7 +1861,7 @@ export const LegalDocumentLayout = ({ children }: { children: React.ReactNode })
                           : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)]/50'
                       }`}
                     >
-                      <span>{doc.label}</span>
+                      <span>{isDe ? doc.de : doc.en}</span>
                       <span className="font-mono text-[10px] text-[var(--fg-faint)]">{doc.code}</span>
                     </Link>
                   );
@@ -1857,28 +1872,28 @@ export const LegalDocumentLayout = ({ children }: { children: React.ReactNode })
             <div className="pt-6 border-t border-[var(--line)] space-y-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--fg)]">
-                  Regulatory Ledger
+                  {isDe ? 'Register & Kontakt' : 'Regulatory Ledger'}
                 </span>
               </div>
               <dl className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-mono text-[var(--fg-faint)]">Jurisdiction</dt>
-                  <dd className="font-mono text-[var(--fg)]">Germany (BGB / GDPR)</dd>
+                  <dt className="font-mono text-[var(--fg-faint)]">{isDe ? 'Rechtsraum' : 'Jurisdiction'}</dt>
+                  <dd className="font-mono text-[var(--fg)]">{isDe ? 'Deutschland (BGB / DSGVO)' : 'Germany (BGB / GDPR)'}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-mono text-[var(--fg-faint)]">Entity</dt>
+                  <dt className="font-mono text-[var(--fg-faint)]">{isDe ? 'Anbieter' : 'Entity'}</dt>
                   <dd className="font-mono text-[var(--fg)]">Anton Schmidt</dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-mono text-[var(--fg-faint)]">Datenschutzbeauftragter</dt>
+                  <dt className="font-mono text-[var(--fg-faint)]">{isDe ? 'Datenschutz' : 'Data Protection'}</dt>
                   <dd className="font-mono text-[var(--fg)]">Anton Schmidt</dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-mono text-[var(--fg-faint)]">Privacy Contact</dt>
+                  <dt className="font-mono text-[var(--fg-faint)]">{isDe ? 'Datenschutz-E-Mail' : 'Privacy Contact'}</dt>
                   <dd className="font-mono text-[var(--accent-bright)]">data@vaultscope.de</dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-mono text-[var(--fg-faint)]">Legal Contact</dt>
+                  <dt className="font-mono text-[var(--fg-faint)]">{isDe ? 'Rechts- & DSA-Kontakt' : 'Legal & DSA Contact'}</dt>
                   <dd className="font-mono text-[var(--accent-bright)]">administration@vaultscope.de</dd>
                 </div>
               </dl>

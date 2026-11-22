@@ -22,6 +22,7 @@ import {
   type StorefrontTaxConfig,
 } from '../lib/catalog';
 import { HeroStack3D } from '../components/HeroStack3D';
+import { SeoHead } from '../components/SeoHead';
 
 interface CatalogProduct {
   id: string;
@@ -333,6 +334,36 @@ export const Home = () => {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--fg)]">
+      <SeoHead
+        title={t.home.seo.title}
+        description={t.home.seo.description}
+        path={isDe ? '/de' : '/'}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'VaultScope',
+            url: 'https://vaultscope.de',
+            logo: 'https://vaultscope.de/logos/logo-picture.png',
+            email: 'administration@vaultscope.de',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: 'Gottlob-Spieß-Straße 2',
+              postalCode: '74343',
+              addressLocality: 'Sachsenheim',
+              addressCountry: 'DE',
+            },
+            sameAs: ['https://github.com/semi-constructor'],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'VaultScope',
+            url: 'https://vaultscope.de',
+            inLanguage: ['en', 'de'],
+          },
+        ]}
+      />
       {/* ─── SECTION 1: HERO (Pixelated Typewriter + Sleek Purple Highlight + Floating Stack) ─── */}
       <section className="relative pt-28 pb-16 lg:min-h-screen lg:pt-20 lg:pb-12 lg:flex lg:items-center overflow-hidden">
         {/* Animated Architectural Background that Slowly Fades Out on Scroll */}

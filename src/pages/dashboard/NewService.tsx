@@ -23,9 +23,15 @@ function CheckoutForm({
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
   const [hasExpressMethods, setHasExpressMethods] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(false);
+  const [immediateProvisionConsent, setImmediateProvisionConsent] = useState(false);
 
   const confirmStripePayment = async () => {
     if (!stripe || !elements) return;
+    if (!legalAccepted || !immediateProvisionConsent) {
+      setError('Please confirm the Terms, Cancellation Policy, and immediate provisioning consent before completing your order.');
+      return;
+    }
     setProcessing(true);
     setError('');
 
@@ -139,26 +145,55 @@ function CheckoutForm({
       {error && (
         <div role="alert" className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[var(--err)] text-xs">{error}</div>
       )}
-      <div className="flex flex-col gap-2">
-        <p className="text-[11px] text-[var(--fg-muted)]">
-          By completing this order, you agree to the{' '}
-          <a href="/legal/terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
-            Terms of Service
-          </a>
-          ,{' '}
-          <a href="/legal/hosting-terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
-            Hosting Terms
-          </a>
-          , and{' '}
-          <a href="/legal/cancellation" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
-            Cancellation Policy
-          </a>
-          .
-        </p>
-        <div className="flex justify-end">
+      <div className="flex flex-col gap-3 pt-1">
+        <label className="flex items-start gap-2.5 cursor-pointer select-none text-[11px] text-[var(--fg-muted)] leading-relaxed">
+          <input
+            type="checkbox"
+            checked={legalAccepted}
+            onChange={(e) => {
+              setLegalAccepted(e.target.checked);
+              if (error) setError('');
+            }}
+            className="mt-0.5 w-3.5 h-3.5 rounded border-[var(--line)] accent-[var(--accent)] shrink-0"
+          />
+          <span>
+            I have read and agree to the{' '}
+            <a href="/legal/terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+              Terms of Service
+            </a>
+            ,{' '}
+            <a href="/legal/hosting-terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+              Hosting Terms
+            </a>
+            ,{' '}
+            <a href="/legal/aup" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+              Acceptable Use Policy
+            </a>
+            , and{' '}
+            <a href="/legal/cancellation" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+              Cancellation Policy
+            </a>
+            .
+          </span>
+        </label>
+        <label className="flex items-start gap-2.5 cursor-pointer select-none text-[11px] text-[var(--fg-muted)] leading-relaxed">
+          <input
+            type="checkbox"
+            checked={immediateProvisionConsent}
+            onChange={(e) => {
+              setImmediateProvisionConsent(e.target.checked);
+              if (error) setError('');
+            }}
+            className="mt-0.5 w-3.5 h-3.5 rounded border-[var(--line)] accent-[var(--accent)] shrink-0"
+          />
+          <span>
+            I expressly request immediate commencement of service provisioning before expiry of the 14-day statutory withdrawal period and acknowledge that I must pay proportionate compensation (pro-rata daily) for services rendered up to any withdrawal, and lose my right of withdrawal upon full performance of one-time services (§ 356(4), § 357a(2) BGB).
+          </span>
+        </label>
+        <div className="flex justify-end pt-1">
           <button
             type="submit"
-            disabled={!stripe || processing}
+            disabled={!stripe || processing || !legalAccepted || !immediateProvisionConsent}
             className="vs-btn-primary disabled:opacity-50"
           >
             <Lock className="w-3.5 h-3.5" />
@@ -242,6 +277,7 @@ export function NewService() {
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const [taxRatePercent, setTaxRatePercent] = useState<number>(0);
   const [smallBusinessExempt, setSmallBusinessExempt] = useState<boolean>(true);
+  const [freeOrderLegalAccepted, setFreeOrderLegalAccepted] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -1148,6 +1184,35 @@ export function NewService() {
                   after payment succeeds. You will receive an order confirmation and access details by email.
                 </div>
               )}
+              {(!stripePromise || total <= 0) && (
+                <label className="mt-4 flex items-start gap-2.5 cursor-pointer select-none text-[11px] text-[var(--fg-muted)] leading-relaxed">
+                  <input
+                    type="checkbox"
+                    checked={freeOrderLegalAccepted}
+                    onChange={(e) => setFreeOrderLegalAccepted(e.target.checked)}
+                    className="mt-0.5 w-3.5 h-3.5 rounded border-[var(--line)] accent-[var(--accent)] shrink-0"
+                  />
+                  <span>
+                    I agree to the{' '}
+                    <a href="/legal/terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+                      Terms of Service
+                    </a>
+                    ,{' '}
+                    <a href="/legal/hosting-terms" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+                      Hosting Terms
+                    </a>
+                    ,{' '}
+                    <a href="/legal/aup" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+                      Acceptable Use Policy
+                    </a>
+                    , and{' '}
+                    <a href="/legal/cancellation" target="_blank" rel="noreferrer" className="underline hover:text-[var(--fg)]">
+                      Cancellation Policy
+                    </a>
+                    , and request immediate provisioning.
+                  </span>
+                </label>
+              )}
             </div>
           )}
 
@@ -1213,7 +1278,7 @@ export function NewService() {
                 <button
                   type="button"
                   onClick={handleProceedToPayment}
-                  disabled={submitting}
+                  disabled={submitting || ((!stripePromise || total <= 0) && !freeOrderLegalAccepted)}
                   className="vs-btn-primary px-5 py-2 text-xs font-medium disabled:opacity-50"
                 >
                   {submitting
@@ -1325,7 +1390,11 @@ export function NewService() {
               </div>
             )}
             <div className="flex justify-between text-[var(--fg-muted)]">
-              <span>19% German VAT</span>
+              <span>
+                {smallBusinessExempt || taxRatePercent <= 0
+                  ? 'VAT (Kleinunternehmer § 19 UStG)'
+                  : `${taxRatePercent}% German VAT`}
+              </span>
               <span className="font-mono text-[var(--fg)]">€{vat.toFixed(2)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-[var(--line)] text-sm font-semibold">

@@ -27,6 +27,9 @@ export interface BlogPost {
   tags?: string[];
   published_at: string;
   category?: string;
+  visibility?: 'public' | 'unlisted' | 'guide' | string;
+  is_unlisted?: boolean;
+  seo_only?: boolean;
   author_name?: string;
   author_username?: string;
   author_avatar?: string;
@@ -79,7 +82,13 @@ export function BlogList() {
       api.get<string[]>('/storefront/blog/tags').catch(() => [] as string[]),
     ])
       .then(([postData, tagData]) => {
-        const fetchedPosts = Array.isArray(postData) ? postData : [];
+        const fetchedPosts = (Array.isArray(postData) ? postData : []).filter(
+          (p) =>
+            p.visibility !== 'unlisted' &&
+            p.visibility !== 'guide' &&
+            p.is_unlisted !== true &&
+            p.seo_only !== true,
+        );
         setPosts(fetchedPosts);
 
         const validTagStrings = Array.isArray(tagData)

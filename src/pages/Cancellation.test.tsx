@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { Cancellation } from './Cancellation';
@@ -13,5 +13,17 @@ describe('Cancellation', () => {
   it('sets document title', () => {
     render(<MemoryRouter><LanguageProvider><Cancellation /></LanguageProvider></MemoryRouter>);
     expect(document.title).toContain('Cancellation');
+  });
+
+  it('renders German translation on /de route', () => {
+    render(
+      <MemoryRouter initialEntries={['/de/legal/cancellation']}>
+        <LanguageProvider>
+          <Cancellation />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+    expect(document.title).toContain('Widerrufsbelehrung');
+    expect(screen.getAllByText('Muster-Widerrufsformular').length).toBeGreaterThan(0);
   });
 });
