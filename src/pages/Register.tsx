@@ -23,26 +23,38 @@ const API_BASE =
     ? '/api'
     : import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-const COUNTRIES = [
+const EU_COUNTRIES = [
   { code: 'DE', name: 'Germany (Deutschland)' },
   { code: 'AT', name: 'Austria (Österreich)' },
-  { code: 'CH', name: 'Switzerland (Schweiz)' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'FR', name: 'France' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'LU', name: 'Luxembourg' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'CZ', name: 'Czech Republic' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' },
-  { code: 'CA', name: 'Canada' },
-];
+  { code: 'BE', name: 'Belgium (Belgien)' },
+  { code: 'BG', name: 'Bulgaria (Bulgarien)' },
+  { code: 'HR', name: 'Croatia (Kroatien)' },
+  { code: 'CY', name: 'Cyprus (Zypern)' },
+  { code: 'CZ', name: 'Czechia (Tschechien)' },
+  { code: 'DK', name: 'Denmark (Dänemark)' },
+  { code: 'EE', name: 'Estonia (Estland)' },
+  { code: 'FI', name: 'Finland (Finnland)' },
+  { code: 'FR', name: 'France (Frankreich)' },
+  { code: 'GR', name: 'Greece (Griechenland)' },
+  { code: 'HU', name: 'Hungary (Ungarn)' },
+  { code: 'IE', name: 'Ireland (Irland)' },
+  { code: 'IT', name: 'Italy (Italien)' },
+  { code: 'LV', name: 'Latvia (Lettland)' },
+  { code: 'LT', name: 'Lithuania (Litauen)' },
+  { code: 'LU', name: 'Luxembourg (Luxemburg)' },
+  { code: 'MT', name: 'Malta (Malta)' },
+  { code: 'NL', name: 'Netherlands (Niederlande)' },
+  { code: 'PL', name: 'Poland (Polen)' },
+  { code: 'PT', name: 'Portugal (Portugal)' },
+  { code: 'RO', name: 'Romania (Rumänien)' },
+  { code: 'SK', name: 'Slovakia (Slowakei)' },
+  { code: 'SI', name: 'Slovenia (Slowenien)' },
+  { code: 'ES', name: 'Spain (Spanien)' },
+  { code: 'SE', name: 'Sweden (Schweden)' },
+] as const;
+
+const COUNTRIES = EU_COUNTRIES;
+const EU_COUNTRY_CODES = new Set<string>(EU_COUNTRIES.map((c) => c.code));
 
 interface AddressSuggestion {
   display: string;
@@ -209,7 +221,10 @@ export function Register() {
                     country,
                   };
                 })
-                .filter((item: AddressSuggestion) => Boolean(item.street));
+                .filter(
+                  (item: AddressSuggestion) =>
+                    Boolean(item.street) && EU_COUNTRY_CODES.has(item.country),
+                );
             }
           }
         }
@@ -230,7 +245,7 @@ export function Register() {
       address: s.street,
       city: s.city || prev.city,
       postal_code: s.postal_code || prev.postal_code,
-      country: s.country || prev.country,
+      country: EU_COUNTRY_CODES.has(s.country) ? s.country : prev.country,
     }));
     setSuggestions([]);
     setShowSuggestions(false);
@@ -279,6 +294,14 @@ export function Register() {
       setError(isDe ? 'Land ist erforderlich.' : 'Country is required.');
       return;
     }
+    if (!EU_COUNTRY_CODES.has(form.country.trim().toUpperCase())) {
+      setError(
+        isDe
+          ? 'Die Konto-Registrierung ist nur für Mitgliedstaaten der Europäischen Union (EU) verfügbar.'
+          : 'Account registration is only available for European Union (EU) member states.',
+      );
+      return;
+    }
 
     if (form.country === 'DE' && !/^[0-9]{5}$/.test(form.postal_code.trim())) {
       setError(
@@ -288,10 +311,7 @@ export function Register() {
       );
       return;
     }
-    if (
-      (form.country === 'AT' || form.country === 'CH') &&
-      !/^[0-9]{4}$/.test(form.postal_code.trim())
-    ) {
+    if (form.country === 'AT' && !/^[0-9]{4}$/.test(form.postal_code.trim())) {
       setError(
         isDe
           ? 'Bitte geben Sie eine gültige 4-stellige Postleitzahl ein (z. B. 1010).'

@@ -154,4 +154,20 @@ describe('Register page', () => {
     renderRegister();
     expect(sessionStorage.getItem('vs_redirect')).toBe('/dashboard/vps');
   });
+
+  it('includes all 27 European Union member states and excludes non-EU countries', () => {
+    renderRegister();
+    const countrySelect = screen.getByLabelText(/Country/i) as HTMLSelectElement;
+    const codes = Array.from(countrySelect.querySelectorAll('option')).map((opt) => opt.value);
+    const expectedEu27 = [
+      'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI',
+      'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU',
+      'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+    ];
+    expect(codes).toHaveLength(27);
+    expect([...codes].sort()).toEqual([...expectedEu27].sort());
+    for (const nonEu of ['CH', 'NO', 'GB', 'US', 'CA']) {
+      expect(codes).not.toContain(nonEu);
+    }
+  });
 });
