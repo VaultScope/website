@@ -28,7 +28,11 @@ export function SftpFthrConfigModal({
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setCustomPassword('');
+      setShowPassword(false);
+      return;
+    }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };

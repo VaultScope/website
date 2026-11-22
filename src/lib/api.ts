@@ -46,7 +46,8 @@ class ApiClient {
   }
 
   private async fetchWithRetry(path: string, init: RequestInit): Promise<Response> {
-    const maxAttempts = 3;
+    const isIdempotent = !init.method || init.method === 'GET' || init.method === 'HEAD';
+    const maxAttempts = isIdempotent ? 3 : 1;
     const isProdVaultScope = API_BASE === '/api';
     let lastError: unknown;
 

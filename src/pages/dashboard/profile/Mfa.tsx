@@ -104,13 +104,16 @@ export function ProfileMfa() {
     setTimeout(() => setCopiedRecovery(false), 2000);
   };
 
-  const qrSrc =
+  const rawQrSrc =
     setupData?.qr_url ||
     (setupData?.qr_base64
       ? setupData.qr_base64.startsWith('data:')
         ? setupData.qr_base64
         : `data:image/png;base64,${setupData.qr_base64}`
       : '');
+  const qrSrc = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(rawQrSrc.trim())
+    ? rawQrSrc.trim()
+    : '';
 
   return (
     <div className="space-y-6">

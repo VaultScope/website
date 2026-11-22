@@ -203,12 +203,12 @@ export function HelpTooltip({
             </div>
           )}
 
-          {docUrl && (
+          {docUrl && /^(?:https?:\/\/|\/(?![/\\]))/i.test(docUrl.trim()) && (
             <div className="mt-2.5 pt-2 border-t border-border/50 flex justify-end">
               <a
-                href={docUrl}
+                href={docUrl.trim()}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[11px] text-foreground hover:underline font-medium"
               >
                 Documentation <ExternalLink className="w-2.5 h-2.5" />

@@ -147,12 +147,18 @@ export function getStoredClaims(): AuthClaims | null {
   if (!raw) return null;
   try {
     const claims: AuthClaims = JSON.parse(raw);
-    if (!claims || typeof claims.exp !== 'number' || claims.exp * 1000 < Date.now()) {
+    if (
+      !claims ||
+      typeof claims.exp !== 'number' ||
+      claims.exp * 1000 < Date.now() ||
+      (claims.audience && claims.audience !== 'storefront')
+    ) {
       clearAuthStorage();
       return null;
     }
     return claims;
   } catch {
+    clearAuthStorage();
     return null;
   }
 }

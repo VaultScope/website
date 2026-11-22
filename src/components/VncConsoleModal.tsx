@@ -45,7 +45,7 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post<ConsoleSession>(`/storefront/services/${serviceId}/console`);
+      const res = await api.post<ConsoleSession>(`/storefront/services/${encodeURIComponent(serviceId)}/console`);
       setSession(res);
     } catch (err: any) {
       setError(err?.message || 'Failed to initialize KVM console session with provider.');
@@ -61,6 +61,11 @@ export function VncConsoleModal({ isOpen, onClose, service }: VncConsoleModalPro
       setSession(null);
       setError(null);
       setIsFullscreen(false);
+      setShowCredentials(false);
+      setShowClipboard(false);
+      setClipboardText('');
+      setConsoleInput('');
+      setConsoleHistory([]);
     }
   }, [isOpen, serviceId, fetchConsole]);
 

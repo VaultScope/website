@@ -40,9 +40,12 @@ export function DsDetail() {
   const [showIp, setShowIp] = useState(false);
   const { toast } = useToast();
 
+  const encodedId = id ? encodeURIComponent(id) : '';
+
   const loadData = useCallback(() => {
+    if (!encodedId) return;
     Promise.all([
-      api.get(`/storefront/services/${id}`).catch(() => null),
+      api.get(`/storefront/services/${encodedId}`).catch(() => null),
       api.get('/storefront/catalog').catch(() => []),
     ]).then(([srv, cat]) => {
       setService(srv);
@@ -51,16 +54,17 @@ export function DsDetail() {
       }
       setLoading(false);
     });
-  }, [id]);
+  }, [encodedId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const handleAction = async (action: string) => {
+    if (!encodedId) return;
     setActionLoading(action);
     try {
-      const res: any = await api.post(`/storefront/services/${id}/${action}`);
+      const res: any = await api.post(`/storefront/services/${encodedId}/${action}`);
       if (action === 'ipmi') {
         setIpmiData(res);
       }
@@ -73,9 +77,10 @@ export function DsDetail() {
   };
 
   const handleCancel = async () => {
+    if (!encodedId) return;
     setActionLoading('cancel');
     try {
-      await api.post(`/storefront/services/${id}/cancel`, { mode: 'period_end' });
+      await api.post(`/storefront/services/${encodedId}/cancel`, { mode: 'period_end' });
       setShowCancelModal(false);
       toast('Server scheduled for cancellation at period end.', 'success');
       loadData();
@@ -87,9 +92,10 @@ export function DsDetail() {
   };
 
   const handleUncancel = async () => {
+    if (!encodedId) return;
     setActionLoading('uncancel');
     try {
-      await api.post(`/storefront/services/${id}/uncancel`);
+      await api.post(`/storefront/services/${encodedId}/uncancel`);
       toast('Cancellation revoked.', 'success');
       loadData();
     } catch (e: any) {
@@ -100,10 +106,11 @@ export function DsDetail() {
   };
 
   const handleReinstall = async () => {
+    if (!encodedId) return;
     setActionLoading('reinstall');
     try {
       const targetOs = service?.config?.os_template || service?.os || 'debian-12';
-      await api.post(`/storefront/services/${id}/reinstall`, { os: targetOs });
+      await api.post(`/storefront/services/${encodedId}/reinstall`, { os: targetOs });
       setShowReinstallModal(false);
       toast('Bare-metal OS reinstallation initiated.', 'success');
       loadData();
@@ -115,9 +122,10 @@ export function DsDetail() {
   };
 
   const handleDeleteNow = async () => {
+    if (!encodedId) return;
     setActionLoading('delete');
     try {
-      await api.delete(`/storefront/services/${id}`);
+      await api.delete(`/storefront/services/${encodedId}`);
       toast('Dedicated server permanently deleted.', 'success');
       navigate('/dashboard/ds');
     } catch (e: any) {

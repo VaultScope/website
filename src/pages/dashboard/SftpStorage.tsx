@@ -120,6 +120,12 @@ export default function SftpStorage() {
     const nextVisible = !showPass[s.id];
     if (nextVisible) {
       await resolveServicePassword(s);
+    } else {
+      setRevealedPasswords((prev) => {
+        const copy = { ...prev };
+        delete copy[s.id];
+        return copy;
+      });
     }
     setShowPass((prev) => ({ ...prev, [s.id]: nextVisible }));
   };

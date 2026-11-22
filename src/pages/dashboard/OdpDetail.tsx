@@ -27,9 +27,12 @@ export function OdpDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { toast } = useToast();
 
+  const encodedId = id ? encodeURIComponent(id) : '';
+
   const loadData = useCallback(() => {
+    if (!encodedId) return;
     Promise.all([
-      api.get(`/storefront/services/${id}`).catch(() => null),
+      api.get(`/storefront/services/${encodedId}`).catch(() => null),
       api.get('/storefront/catalog').catch(() => []),
     ]).then(([srv, cat]) => {
       setService(srv);
@@ -38,19 +41,20 @@ export function OdpDetail() {
       }
       setLoading(false);
     });
-  }, [id]);
+  }, [encodedId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const handleAction = async (action: string) => {
+    if (!encodedId) return;
     setActionLoading(action);
     try {
-      const res: any = await api.post(`/storefront/services/${id}/${action}`);
+      const res: any = await api.post(`/storefront/services/${encodedId}/${action}`);
       const rawConsoleUrl = res?.url || res?.wss_url;
       if (action === 'console' && rawConsoleUrl) {
-        const consoleUrl = sanitizeSafeUrl(rawConsoleUrl, true, ['https:', 'http:', 'wss:']);
+        const consoleUrl = sanitizeSafeUrl(rawConsoleUrl, true, ['https:', 'wss:']);
         if (consoleUrl) {
           window.open(consoleUrl, '_blank', 'noopener,noreferrer');
         } else {
@@ -66,9 +70,10 @@ export function OdpDetail() {
   };
 
   const handleCancel = async () => {
+    if (!encodedId) return;
     setActionLoading('cancel');
     try {
-      await api.post(`/storefront/services/${id}/cancel`, { mode: 'period_end' });
+      await api.post(`/storefront/services/${encodedId}/cancel`, { mode: 'period_end' });
       setShowCancelModal(false);
       toast('OCD service scheduled for cancellation at period end.', 'success');
       loadData();
@@ -80,9 +85,10 @@ export function OdpDetail() {
   };
 
   const handleUncancel = async () => {
+    if (!encodedId) return;
     setActionLoading('uncancel');
     try {
-      await api.post(`/storefront/services/${id}/uncancel`);
+      await api.post(`/storefront/services/${encodedId}/uncancel`);
       toast('Cancellation revoked.', 'success');
       loadData();
     } catch (e: any) {
@@ -93,9 +99,10 @@ export function OdpDetail() {
   };
 
   const handleDeleteNow = async () => {
+    if (!encodedId) return;
     setActionLoading('delete');
     try {
-      await api.delete(`/storefront/services/${id}`);
+      await api.delete(`/storefront/services/${encodedId}`);
       toast('OCD application permanently deleted.', 'success');
       navigate('/dashboard/odp');
     } catch (e: any) {
