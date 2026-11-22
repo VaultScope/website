@@ -37,8 +37,8 @@ REDIS_URL=redis://127.0.0.1:6379/0
 # Cryptography & Security Secrets
 # Generate via: openssl rand -base64 64
 JWT_SECRET=c29tZXNlY3JldGtleXRvYmVyZXBsYWNlZGluYXBw...
-# Generate via: openssl rand -base64 32 (AES-256-GCM)
-ENCRYPTION_KEY=MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=
+# Generate via: openssl rand -hex 32 (64-char hex AES-256-GCM key)
+ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
 # Authentik OIDC Federation
 AUTHENTIK_ISSUER_URL=https://auth.vaultscope.de/application/o/vaultscope/
@@ -147,7 +147,7 @@ RUST_LOG=info,vamos_api=debug,vamos_jobs=debug,sqlx=warn`;
               Never use default or placeholder keys in production. Both <code className="font-mono text-foreground">JWT_SECRET</code> and <code className="font-mono text-foreground">ENCRYPTION_KEY</code> must be randomly generated:
             </p>
             <CodeBlock
-              code={`# 64-byte JWT secret\nopenssl rand -base64 64\n\n# 32-byte (256-bit) AES-GCM encryption key\nopenssl rand -base64 32`}
+              code={`# 64-byte JWT secret\nopenssl rand -base64 64\n\n# 32-byte (256-bit) AES-GCM encryption key (64 hex chars)\nopenssl rand -hex 32`}
               language="bash"
               title="Generate Cryptographic Keys"
             />

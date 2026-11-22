@@ -18,11 +18,15 @@
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
-		Content-Security-Policy "default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://api.vaultscope.de wss://api.vaultscope.de https://api.stripe.com https://nominatim.openstreetmap.org https://photon.komoot.io; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://js.stripe.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' https://api.vaultscope.de wss://api.vaultscope.de https://api.stripe.com https://nominatim.openstreetmap.org https://photon.komoot.io https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://js.stripe.com https://hooks.stripe.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		-Server
 	}
 
-	handle /api/listmonk/api/public/subscription {
+	@listmonk_sub {
+		method POST
+		path /api/listmonk/api/public/subscription
+	}
+	handle @listmonk_sub {
 		uri strip_prefix /api/listmonk
 		reverse_proxy https://sub.vaultscope.de {
 			header_up Host sub.vaultscope.de
@@ -34,7 +38,9 @@
 	}
 
 	handle /api/* {
-		reverse_proxy vaultscope-api:3000
+		reverse_proxy vaultscope-api:3000 {
+			header_up -CF-Connecting-IP
+		}
 	}
 
 	handle /assets/* {

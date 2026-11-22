@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # VaultScope Production Build Script
 # Builds Docker images for production deployment with proper versioning
@@ -14,12 +14,21 @@ NC='\033[0m' # No Color
 VERSION=${1:-$(git describe --tags --always --dirty 2>/dev/null || echo "dev")}
 REGISTRY=${REGISTRY:-ghcr.io/vaultscope}
 
-# Load production environment if available
+# Safely load KEY=VALUE pairs from .env.production without executing shell commands
 if [ -f .env.production ]; then
     echo -e "${GREEN}Loading production environment...${NC}"
-    set -a
-    source .env.production
-    set +a
+    while IFS='=' read -r key val || [ -n "$key" ]; do
+        key=$(echo "$key" | tr -d '[:space:]')
+        [[ -z "$key" || "$key" =~ ^# ]] && continue
+        if [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            val="${val%$'\r'}"
+            val="${val#\"}"
+            val="${val%\"}"
+            val="${val#\'}"
+            val="${val%\'}"
+            export "$key=$val"
+        fi
+    done < .env.production
 else
     echo -e "${YELLOW}Warning: .env.production not found${NC}"
     echo "Using defaults from .env.production.example"
@@ -36,7 +45,7 @@ REQUIRED_VARS=(
 )
 
 for var in "${REQUIRED_VARS[@]}"; do
-    if [ -z "${!var}" ]; then
+    if [ -z "${!var:-}" ]; then
         echo -e "${RED}Error: ${var} not set${NC}"
         echo "Please set it in .env.production or environment"
         exit 1
@@ -56,8 +65,8 @@ echo -e "\n${GREEN}Building API...${NC}"
 cd VaultScope-API
 docker build \
     --platform linux/amd64 \
-    --tag ${REGISTRY}/vaultscope-api:${VERSION} \
-    --tag ${REGISTRY}/vaultscope-api:latest \
+    --tag "${REGISTRY}/vaultscope-api:${VERSION}" \
+    --tag "${REGISTRY}/vaultscope-api:latest" \
     .
 cd ..
 
@@ -66,12 +75,12 @@ echo -e "\n${GREEN}Building Storefront...${NC}"
 cd VaultScope
 docker build \
     --platform linux/amd64 \
-    --build-arg VITE_API_URL=${VITE_API_URL} \
-    --build-arg VITE_AUTHENTIK_URL=${VITE_AUTHENTIK_URL} \
-    --build-arg VITE_OIDC_CLIENT_ID=${VITE_OIDC_CLIENT_ID_STOREFRONT} \
-    --build-arg VITE_OIDC_REDIRECT_URI=${VITE_OIDC_REDIRECT_URI_STOREFRONT} \
-    --tag ${REGISTRY}/vaultscope-storefront:${VERSION} \
-    --tag ${REGISTRY}/vaultscope-storefront:latest \
+    --build-arg "VITE_API_URL=${VITE_API_URL}" \
+    --build-arg "VITE_AUTHENTIK_URL=${VITE_AUTHENTIK_URL}" \
+    --build-arg "VITE_OIDC_CLIENT_ID=${VITE_OIDC_CLIENT_ID_STOREFRONT}" \
+    --build-arg "VITE_OIDC_REDIRECT_URI=${VITE_OIDC_REDIRECT_URI_STOREFRONT}" \
+    --tag "${REGISTRY}/vaultscope-storefront:${VERSION}" \
+    --tag "${REGISTRY}/vaultscope-storefront:latest" \
     .
 cd ..
 
@@ -80,12 +89,12 @@ echo -e "\n${GREEN}Building Admin...${NC}"
 cd VaultScope-Admin
 docker build \
     --platform linux/amd64 \
-    --build-arg VITE_API_URL=${VITE_API_URL} \
-    --build-arg VITE_AUTHENTIK_URL=${VITE_AUTHENTIK_URL} \
-    --build-arg VITE_OIDC_CLIENT_ID=${VITE_OIDC_CLIENT_ID_ADMIN} \
-    --build-arg VITE_OIDC_REDIRECT_URI=${VITE_OIDC_REDIRECT_URI_ADMIN} \
-    --tag ${REGISTRY}/vaultscope-admin:${VERSION} \
-    --tag ${REGISTRY}/vaultscope-admin:latest \
+    --build-arg "VITE_API_URL=${VITE_API_URL}" \
+    --build-arg "VITE_AUTHENTIK_URL=${VITE_AUTHENTIK_URL}" \
+    --build-arg "VITE_OIDC_CLIENT_ID=${VITE_OIDC_CLIENT_ID_ADMIN}" \
+    --build-arg "VITE_OIDC_REDIRECT_URI=${VITE_OIDC_REDIRECT_URI_ADMIN}" \
+    --tag "${REGISTRY}/vaultscope-admin:${VERSION}" \
+    --tag "${REGISTRY}/vaultscope-admin:latest" \
     .
 cd ..
 

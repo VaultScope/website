@@ -73,7 +73,7 @@ INSERT INTO settings (key, value) VALUES
     ('support_email', '"support@vaultscope.de"'),
     ('stripe_test_mode_enabled', 'true'),
     ('stripe_public_key', '"pk_test_vaultscope_mock"')
-ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+ON CONFLICT (key) DO NOTHING;
 
 -- 10. Coupons
 INSERT INTO coupons (id, code, discount_type, discount_value, usage_limit, usage_count, status) VALUES

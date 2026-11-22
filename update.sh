@@ -9,7 +9,7 @@
 #   sudo ./update.sh [--branch=main|dev]
 #############################################################################
 
-set -eu
+set -euo pipefail
 umask 077
 
 # Colors

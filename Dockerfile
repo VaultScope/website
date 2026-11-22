@@ -22,10 +22,9 @@ FROM caddy:2-alpine
 RUN addgroup -g 10001 -S caddy \
     && adduser -u 10001 -S -G caddy -H -D caddy \
     && mkdir -p /data/caddy /config/caddy /srv \
-    && chown -R caddy:caddy /data /config /srv /etc/caddy
+    && chown -R caddy:caddy /data /config
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
-RUN chown -R caddy:caddy /srv /etc/caddy
 ENV PORT=3000 \
     XDG_DATA_HOME=/data \
     XDG_CONFIG_HOME=/config

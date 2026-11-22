@@ -17,7 +17,7 @@ export const StorefrontInstall = () => {
     document.title = 'Storefront Installation — VaultScope Docs';
   }, []);
 
-  const automatedSnippet = `curl -fsSL https://raw.githubusercontent.com/VaultScope/website/dev/installer.sh | sudo bash`;
+  const automatedSnippet = `curl -fsSLO https://raw.githubusercontent.com/VaultScope/website/main/installer.sh && sudo bash installer.sh`;
 
   const dockerSnippet = `# 1. Clone repository
 git clone https://github.com/VaultScope/website.git
@@ -30,11 +30,11 @@ docker build -t vaultscope-storefront \\
   --build-arg VITE_OIDC_CLIENT_ID=vaultscope-storefront \\
   --build-arg VITE_OIDC_REDIRECT_URI=https://vaultscope.de/auth/callback .
 
-# 3. Run container bound to host port 8080 (or 80/443)
+# 3. Run container bound to localhost port 8080 behind reverse proxy
 docker run -d \\
   --name vaultscope-storefront \\
   --restart unless-stopped \\
-  -p 8080:3000 \\
+  -p 127.0.0.1:8080:3000 \\
   vaultscope-storefront`;
 
   const localSnippet = `# 1. Clone storefront repository

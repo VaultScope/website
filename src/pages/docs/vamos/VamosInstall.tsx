@@ -17,7 +17,7 @@ export const VamosInstall = () => {
     document.title = 'VAMOS Installation — VaultScope Docs';
   }, []);
 
-  const automatedSnippet = `curl -fsSL https://raw.githubusercontent.com/VaultScope/website/dev/installer.sh | sudo bash`;
+  const automatedSnippet = `curl -fsSLO https://raw.githubusercontent.com/VaultScope/website/main/installer.sh && sudo bash installer.sh`;
 
   const dockerSnippet = `# 1. Clone VAMOS repository
 git clone https://github.com/VaultScope/vamos.git
@@ -27,8 +27,8 @@ cd vamos
 cp .env.example .env
 
 # Generate cryptographically secure keys:
-JWT_SECRET=$(openssl rand -base64 64)
-ENCRYPTION_KEY=$(openssl rand -base64 32)
+JWT_SECRET=$(openssl rand -base64 64 | tr -d '\\n')
+ENCRYPTION_KEY=$(openssl rand -hex 32)
 sed -i "s|JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" .env
 sed -i "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$ENCRYPTION_KEY|" .env
 

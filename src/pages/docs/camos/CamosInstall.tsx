@@ -16,7 +16,7 @@ export const CamosInstall = () => {
     document.title = 'CAMOS Installation — VaultScope Docs';
   }, []);
 
-  const automatedSnippet = `curl -fsSL https://raw.githubusercontent.com/VaultScope/website/dev/installer.sh | sudo bash`;
+  const automatedSnippet = `curl -fsSLO https://raw.githubusercontent.com/VaultScope/website/main/installer.sh && sudo bash installer.sh`;
 
   const dockerSnippet = `# 1. Clone CAMOS admin repository
 git clone https://github.com/VaultScope/camos.git
@@ -29,11 +29,11 @@ docker build -t vaultscope-camos \\
   --build-arg VITE_OIDC_CLIENT_ID=vaultscope-camos \\
   --build-arg VITE_OIDC_REDIRECT_URI=https://admin.vaultscope.de/callback .
 
-# 3. Launch container bound to internal port 8081
+# 3. Launch container bound to internal port 8081 (container listens on 8080)
 docker run -d \\
   --name vaultscope-camos \\
   --restart unless-stopped \\
-  -p 127.0.0.1:8081:80 \\
+  -p 127.0.0.1:8081:8080 \\
   vaultscope-camos`;
 
   const localSnippet = `# 1. Clone repository

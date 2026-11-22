@@ -18,14 +18,16 @@ export const DocsRunbooks = () => {
 
   const cronScript = `#!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 BACKUP_DIR="/var/backups/vaultscope"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 FILENAME="$BACKUP_DIR/vamos_backup_$TIMESTAMP.dump"
 
 mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR"
 
-# 1. Take compressed custom PostgreSQL dump
+# 1. Take compressed custom PostgreSQL dump (mode 0600 via umask 077)
 pg_dump -U postgres -d vaultscope -Fc -f "$FILENAME"
 
 # 2. Prune local backups older than 14 days

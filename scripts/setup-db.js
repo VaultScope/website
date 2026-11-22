@@ -76,6 +76,9 @@ function runSetup() {
   if (!process.env.VAULTSCOPE_DB_PASSWORD) {
     log.warn('Using default local dev DB password for role "vaultscope" (set VAULTSCOPE_DB_PASSWORD to override).');
   }
+  if (dbPassword.includes('$$') || /[\u0000-\u001F\u007F]/.test(dbPassword)) {
+    throw new Error('VAULTSCOPE_DB_PASSWORD contains disallowed characters ($$ or control characters).');
+  }
   const escapedDbPassword = dbPassword.replace(/'/g, "''");
 
   log.info('Ensuring role "vaultscope" and database "vaultscope" exist...');
@@ -154,8 +157,12 @@ function runSetup() {
     }
   }
 
-  // 4. Apply comprehensive seed data
-  if (fs.existsSync(SEED_FILE)) {
+  // 4. Apply comprehensive seed data only in dev or when --seed is explicitly passed
+  const shouldSeed =
+    process.argv.includes('--seed') ||
+    process.env.VAULTSCOPE_SEED_DB === 'true' ||
+    process.env.NODE_ENV !== 'production';
+  if (shouldSeed && fs.existsSync(SEED_FILE)) {
     log.info('Seeding database with full development data...');
     const seedSql = fs.readFileSync(SEED_FILE, 'utf-8');
     const seedRes = executePsql(seedSql, 'vaultscope');

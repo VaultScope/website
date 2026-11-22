@@ -73,7 +73,7 @@ export const DocsProjects = () => {
       badge: 'Operations Portal',
       badgeColor: 'border-[var(--line-strong)] text-[var(--text-muted)] bg-white/5',
       stack: ['React 19', 'Vite 8', 'TipTap', 'Recharts', 'Nginx Alpine'],
-      ports: 'Container: 80 | Host: 8081 / 3001',
+      ports: 'Container: 8080 | Host: 8081 / 3001',
       description: 'The internal administrative control plane used by support staff and system operators to oversee infrastructure, manage product plans, resolve tickets, and inspect financial ledgers.',
       highlights: [
         'Global infrastructure fleet oversight with remote power controls',
@@ -244,7 +244,7 @@ export const DocsProjects = () => {
               <tr>
                 <td className="p-3 font-semibold text-foreground">Install (Automated)</td>
                 <td colSpan={3} className="p-3 text-foreground/80">
-                  <code>curl -fsSL https://raw.githubusercontent.com/VaultScope/website/dev/installer.sh | sudo bash</code>
+                  <code>curl -fsSLO https://raw.githubusercontent.com/VaultScope/website/main/installer.sh &amp;&amp; sudo bash installer.sh</code>
                 </td>
               </tr>
               <tr>

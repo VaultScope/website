@@ -9,7 +9,7 @@
 #   sudo ./uninstall.sh
 #############################################################################
 
-set -eu
+set -euo pipefail
 umask 077
 
 # Colors

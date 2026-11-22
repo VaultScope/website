@@ -246,11 +246,11 @@ validate_branch() {
 validate_url() {
     local url=$1
 
-    # Strict URL validation (no whitespace, quotes, or shell metacharacters)
-    if [[ $url =~ ^https?://[a-zA-Z0-9.-]+(:[0-9]{1,5})?(/[a-zA-Z0-9._~:/?#\[\]@!\$\&\'\(\)*+,;=%-]*)?$ ]]; then
+    # Strict HTTPS URL validation (no whitespace, quotes, '$', or shell metacharacters)
+    if [[ $url =~ ^https://[a-zA-Z0-9.-]+(:[0-9]{1,5})?(/[a-zA-Z0-9._~:/?#\[\]@!\&\'\(\)*+,;=%-]*)?$ ]]; then
         return 0
     else
-        log_error "Invalid URL format: $url"
+        log_error "Invalid URL format (must be https:// without shell variables): $url"
         return 1
     fi
 }
@@ -980,7 +980,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1034,7 +1034,7 @@ services:
     container_name: vaultscope-admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8081:80"
+      - "127.0.0.1:8081:8080"
     networks:
       - vaultscope-network
     cap_drop:
@@ -1114,8 +1114,9 @@ server {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
+        proxy_set_header CF-Connecting-IP "";
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For \$remote_addr;
         proxy_set_header X-Forwarded-Proto \$scheme;
 
         # Increase timeout for long-running requests
@@ -1276,8 +1277,9 @@ server {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
+        proxy_set_header CF-Connecting-IP "";
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For \$remote_addr;
         proxy_set_header X-Forwarded-Proto \$scheme;
 
         # Increase timeout for long-running requests
@@ -1380,7 +1382,7 @@ setup_ssl() {
     fi
 
     # Setup auto-renewal (idempotent)
-    local cron_entry="0 0,12 * * * certbot renew --quiet"
+    local cron_entry="0 0,12 * * * certbot renew --quiet --deploy-hook \"systemctl reload nginx\""
     if ! crontab -l 2>/dev/null | grep -qF "certbot renew"; then
         (crontab -l 2>/dev/null || true; echo "$cron_entry") | crontab -
         log "SSL auto-renewal cron job installed"

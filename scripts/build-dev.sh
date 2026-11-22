@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # VaultScope Development Build Script
 # Builds Docker images for local development with test configuration

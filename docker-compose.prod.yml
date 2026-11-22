@@ -12,19 +12,19 @@ services:
 
     environment:
       # Database (external managed service)
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-20}
 
       # Redis (external managed service)
-      REDIS_URL: ${REDIS_URL}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL}
 
       # Server
       HOST: 0.0.0.0
       PORT: 3000
 
       # Security (from secrets manager)
-      JWT_SECRET: ${JWT_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}
 
       # Environment
       DEV_MODE: "false"
@@ -43,12 +43,13 @@ services:
 
       # Mailer (SMTP)
       SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-support@vaultscope.de}
 
       # CORS
-      CORS_ORIGINS: ${CORS_ORIGINS}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS}
 
       # Job Processing
       JOB_POLL_INTERVAL_SECS: ${JOB_POLL_INTERVAL_SECS:-5}
@@ -145,7 +146,7 @@ services:
     restart: always
 
     ports:
-      - "127.0.0.1:${ADMIN_PORT:-3001}:80"
+      - "127.0.0.1:${ADMIN_PORT:-3001}:8080"
 
     networks:
       - vaultscope-prod
@@ -165,7 +166,7 @@ services:
           memory: 128M
 
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080"]
       interval: 30s
       timeout: 10s
       retries: 3

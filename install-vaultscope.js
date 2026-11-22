@@ -325,11 +325,23 @@ async function configureEnvironment(component, options) {
       'DATABASE_URL',
       `postgres://vaultscope:${encodeURIComponent(dbPassword)}@localhost:5432/vaultscope`
     );
+    function hasActiveEnvVar(content, key) {
+      return content.split(/\r?\n/).some(line => {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith(`${key}=`)) return false;
+        const val = trimmed.slice(key.length + 1).trim();
+        return val.length >= 32 && !val.includes('change-me') && !val.includes('changeme');
+      });
+    }
     envContent = updateEnvVar(envContent, 'DB_MAX_CONNECTIONS', '10');
     envContent = updateEnvVar(envContent, 'HOST', '0.0.0.0');
     envContent = updateEnvVar(envContent, 'PORT', '3000');
-    envContent = updateEnvVar(envContent, 'JWT_SECRET', generatedJwtSecret);
-    envContent = updateEnvVar(envContent, 'ENCRYPTION_KEY', generatedEncryptionKey);
+    if (overwrite || !hasActiveEnvVar(envContent, 'JWT_SECRET')) {
+      envContent = updateEnvVar(envContent, 'JWT_SECRET', generatedJwtSecret);
+    }
+    if (overwrite || !hasActiveEnvVar(envContent, 'ENCRYPTION_KEY')) {
+      envContent = updateEnvVar(envContent, 'ENCRYPTION_KEY', generatedEncryptionKey);
+    }
     envContent = updateEnvVar(envContent, 'REDIS_URL', 'redis://localhost:6379');
     envContent = updateEnvVar(envContent, 'CORS_ORIGINS', 'http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:3001');
 
@@ -361,6 +373,11 @@ async function configureEnvironment(component, options) {
   }
 
   fs.writeFileSync(envPath, envContent.trim() + '\n', { encoding: 'utf-8', mode: 0o600 });
+  try {
+    fs.chmodSync(envPath, 0o600);
+  } catch {
+    // Ignore on platforms without POSIX chmod
+  }
   log.success(`Configured .env for ${name}`);
 }
 

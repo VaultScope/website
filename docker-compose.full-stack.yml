@@ -189,7 +189,7 @@ services:
     image: vaultscope-admin:test
     container_name: vaultscope-admin
     ports:
-      - "127.0.0.1:3001:80"
+      - "127.0.0.1:3001:8080"
     depends_on:
       - api
     networks:
@@ -199,7 +199,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080"]
       interval: 10s
       timeout: 5s
       retries: 3
