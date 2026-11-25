@@ -53,7 +53,36 @@ export function DashboardLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  if (typeof window !== 'undefined' && window.location.hash.includes('impersonate_token=')) {
+    try {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const impToken = hashParams.get('impersonate_token');
+      const impUsername = hashParams.get('username') || '';
+      const impName = hashParams.get('name') || '';
+      if (impToken) {
+        localStorage.setItem('vs_token', impToken);
+        localStorage.setItem('vs_impersonating', 'true');
+        if (impName) localStorage.setItem('vs_user_name', impName);
+        const tokenParts = impToken.split('.');
+        const base64Url = tokenParts[1] || '';
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+        const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+        const decoded = JSON.parse(new TextDecoder().decode(bytes));
+        localStorage.setItem(
+          'vs_claims',
+          JSON.stringify({ ...decoded, username: impUsername || decoded.username }),
+        );
+      }
+      window.history.replaceState({}, '', window.location.pathname + window.location.search);
+    } catch {
+      // Ignore malformed hash
+    }
+  }
+
   const token = typeof window !== 'undefined' ? localStorage.getItem('vs_token') : null;
+  const isImpersonating =
+    typeof window !== 'undefined' && localStorage.getItem('vs_impersonating') === 'true';
   const rawClaims = typeof window !== 'undefined' ? localStorage.getItem('vs_claims') : null;
   let claims: (AuthClaims & { name?: string; username?: string }) | null = null;
   if (rawClaims) {
@@ -106,6 +135,7 @@ export function DashboardLayout() {
   }, [userMenuOpen]);
 
   const handleLogout = () => {
+    localStorage.removeItem('vs_impersonating');
     logout();
     navigate('/login');
   };
@@ -155,6 +185,21 @@ export function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col selection:bg-[var(--accent)] selection:text-white">
+      {isImpersonating && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-400 px-4 py-2 text-xs flex items-center justify-between gap-4">
+          <span className="font-mono">
+            CAMOS Staff Impersonation Active — viewing customer account{' '}
+            <strong>{claims?.email || storedUsername || 'Customer'}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium transition-colors cursor-pointer shrink-0"
+          >
+            End Impersonation
+          </button>
+        </div>
+      )}
       {/* Architectural Obsidian Navigation Bar */}
       <header className="sticky top-0 left-0 right-0 h-16 z-50 bg-[var(--bg)]/88 backdrop-blur-xl border-b border-[var(--line)]">
         <div className="vs-container-wide h-full flex items-center justify-between gap-4">
